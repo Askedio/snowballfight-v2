@@ -1,4 +1,5 @@
-import { Room, Client } from "colyseus";
+import type { Client } from "colyseus";
+import { Room } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 
 export interface InputData {
@@ -124,7 +125,7 @@ export class Part4Room extends Room<MyRoomState> {
 
   fireBullet(player: Player) {
     const now = Date.now();
-    const cooldown = 200; // Bullet cooldown in milliseconds
+    const cooldown = 400; // Bullet cooldown in milliseconds
 
     if (now - player.lastBulletTime < cooldown) {
       return; // Skip firing if cooldown hasn't elapsed

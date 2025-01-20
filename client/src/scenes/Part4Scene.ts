@@ -35,7 +35,7 @@ export class Part4Scene extends Phaser.Scene {
   currentTick = 0;
 
   canShoot = true;
-  shootCooldown = 200;
+  shootCooldown = 400;
 
   constructor() {
     super({ key: "part4" });
