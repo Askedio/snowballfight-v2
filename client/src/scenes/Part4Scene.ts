@@ -6,8 +6,8 @@ import { BACKEND_URL } from "../backend";
 export class Part4Scene extends Phaser.Scene {
   room: Room;
 
-  currentPlayer: Phaser.GameObjects.Image;
-  playerEntities: { [sessionId: string]: Phaser.GameObjects.Image } = {};
+  currentPlayer: Phaser.GameObjects.Container;
+  playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
   playerHealth: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   bulletEntities: { [bulletId: string]: Phaser.GameObjects.Image } = {};
 
@@ -41,6 +41,14 @@ export class Part4Scene extends Phaser.Scene {
     super({ key: "part4" });
   }
 
+  preload() {
+    this.load.atlas(
+      "players",
+      "assets/sprites/players.png",
+      "assets/sprites/players.json"
+    );
+  }
+
   async create() {
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
@@ -53,10 +61,11 @@ export class Part4Scene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    const tabKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
+    const tabKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.TAB
+    );
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
-
 
     this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
 
@@ -97,59 +106,92 @@ export class Part4Scene extends Phaser.Scene {
       this.inputPayload.shoot = false;
     });
 
+    this.createAnimations();
+
+
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
-      const entity = this.add.image(player.x, player.y, player.skin);
-      entity.setOrigin(0.5, 0.5);
-      entity.setVisible(!player.isDead); // Hide if the player is dead
-
-      this.playerEntities[sessionId] = entity;
-
-      this.playerHealth[sessionId] = this.add.text(
-        player.x - 15,
-        player.y - 30,
+      const playerSprite = this.add.sprite(
+        0,
+        0,
+        "players",
+        `${player.skin}_01.png`
+      );
+      
+      const playerHealthText = this.add.text(
+        0, // X relative to the container
+        -30, // Y above the sprite
         `HP: ${player.health || 100}`,
         { fontSize: "10px", color: "#ffffff" }
       );
+      
+      playerSprite.setOrigin(0.5, 0.5); // Centered
+      playerHealthText.setOrigin(0.5, 0.5); // Centered
 
+      // Add both to a container
+      const playerContainer = this.add.container(player.x, player.y, [
+        playerSprite,
+        playerHealthText,
+      ]);
+
+      console.log(playerSprite)
+      
+      // Optionally set size (useful for debugging)
+      playerContainer.setSize(playerSprite.width, playerSprite.height);
+      
+  
+    
+      this.playerEntities[sessionId] = playerContainer;
+      this.playerHealth[sessionId] = playerHealthText;
+    
       if (sessionId === this.room.sessionId) {
-        this.currentPlayer = entity;
+        this.currentPlayer = playerContainer;
       }
-
+    
       // React to player state changes
       player.onChange(() => {
-        const entity = this.playerEntities[sessionId];
-        const healthText = this.playerHealth[sessionId];
-      
-        if (entity) {
+        const container = this.playerEntities[sessionId] as Phaser.GameObjects.Container;
+        const sprite = container.list.find((item) => item instanceof Phaser.GameObjects.Sprite) as Phaser.GameObjects.Sprite;
+        const healthText = container.list.find((item) => item instanceof Phaser.GameObjects.Text) as Phaser.GameObjects.Text;
+    
+        if (container) {
+          container.setPosition(player.x, player.y);
+
           if (player.isDead) {
-            // Hide visuals when the player is dead
-            entity.setVisible(false);
-            healthText?.setVisible(false);
+            container.setVisible(false);
           } else {
-            // Show visuals when the player is alive
-            entity.setVisible(true);
-            healthText?.setVisible(true);
-      
-            // Update position and rotation
-            entity.setPosition(player.x, player.y);
-            entity.setRotation(player.rotation);
-      
-            if (healthText) {
-              healthText.setPosition(player.x - 15, player.y - 30);
-              healthText.setText(`HP: ${player.health}`);
+            container.setVisible(true);
+    
+            this.tweens.add({
+              targets: container,
+              x: player.x,
+              y: player.y,
+              duration: 100,
+              ease: "Linear",
+            });
+    
+            sprite.setRotation(player.rotation);
+    
+            if (player.isMoving) {
+              if (sprite.anims.currentAnim?.key !== `${player.skin}_walk` || !sprite.anims.isPlaying) {
+                sprite.play(`${player.skin}_walk`, true);
+              }
+            } else {
+              if (sprite.anims.isPlaying) {
+                sprite.stop();
+                sprite.setTexture("players", `${player.skin}_01.png`);
+              }
             }
+    
+            healthText.setText(`HP: ${player.health}`);
           }
         }
-      
-        // Handle death modal for the local player
-        if (sessionId === this.room.sessionId && player.isDead) {
-          console.log("You have died!");
-          this.handlePlayerDeath();
-        }
       });
-      
     });
+    
+    
+    
+    
 
     // Listen for player death event from the server
     this.room.onMessage("player-death", (data) => {
@@ -165,27 +207,20 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player removal
     this.room.state.players.onRemove((player, sessionId) => {
-      const entity = this.playerEntities[sessionId];
-      if (entity) {
-        entity.destroy();
+      const container = this.playerEntities[sessionId];
+      if (container) {
+        container.destroy();
         delete this.playerEntities[sessionId];
       }
-
-      const healthText = this.playerHealth[sessionId];
-      if (healthText) {
-        healthText.destroy();
-        delete this.playerHealth[sessionId];
-      }
     });
+    
 
     // Handle bullet addition
     this.room.state.bullets.onAdd((bullet, bulletId) => {
-      // Use an image for the bullet
       const bulletEntity = this.add.image(bullet.x, bullet.y, "snowball");
       bulletEntity.setOrigin(0.5, 0.5);
       this.bulletEntities[bulletId] = bulletEntity;
 
-      // Update bullet position when it changes
       bullet.onChange(() => {
         if (this.bulletEntities[bulletId]) {
           this.bulletEntities[bulletId].setPosition(bullet.x, bullet.y);
@@ -201,20 +236,14 @@ export class Part4Scene extends Phaser.Scene {
       }
     });
 
-
-    // Listen for rejoin event
     window.addEventListener("player-rejoin", () => {
       const deathModal = document.getElementById("death-modal");
       if (deathModal) {
-        deathModal.classList.remove("show"); // Hide the modal
+        deathModal.classList.remove("show");
       }
       console.log("Sending rejoin request to the server");
       this.room.send("rejoin", {});
     });
-
-
-    
-
   }
 
   async connect() {
@@ -271,8 +300,12 @@ export class Part4Scene extends Phaser.Scene {
 
     const player = this.room.state.players.get(this.room.sessionId);
     if (player) {
-      document.getElementById("active-player-kills").innerText = `Kills: ${player.kills}`;
-      document.getElementById("active-player-deaths").innerText = `Deaths: ${player.deaths}`;
+      document.getElementById(
+        "active-player-kills"
+      ).innerText = `Kills: ${player.kills}`;
+      document.getElementById(
+        "active-player-deaths"
+      ).innerText = `Deaths: ${player.deaths}`;
     }
   }
 
@@ -320,4 +353,29 @@ export class Part4Scene extends Phaser.Scene {
     leaderboard.style.display = "none";
   }
 
+  createAnimations() {
+    const skins = ["playersa", "playersb", "playersc", "playersd"];
+  
+    skins.forEach((skin) => {
+      // Walking animation
+      this.anims.create({
+        key: `${skin}_walk`,
+        frames: [
+          { key: "players", frame: `${skin}_02.png` }, // Left foot forward
+          { key: "players", frame: `${skin}_04.png` }, // Right foot forward
+        ],
+        frameRate: 4,
+        repeat: -1,
+      });
+  
+      // Idle animation
+      this.anims.create({
+        key: `${skin}_idle`,
+        frames: [{ key: "players", frame: `${skin}_01.png` }], // Idle frame
+        frameRate: 1,
+        repeat: -1,
+      });
+    });
+  }
+  
 }

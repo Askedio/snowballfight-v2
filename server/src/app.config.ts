@@ -1,6 +1,6 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
-import { Server } from "colyseus";
+import type { Server } from "colyseus";
 
 /**
  * Import your Room files

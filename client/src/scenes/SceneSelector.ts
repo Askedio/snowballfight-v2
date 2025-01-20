@@ -9,20 +9,11 @@ export class SceneSelector extends Phaser.Scene {
     // update menu background color
     this.cameras.main.setBackgroundColor(0x000000);
 
-    this.load.image(
-      "playersa_01",
-      "/assets/images/skins/player/playersa_01.png"
-    );
-    this.load.image(
-      "playersb_01",
-      "/assets/images/skins/player/playersb_01.png"
-    );
-    this.load.image(
-      "playersc_01",
-      "/assets/images/skins/player/playersc_01.png"
-    );
+    
 
     this.load.image("snowball", "/assets/images/weapons/snowball.png");
+
+  
   }
 
   create() {

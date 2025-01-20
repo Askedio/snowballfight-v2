@@ -29,8 +29,9 @@ export class Player extends Schema {
   @type("number") deaths = 0;
   @type("number") tick: number;
   @type("boolean") isDead = false; // Track if the player is dead
-  @type("string") skin = "playersb_01"; // Default skin
-
+  @type("string") skin = "playersa"; // Default skin
+  @type("boolean") isMoving = false; // Track if the player is moving
+ 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 }
@@ -106,16 +107,25 @@ export class Part4Room extends Room<MyRoomState> {
     const velocity = 2;
 
     this.state.players.forEach((player) => {
-      if (player.isDead) return; // Skip dead players
+      if (player.isDead) {
+        player.isMoving = false; // Dead players aren't moving
+        return;
+      }
 
       let input: InputData;
+
+      const wasMoving = player.isMoving; // Track the previous movement state
+       let isCurrentlyMoving = false; // Temporary movement check
+
 
       while ((input = player.inputQueue.shift())) {
         if (input.left) {
           player.rotation -= 0.05; // Rotate left
+          isCurrentlyMoving = true;
         }
         if (input.right) {
           player.rotation += 0.05; // Rotate right
+          isCurrentlyMoving = true;
         }
 
         const angle = player.rotation;
@@ -123,11 +133,13 @@ export class Part4Room extends Room<MyRoomState> {
         if (input.up) {
           player.x += Math.cos(angle) * velocity;
           player.y += Math.sin(angle) * velocity;
+          isCurrentlyMoving = true;
         }
 
         if (input.down) {
           player.x -= Math.cos(angle) * velocity * 0.5;
           player.y -= Math.sin(angle) * velocity * 0.5;
+          isCurrentlyMoving = true;
         }
 
         if (input.shoot) {
@@ -135,6 +147,8 @@ export class Part4Room extends Room<MyRoomState> {
         }
 
         player.tick = input.tick;
+
+        player.isMoving = isCurrentlyMoving;
       }
     });
 
@@ -178,39 +192,42 @@ export class Part4Room extends Room<MyRoomState> {
       width: this.state.mapWidth,
       height: this.state.mapHeight,
     };
-
-    // Filter bullets to keep only those still valid
-    this.state.bullets = this.state.bullets.filter((bullet) => {
+  
+    const bulletsToRemove: Bullet[] = [];
+  
+    this.state.bullets.forEach((bullet, index) => {
       bullet.x += bullet.dx;
       bullet.y += bullet.dy;
       bullet.lifetime -= this.fixedTimeStep;
-
+  
+      // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
-        return false; // Remove expired bullets
+        bulletsToRemove.push(bullet);
+        return;
       }
-
+  
       // Check collisions with players
       for (const [sessionId, player] of this.state.players.entries()) {
         if (player.isDead) continue; // Skip dead players
-
+  
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
+  
           const hitRadius = 15; // Adjust hit radius based on player size
           if (distance < hitRadius) {
             player.health -= 20;
-
-            // Remove the bullet immediately after collision
+  
+            // Handle player death
             if (player.health <= 0) {
               console.log(`Player ${sessionId} was killed.`);
               this.broadcast("player-death", { sessionId }); // Emit death event
-
+  
               player.isDead = true;
               player.deaths += 1;
-
-              // Increment the killer's kills count
+  
+              // Increment killer's kills count
               const killer = this.state.players.get(bullet.ownerId);
               if (killer) {
                 killer.kills += 1;
@@ -219,21 +236,33 @@ export class Part4Room extends Room<MyRoomState> {
                 );
               }
             }
-
-            return false; // Remove the bullet
+  
+            bulletsToRemove.push(bullet);
+            return;
           }
         }
       }
-
-      // Remove bullets out of bounds
-      return (
-        bullet.x >= 0 &&
-        bullet.x <= mapBounds.width &&
-        bullet.y >= 0 &&
-        bullet.y <= mapBounds.height
-      );
+  
+      // Check if the bullet is out of bounds
+      if (
+        bullet.x < 0 ||
+        bullet.x > mapBounds.width ||
+        bullet.y < 0 ||
+        bullet.y > mapBounds.height
+      ) {
+        bulletsToRemove.push(bullet);
+      }
+    });
+  
+    // Remove bullets from ArraySchema
+    bulletsToRemove.forEach((bullet) => {
+      const index = this.state.bullets.indexOf(bullet);
+      if (index !== -1) {
+        this.state.bullets.splice(index, 1);
+      }
     });
   }
+  
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
@@ -307,7 +336,7 @@ export class Part4Room extends Room<MyRoomState> {
   }
 
   private assignRandomSkin(): string {
-    const availableSkins = ["playersa_01", "playersb_01", "playersc_01"];
+    const availableSkins = ["playersa", "playersb", "playersc", "playersd"];
     return availableSkins[Math.floor(Math.random() * availableSkins.length)];
   }
 }

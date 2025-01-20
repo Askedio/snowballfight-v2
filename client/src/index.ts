@@ -19,7 +19,6 @@ const config: Phaser.Types.Core.GameConfig = {
     default: "arcade",
   },
   scene: [SceneSelector, Part4Scene],
- 
 };
 
 const game = new Phaser.Game(config);
