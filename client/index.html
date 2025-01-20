@@ -1,12 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multiplayer Game</title>
-</head>
-<body>
-  <div id="game-container"></div>
-  <script type="module" src="./client.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        background-color: black;
+        height: 100%;
+        overflow: hidden;
+      }
+      a {
+        color: red;
+      }
+      input {
+        outline: none;
+      }
+      div.menu {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 1em;
+        color: white;
+      }
+      div.menu > div {
+        margin-bottom: 0.1em;
+      }
+      #game-container {
+        width: 100%;
+        height: 100%;
+      }
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        text-align: center;
+      }
+      .modal.show {
+        display: block;
+      }
+      .modal button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .modal button:hover {
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Modal -->
+    <div id="death-modal" class="modal">
+      <h2>You Died!</h2>
+      <p>Click below to rejoin the game.</p>
+      <button id="rejoin-button">Rejoin</button>
+
+      <br/>WASD/Arrows, Space to shoot.
+    </div>
+
+    <script src="src/index.ts" type="module"></script>
+    <script>
+      // JavaScript to handle modal
+      const deathModal = document.getElementById("death-modal");
+      const rejoinButton = document.getElementById("rejoin-button");
+
+      // Show the modal
+      function showDeathModal() {
+        deathModal.classList.add("show");
+      }
+
+      // Hide the modal
+      function hideDeathModal() {
+        deathModal.classList.remove("show");
+      }
+
+      // Listen for rejoin button click
+      rejoinButton.addEventListener("click", () => {
+        hideDeathModal();
+        // Emit an event to rejoin the game
+        window.dispatchEvent(new Event("player-rejoin"));
+      });
+
+      window.addEventListener("ready", () => {
+        showDeathModal();
+      });
+    </script>
+  </body>
 </html>
