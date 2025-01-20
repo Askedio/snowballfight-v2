@@ -52,9 +52,36 @@ export class Part4Scene extends Phaser.Scene {
     const spaceBar = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
+
+    const tabKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
+    tabKey.on("down", this.showLeaderboard.bind(this));
+    tabKey.on("up", this.hideLeaderboard.bind(this));
+
+
     this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
 
     await this.connect();
+
+    setInterval(() => {
+      if (this.room?.state?.players) {
+        const players = Array.from(this.room.state.players.entries()).map(
+          ([sessionId, player]) => ({
+            sessionId,
+            x: player.x,
+            y: player.y,
+            health: player.health,
+            kills: player.kills,
+            deaths: player.deaths,
+            isDead: player.isDead,
+          })
+        );
+        console.log("Players state:", players);
+      }
+    }, 30000);
+
+    setInterval(() => {
+      this.updatePlayerStats();
+    }, 1000);
 
     // Space bar for shooting
     spaceBar.on("down", () => {
@@ -186,22 +213,7 @@ export class Part4Scene extends Phaser.Scene {
     });
 
 
-    setInterval(() => {
-      if (this.room?.state?.players) {
-        const players = Array.from(this.room.state.players.entries()).map(
-          ([sessionId, player]) => ({
-            sessionId,
-            x: player.x,
-            y: player.y,
-            health: player.health,
-            kills: player.kills,
-            deaths: player.deaths,
-            isDead: player.isDead,
-          })
-        );
-        console.log("Players state:", players);
-      }
-    }, 30000);
+    
 
   }
 
@@ -253,4 +265,59 @@ export class Part4Scene extends Phaser.Scene {
       this.canShoot = true;
     }, this.shootCooldown);
   }
+
+  updatePlayerStats() {
+    if (!this.room?.state?.players) return;
+
+    const player = this.room.state.players.get(this.room.sessionId);
+    if (player) {
+      document.getElementById("active-player-kills").innerText = `Kills: ${player.kills}`;
+      document.getElementById("active-player-deaths").innerText = `Deaths: ${player.deaths}`;
+    }
+  }
+
+  showLeaderboard() {
+    const leaderboard = document.getElementById("leaderboard");
+    const leaderboardBody = document.getElementById("leaderboard-body");
+
+    leaderboard.style.display = "block";
+    leaderboardBody.innerHTML = ""; // Clear previous content
+
+    const players = Array.from(this.room.state.players.entries()).map(
+      ([sessionId, player]) => ({
+        sessionId,
+        kills: player.kills,
+        deaths: player.deaths,
+        isDead: player.isDead,
+      })
+    );
+
+    players.forEach((player) => {
+      const row = document.createElement("tr");
+
+      const nameCell = document.createElement("td");
+      nameCell.textContent = player.sessionId;
+      row.appendChild(nameCell);
+
+      const killsCell = document.createElement("td");
+      killsCell.textContent = player.kills.toString();
+      row.appendChild(killsCell);
+
+      const deathsCell = document.createElement("td");
+      deathsCell.textContent = player.deaths.toString();
+      row.appendChild(deathsCell);
+
+      const statusCell = document.createElement("td");
+      statusCell.textContent = player.isDead ? "Dead" : "Alive";
+      row.appendChild(statusCell);
+
+      leaderboardBody.appendChild(row);
+    });
+  }
+
+  hideLeaderboard() {
+    const leaderboard = document.getElementById("leaderboard");
+    leaderboard.style.display = "none";
+  }
+
 }
