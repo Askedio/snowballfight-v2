@@ -47,9 +47,35 @@ export class Part4Scene extends Phaser.Scene {
       "assets/sprites/players.png",
       "assets/sprites/players.json"
     );
+
+    	// load the PNG file
+	this.load.image("Tileset", 'assets/maps/winter/map.png')
+
+	// load the JSON file
+	this.load.tilemapTiledJSON('tilemap', 'assets/maps/winter/map.json')
+
   }
 
   async create() {
+
+    let bg = this.add.image(0, 0, "Tileset").setOrigin(0, 0);
+    this.cameras.main.setBounds(0, 0, 2240, 1344);
+   
+    
+
+    const map = this.make.tilemap({ key: 'tilemap' })
+
+    // add the tileset image we are using
+    const tileset = map.addTilesetImage("Tileset")
+    
+    // create the layers we want in the right order
+  
+    map.createLayer('base', tileset)
+  
+    // "Ground" layer will be on top of "Background" layer
+    //map.createLayer('Ground', tileset)
+
+    
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
       W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -108,7 +134,6 @@ export class Part4Scene extends Phaser.Scene {
 
     this.createAnimations();
 
-
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
       const playerSprite = this.add.sprite(
@@ -117,14 +142,14 @@ export class Part4Scene extends Phaser.Scene {
         "players",
         `${player.skin}_01.png`
       );
-      
+
       const playerHealthText = this.add.text(
         0, // X relative to the container
         -30, // Y above the sprite
         `HP: ${player.health || 100}`,
         { fontSize: "10px", color: "#ffffff" }
       );
-      
+
       playerSprite.setOrigin(0.5, 0.5); // Centered
       playerHealthText.setOrigin(0.5, 0.5); // Centered
 
@@ -134,26 +159,30 @@ export class Part4Scene extends Phaser.Scene {
         playerHealthText,
       ]);
 
-      console.log(playerSprite)
-      
       // Optionally set size (useful for debugging)
       playerContainer.setSize(playerSprite.width, playerSprite.height);
-      
-  
-    
+
       this.playerEntities[sessionId] = playerContainer;
       this.playerHealth[sessionId] = playerHealthText;
-    
+
       if (sessionId === this.room.sessionId) {
         this.currentPlayer = playerContainer;
+        this.cameras.main.startFollow(this.currentPlayer, true);
+   
       }
-    
+
       // React to player state changes
       player.onChange(() => {
-        const container = this.playerEntities[sessionId] as Phaser.GameObjects.Container;
-        const sprite = container.list.find((item) => item instanceof Phaser.GameObjects.Sprite) as Phaser.GameObjects.Sprite;
-        const healthText = container.list.find((item) => item instanceof Phaser.GameObjects.Text) as Phaser.GameObjects.Text;
-    
+        const container = this.playerEntities[
+          sessionId
+        ] as Phaser.GameObjects.Container;
+        const sprite = container.list.find(
+          (item) => item instanceof Phaser.GameObjects.Sprite
+        ) as Phaser.GameObjects.Sprite;
+        const healthText = container.list.find(
+          (item) => item instanceof Phaser.GameObjects.Text
+        ) as Phaser.GameObjects.Text;
+
         if (container) {
           container.setPosition(player.x, player.y);
 
@@ -161,7 +190,7 @@ export class Part4Scene extends Phaser.Scene {
             container.setVisible(false);
           } else {
             container.setVisible(true);
-    
+
             this.tweens.add({
               targets: container,
               x: player.x,
@@ -169,11 +198,14 @@ export class Part4Scene extends Phaser.Scene {
               duration: 100,
               ease: "Linear",
             });
-    
+
             sprite.setRotation(player.rotation);
-    
+
             if (player.isMoving) {
-              if (sprite.anims.currentAnim?.key !== `${player.skin}_walk` || !sprite.anims.isPlaying) {
+              if (
+                sprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
+                !sprite.anims.isPlaying
+              ) {
                 sprite.play(`${player.skin}_walk`, true);
               }
             } else {
@@ -182,16 +214,12 @@ export class Part4Scene extends Phaser.Scene {
                 sprite.setTexture("players", `${player.skin}_01.png`);
               }
             }
-    
+
             healthText.setText(`HP: ${player.health}`);
           }
         }
       });
     });
-    
-    
-    
-    
 
     // Listen for player death event from the server
     this.room.onMessage("player-death", (data) => {
@@ -213,7 +241,6 @@ export class Part4Scene extends Phaser.Scene {
         delete this.playerEntities[sessionId];
       }
     });
-    
 
     // Handle bullet addition
     this.room.state.bullets.onAdd((bullet, bulletId) => {
@@ -355,7 +382,7 @@ export class Part4Scene extends Phaser.Scene {
 
   createAnimations() {
     const skins = ["playersa", "playersb", "playersc", "playersd"];
-  
+
     skins.forEach((skin) => {
       // Walking animation
       this.anims.create({
@@ -364,18 +391,9 @@ export class Part4Scene extends Phaser.Scene {
           { key: "players", frame: `${skin}_02.png` }, // Left foot forward
           { key: "players", frame: `${skin}_04.png` }, // Right foot forward
         ],
-        frameRate: 4,
-        repeat: -1,
-      });
-  
-      // Idle animation
-      this.anims.create({
-        key: `${skin}_idle`,
-        frames: [{ key: "players", frame: `${skin}_01.png` }], // Idle frame
-        frameRate: 1,
+        frameRate: 5,
         repeat: -1,
       });
     });
   }
-  
 }
