@@ -13,14 +13,13 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   width: 800,
   height: 600,
-  // height: 200,
   backgroundColor: "#000000",
   parent: "phaser-example",
   physics: {
     default: "arcade",
   },
-  pixelArt: true,
   scene: [SceneSelector, Part4Scene],
+ 
 };
 
 const game = new Phaser.Game(config);

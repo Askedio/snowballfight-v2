@@ -25,7 +25,10 @@ export class Player extends Schema {
   @type("number") y = 300;
   @type("number") rotation = 0; // Rotation in radians
   @type("number") health = 100;
+  @type("number") kills = 0;
+  @type("number") deaths = 0;
   @type("number") tick: number;
+  @type("boolean") isDead = false; // Track if the player is dead
   @type("string") skin = "playersb_01"; // Default skin
 
   lastBulletTime = 0; // Track the last time a bullet was fired
@@ -49,15 +52,26 @@ export class Part4Room extends Room<MyRoomState> {
 
     this.onMessage("input", (client, input: InputData) => {
       const player = this.state.players.get(client.sessionId);
-      if (player) {
+      if (player && !player.isDead) {
         player.inputQueue.push(input);
       }
     });
 
     // Rejoin message handler
     this.onMessage("rejoin", (client) => {
-      if (!this.state.players.has(client.sessionId)) {
-        console.log(`${client.sessionId} rejoined the game!`);
+      const player = this.state.players.get(client.sessionId);
+
+      if (player) {
+        if (player.isDead) {
+          console.log(`${client.sessionId} is respawning.`);
+          player.health = 100; // Restore health
+          player.isDead = false; // Mark as alive
+          this.assignRandomPosition(player); // Respawn at a new position
+        } else {
+          console.warn(`${client.sessionId} tried to rejoin while alive.`);
+        }
+      } else {
+        console.log(`${client.sessionId} is being added back.`);
         this.createPlayer(client);
       }
     });
@@ -67,6 +81,7 @@ export class Part4Room extends Room<MyRoomState> {
       elapsedTime += deltaTime;
 
       while (elapsedTime >= this.fixedTimeStep) {
+        //console.log(elapsedTime, ">=", this.fixedTimeStep)
         elapsedTime -= this.fixedTimeStep;
         this.fixedTick(this.fixedTimeStep);
       }
@@ -81,6 +96,7 @@ export class Part4Room extends Room<MyRoomState> {
 
     // Respawn player with full health
     player.health = 100;
+    player.isDead = false;
     player.skin = this.assignRandomSkin();
 
     this.state.players.set(client.sessionId, player);
@@ -90,6 +106,8 @@ export class Part4Room extends Room<MyRoomState> {
     const velocity = 2;
 
     this.state.players.forEach((player) => {
+      if (player.isDead) return; // Skip dead players
+
       let input: InputData;
 
       while ((input = player.inputQueue.shift())) {
@@ -140,7 +158,17 @@ export class Part4Room extends Room<MyRoomState> {
     bullet.y = player.y + Math.sin(angle) * 15;
     bullet.dx = Math.cos(angle) * this.bulletSpeed;
     bullet.dy = Math.sin(angle) * this.bulletSpeed;
-    bullet.ownerId = player["$id"]; // Use the player's unique ID
+    const client = this.clients.find(
+      (c) => this.state.players.get(c.sessionId) === player
+    );
+    if (client) {
+      bullet.ownerId = client.sessionId;
+    } else {
+      console.warn(
+        `No client found for player at position (${player.x}, ${player.y})`
+      );
+      return; // Do not create the bullet if we can't find the client
+    }
 
     this.state.bullets.push(bullet);
   }
@@ -163,21 +191,33 @@ export class Part4Room extends Room<MyRoomState> {
 
       // Check collisions with players
       for (const [sessionId, player] of this.state.players.entries()) {
+        if (player.isDead) continue; // Skip dead players
+
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          const hitRadius = 10; // Adjust hit radius based on player size
+          const hitRadius = 15; // Adjust hit radius based on player size
           if (distance < hitRadius) {
-            player.health -= 5;
+            player.health -= 20;
 
             // Remove the bullet immediately after collision
             if (player.health <= 0) {
               console.log(`Player ${sessionId} was killed.`);
               this.broadcast("player-death", { sessionId }); // Emit death event
 
-              this.state.players.delete(sessionId);
+              player.isDead = true;
+              player.deaths += 1;
+
+              // Increment the killer's kills count
+              const killer = this.state.players.get(bullet.ownerId);
+              if (killer) {
+                killer.kills += 1;
+                console.log(
+                  `Player ${bullet.ownerId} now has ${killer.kills} kills.`
+                );
+              }
             }
 
             return false; // Remove the bullet
@@ -231,19 +271,38 @@ export class Part4Room extends Room<MyRoomState> {
 
   private assignRandomPosition(player: Player) {
     const spawnBuffer = 50;
+    const maxAttempts = 100; // Limit the number of spawn attempts
+    let attempts = 0;
     let isValidSpawn = false;
 
-    while (!isValidSpawn) {
+    while (attempts < maxAttempts) {
+      attempts++;
+
+      // Generate a random position
       player.x = Math.random() * this.state.mapWidth;
       player.y = Math.random() * this.state.mapHeight;
 
+      // Check if the position is valid
       isValidSpawn = Array.from(this.state.players.values()).every(
         (otherPlayer) => {
+          // Skip checking against the same player
+          if (otherPlayer === player || otherPlayer.isDead) return true;
+
           const dx = player.x - otherPlayer.x;
           const dy = player.y - otherPlayer.y;
           return Math.sqrt(dx * dx + dy * dy) > spawnBuffer;
         }
       );
+
+      // Break the loop if a valid position is found
+      if (isValidSpawn) break;
+    }
+
+    if (!isValidSpawn) {
+      console.warn(
+        "Could not find a valid spawn position within the buffer. Placing player randomly."
+      );
+      // Use the last generated random position
     }
   }
 

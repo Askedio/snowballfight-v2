@@ -74,6 +74,8 @@ export class Part4Scene extends Phaser.Scene {
     this.room.state.players.onAdd((player, sessionId) => {
       const entity = this.add.image(player.x, player.y, player.skin);
       entity.setOrigin(0.5, 0.5);
+      entity.setVisible(!player.isDead); // Hide if the player is dead
+
       this.playerEntities[sessionId] = entity;
 
       this.playerHealth[sessionId] = this.add.text(
@@ -89,21 +91,37 @@ export class Part4Scene extends Phaser.Scene {
 
       // React to player state changes
       player.onChange(() => {
-        entity.setPosition(player.x, player.y);
-        entity.setRotation(player.rotation);
-
+        const entity = this.playerEntities[sessionId];
         const healthText = this.playerHealth[sessionId];
-        if (healthText) {
-          healthText.setPosition(player.x - 15, player.y - 30);
-          healthText.setText(`HP: ${player.health}`);
+      
+        if (entity) {
+          if (player.isDead) {
+            // Hide visuals when the player is dead
+            entity.setVisible(false);
+            healthText?.setVisible(false);
+          } else {
+            // Show visuals when the player is alive
+            entity.setVisible(true);
+            healthText?.setVisible(true);
+      
+            // Update position and rotation
+            entity.setPosition(player.x, player.y);
+            entity.setRotation(player.rotation);
+      
+            if (healthText) {
+              healthText.setPosition(player.x - 15, player.y - 30);
+              healthText.setText(`HP: ${player.health}`);
+            }
+          }
         }
-
-        // Handle death of the current player
-        if (sessionId === this.room.sessionId && player.health <= 0) {
+      
+        // Handle death modal for the local player
+        if (sessionId === this.room.sessionId && player.isDead) {
           console.log("You have died!");
           this.handlePlayerDeath();
         }
       });
+      
     });
 
     // Listen for player death event from the server
@@ -156,6 +174,7 @@ export class Part4Scene extends Phaser.Scene {
       }
     });
 
+
     // Listen for rejoin event
     window.addEventListener("player-rejoin", () => {
       const deathModal = document.getElementById("death-modal");
@@ -165,6 +184,25 @@ export class Part4Scene extends Phaser.Scene {
       console.log("Sending rejoin request to the server");
       this.room.send("rejoin", {});
     });
+
+
+    setInterval(() => {
+      if (this.room?.state?.players) {
+        const players = Array.from(this.room.state.players.entries()).map(
+          ([sessionId, player]) => ({
+            sessionId,
+            x: player.x,
+            y: player.y,
+            health: player.health,
+            kills: player.kills,
+            deaths: player.deaths,
+            isDead: player.isDead,
+          })
+        );
+        console.log("Players state:", players);
+      }
+    }, 30000);
+
   }
 
   async connect() {
