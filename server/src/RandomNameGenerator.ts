@@ -32,7 +32,14 @@ export class RandomNameGenerator {
   public generateRandomName(): { race: string; name: string } {
     const randomRace =
       this.races[Math.floor(Math.random() * this.races.length)];
-    const name = nameByRace(randomRace.race, randomRace.options || {});
-    return { race: randomRace.race, name };
+    const result = nameByRace(randomRace.race, randomRace.options || {});
+
+    // Check if the result is an instance of Error
+    if (result instanceof Error) {
+      console.error("Error generating name:", result.message);
+      return { race: randomRace.race, name: "Unknown" }; // Fallback name
+    }
+
+    return { race: randomRace.race, name: result }; // Safe to return
   }
 }

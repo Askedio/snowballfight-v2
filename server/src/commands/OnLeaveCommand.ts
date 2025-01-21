@@ -11,10 +11,6 @@ export class OnLeaveCommand extends Command<
 
     console.log(client.sessionId, "left!");
 
-    //this.state.players.get(client.sessionId).connected = false;
-
-    //this.state.players.get(client.sessionId).connected = false;
-
     this.state.players.delete(client.sessionId);
     return;
   }

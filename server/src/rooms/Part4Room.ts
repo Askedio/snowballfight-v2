@@ -20,6 +20,7 @@ export class Part4Room extends Room<MyRoomState> {
     const mapFilePath = "../client/static/assets/maps/winter/map.json"; // Update with the correct path
     const collisionLayerName = "Colissins";
     const spawnLayerName = "spawns";
+    
     this.tilemapManager = new TilemapManager(
       mapFilePath,
       collisionLayerName,

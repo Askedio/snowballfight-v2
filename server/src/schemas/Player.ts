@@ -46,7 +46,10 @@ export class Player extends Schema {
 
     // Clear existing timeout if already set for this key
     if (this.resetTimeouts.has(keyString)) {
-      clearTimeout(this.resetTimeouts.get(keyString)!);
+      const timeout = this.resetTimeouts.get(keyString);
+      if (timeout) {
+        clearTimeout(timeout);
+      }
     }
 
     // Apply the temporary value

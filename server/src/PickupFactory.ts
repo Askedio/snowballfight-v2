@@ -1,4 +1,4 @@
-import type { Pickup } from "./Pickup";
+import type { Pickup } from "./schemas/Pickup";
 import { DevilPickup } from "./pickups/Devil";
 import { SkullPickup } from "./pickups/Skull";
 import { SwordPickup } from "./pickups/Sword";
@@ -24,7 +24,7 @@ export class PickupFactory {
       case "wings":
         return new WingsPickup(x, y, asset);
       default:
-       return null
+        return null;
     }
   }
 }

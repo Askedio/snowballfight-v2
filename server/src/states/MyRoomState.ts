@@ -1,7 +1,7 @@
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 import { Player } from "../schemas/Player";
 import { Bullet } from "../schemas/Bullet";
-import { Pickup } from "../Pickup";
+import { Pickup } from "../schemas/Pickup";
 import { ChatMessage } from "../schemas/ChatMessage";
 
 export class MyRoomState extends Schema {

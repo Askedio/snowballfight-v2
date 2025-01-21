@@ -18,12 +18,11 @@ export class OnCreateCommand extends Command<
   fixedTimeStep = 1000 / 60;
 
   execute(payload: this["payload"]) {
-   
     this.room.setState(new MyRoomState());
 
     this.room.maxClients = 20; // Adjust the number as needed
 
-    this.tilemapManager = payload.tilemapManager
+    this.tilemapManager = payload.tilemapManager;
 
     this.spawnPickups();
 
@@ -112,8 +111,9 @@ export class OnCreateCommand extends Command<
     const spawnTiles = this.tilemapManager.getItemSpawnTiles(); // Add this method to TilemapManager
 
     spawnTiles.forEach((tile) => {
-      const randomType =
-        itemTypes[Math.floor(Math.random() * itemTypes.length)];
+      const randomType = itemTypes[
+        Math.floor(Math.random() * itemTypes.length)
+      ] as keyof typeof assets;
 
       const pickup = PickupFactory.createPickup(
         randomType,
@@ -160,5 +160,4 @@ export class OnCreateCommand extends Command<
     const availableSkins = ["playersa", "playersb", "playersc", "playersd"];
     return availableSkins[Math.floor(Math.random() * availableSkins.length)];
   }
-
 }

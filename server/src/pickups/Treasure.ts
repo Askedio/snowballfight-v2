@@ -1,4 +1,4 @@
-import { Pickup } from "../Pickup";
+import { Pickup } from "../schemas/Pickup";
 
 export class TreasurePickup extends Pickup {
   constructor(x: number, y: number, asset: string) {
