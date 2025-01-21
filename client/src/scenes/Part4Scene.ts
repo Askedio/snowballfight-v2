@@ -48,34 +48,26 @@ export class Part4Scene extends Phaser.Scene {
       "assets/sprites/players.json"
     );
 
-    	// load the PNG file
-	this.load.image("Tileset", 'assets/maps/winter/map.png')
+    // load the PNG file
+    this.load.image("Tileset", "assets/maps/winter/map.png");
 
-	// load the JSON file
-	this.load.tilemapTiledJSON('tilemap', 'assets/maps/winter/map.json')
-
+    // load the JSON file
+    this.load.tilemapTiledJSON("tilemap", "assets/maps/winter/map.json");
   }
 
   async create() {
-
-    let bg = this.add.image(0, 0, "Tileset").setOrigin(0, 0);
+    this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
+    
+    this.add.image(0, 0, "Tileset").setOrigin(0, 0);
     this.cameras.main.setBounds(0, 0, 2240, 1344);
-   
-    
+    this.physics.world.setBounds(0, 0, 2240 * 2, 1344 * 2);
 
-    const map = this.make.tilemap({ key: 'tilemap' })
+    const map = this.make.tilemap({ key: "tilemap" });
 
-    // add the tileset image we are using
-    const tileset = map.addTilesetImage("Tileset")
-    
-    // create the layers we want in the right order
-  
-    map.createLayer('base', tileset)
-  
-    // "Ground" layer will be on top of "Background" layer
-    //map.createLayer('Ground', tileset)
+    const tileset = map.addTilesetImage("Tileset");
 
-    
+    map.createLayer("base", tileset);
+
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
       W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -93,7 +85,8 @@ export class Part4Scene extends Phaser.Scene {
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
 
-    this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
+   
+
 
     await this.connect();
 
@@ -168,7 +161,6 @@ export class Part4Scene extends Phaser.Scene {
       if (sessionId === this.room.sessionId) {
         this.currentPlayer = playerContainer;
         this.cameras.main.startFollow(this.currentPlayer, true);
-   
       }
 
       // React to player state changes

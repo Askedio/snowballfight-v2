@@ -9,7 +9,7 @@ const config: Phaser.Types.Core.GameConfig = {
   fps: {
     target: 60,
     forceSetTimeOut: true,
-    smoothStep: false,
+    smoothStep: true,
   },
   scale: {
         mode: Phaser.Scale.FIT,

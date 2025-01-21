@@ -1,6 +1,7 @@
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
+import { TilemapManager } from "../TilemapManager";
 
 export interface InputData {
   left: boolean;
@@ -31,15 +32,16 @@ export class Player extends Schema {
   @type("boolean") isDead = false; // Track if the player is dead
   @type("string") skin = "playersa"; // Default skin
   @type("boolean") isMoving = false; // Track if the player is moving
- 
+
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 }
 
 export class MyRoomState extends Schema {
-  @type("number") mapWidth = 800;
-  @type("number") mapHeight = 600;
+  @type("number") mapWidth = 2240;
+  @type("number") mapHeight = 1600;
 
+ 
   @type({ map: Player }) players = new MapSchema<Player>();
   @type([Bullet]) bullets = new ArraySchema<Bullet>();
 }
@@ -47,9 +49,17 @@ export class MyRoomState extends Schema {
 export class Part4Room extends Room<MyRoomState> {
   fixedTimeStep = 1000 / 60;
   bulletSpeed = 5;
+ private tilemapManager: TilemapManager;
+
 
   onCreate(options: any) {
     this.setState(new MyRoomState());
+
+    const mapFilePath = "../client/static/assets/maps/winter/map.json"; // Update with the correct path
+    const collisionLayerName = "Colissins";
+    const spawnLayerName = "spawns";
+    this.tilemapManager = new TilemapManager(mapFilePath, collisionLayerName, spawnLayerName);
+
 
     this.onMessage("input", (client, input: InputData) => {
       const player = this.state.players.get(client.sessionId);
@@ -105,49 +115,50 @@ export class Part4Room extends Room<MyRoomState> {
 
   fixedTick(timeStep: number) {
     const velocity = 2;
+    const playerSize = 32; // Adjust based on your player sprite size
 
     this.state.players.forEach((player) => {
       if (player.isDead) {
-        player.isMoving = false; // Dead players aren't moving
+        player.isMoving = false;
         return;
       }
 
       let input: InputData;
-
-      const wasMoving = player.isMoving; // Track the previous movement state
-       let isCurrentlyMoving = false; // Temporary movement check
-
+      let isCurrentlyMoving = false;
 
       while ((input = player.inputQueue.shift())) {
+        const angle = player.rotation;
+        let newX = player.x;
+        let newY = player.y;
+
         if (input.left) {
-          player.rotation -= 0.05; // Rotate left
+          player.rotation -= 0.05;
           isCurrentlyMoving = true;
         }
         if (input.right) {
-          player.rotation += 0.05; // Rotate right
+          player.rotation += 0.05;
           isCurrentlyMoving = true;
         }
-
-        const angle = player.rotation;
-
         if (input.up) {
-          player.x += Math.cos(angle) * velocity;
-          player.y += Math.sin(angle) * velocity;
+          newX += Math.cos(angle) * velocity;
+          newY += Math.sin(angle) * velocity;
           isCurrentlyMoving = true;
         }
-
         if (input.down) {
-          player.x -= Math.cos(angle) * velocity * 0.5;
-          player.y -= Math.sin(angle) * velocity * 0.5;
+          newX -= Math.cos(angle) * velocity * 0.5;
+          newY -= Math.sin(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
 
-        if (input.shoot) {
-          this.fireBullet(player);
+        // Use TilemapManager to check for collisions
+        if (!this.tilemapManager.isColliding(newX, newY, playerSize, playerSize)) {
+          player.x = newX;
+          player.y = newY;
+        } else {
+          console.log("Collision detected! Movement blocked.");
         }
 
         player.tick = input.tick;
-
         player.isMoving = isCurrentlyMoving;
       }
     });
@@ -192,41 +203,41 @@ export class Part4Room extends Room<MyRoomState> {
       width: this.state.mapWidth,
       height: this.state.mapHeight,
     };
-  
+
     const bulletsToRemove: Bullet[] = [];
-  
+
     this.state.bullets.forEach((bullet, index) => {
       bullet.x += bullet.dx;
       bullet.y += bullet.dy;
       bullet.lifetime -= this.fixedTimeStep;
-  
+
       // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
         bulletsToRemove.push(bullet);
         return;
       }
-  
+
       // Check collisions with players
       for (const [sessionId, player] of this.state.players.entries()) {
         if (player.isDead) continue; // Skip dead players
-  
+
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-  
+
           const hitRadius = 15; // Adjust hit radius based on player size
           if (distance < hitRadius) {
             player.health -= 20;
-  
+
             // Handle player death
             if (player.health <= 0) {
               console.log(`Player ${sessionId} was killed.`);
               this.broadcast("player-death", { sessionId }); // Emit death event
-  
+
               player.isDead = true;
               player.deaths += 1;
-  
+
               // Increment killer's kills count
               const killer = this.state.players.get(bullet.ownerId);
               if (killer) {
@@ -236,13 +247,13 @@ export class Part4Room extends Room<MyRoomState> {
                 );
               }
             }
-  
+
             bulletsToRemove.push(bullet);
             return;
           }
         }
       }
-  
+
       // Check if the bullet is out of bounds
       if (
         bullet.x < 0 ||
@@ -250,10 +261,11 @@ export class Part4Room extends Room<MyRoomState> {
         bullet.y < 0 ||
         bullet.y > mapBounds.height
       ) {
+        console.log('outa bounds', mapBounds)
         bulletsToRemove.push(bullet);
       }
     });
-  
+
     // Remove bullets from ArraySchema
     bulletsToRemove.forEach((bullet) => {
       const index = this.state.bullets.indexOf(bullet);
@@ -262,7 +274,6 @@ export class Part4Room extends Room<MyRoomState> {
       }
     });
   }
-  
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
@@ -299,39 +310,15 @@ export class Part4Room extends Room<MyRoomState> {
   }
 
   private assignRandomPosition(player: Player) {
-    const spawnBuffer = 50;
-    const maxAttempts = 100; // Limit the number of spawn attempts
-    let attempts = 0;
-    let isValidSpawn = false;
-
-    while (attempts < maxAttempts) {
-      attempts++;
-
-      // Generate a random position
-      player.x = Math.random() * this.state.mapWidth;
-      player.y = Math.random() * this.state.mapHeight;
-
-      // Check if the position is valid
-      isValidSpawn = Array.from(this.state.players.values()).every(
-        (otherPlayer) => {
-          // Skip checking against the same player
-          if (otherPlayer === player || otherPlayer.isDead) return true;
-
-          const dx = player.x - otherPlayer.x;
-          const dy = player.y - otherPlayer.y;
-          return Math.sqrt(dx * dx + dy * dy) > spawnBuffer;
-        }
-      );
-
-      // Break the loop if a valid position is found
-      if (isValidSpawn) break;
-    }
-
-    if (!isValidSpawn) {
-      console.warn(
-        "Could not find a valid spawn position within the buffer. Placing player randomly."
-      );
-      // Use the last generated random position
+    try {
+      const spawn = this.tilemapManager.getRandomSpawn();
+      player.x = spawn.x;
+      player.y = spawn.y;
+    } catch (error) {
+      console.error("Error assigning spawn position:", error);
+      // Fallback to a default position
+      player.x = 400;
+      player.y = 300;
     }
   }
 
