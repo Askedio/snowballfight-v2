@@ -6,101 +6,10 @@ import { Pickup } from "../Pickup";
 import { nanoid } from "nanoid";
 import { PickupFactory } from "../PickupFactory";
 import { RandomNameGenerator } from "../RandomNameGenerator";
-
-export interface InputData {
-  left: boolean;
-  right: boolean;
-  up: boolean;
-  down: boolean;
-  shoot: boolean;
-  tick: number;
-}
-
-export class ChatMessage extends Schema {
-  @type("string") playerName: string;
-  @type("string") message: string;
-  @type("number") timestamp: number;
-}
-
-export class Bullet extends Schema {
-  @type("number") x: number;
-  @type("number") y: number;
-  @type("number") dx: number;
-  @type("number") dy: number;
-  @type("number") lifetime = 2000; // Bullet lifetime in ms
-  @type("string") ownerId: string;
-}
-
-export class Player extends Schema {
-  @type("number") x = 400;
-  @type("number") y = 300;
-  @type("number") rotation = 0; // Rotation in radians
-  @type("number") health = 100;
-  @type("number") kills = 0;
-
-  @type("number") deaths = 0;
-  @type("number") tick: number;
-  @type("boolean") isDead = false; // Track if the player is dead
-  @type("string") name = "";
-  @type("string") skin = "playersa"; // Default skin
-  @type("boolean") isMoving = false; // Track if the player is moving
-
-  @type("number") speed = 4;
-  @type("number") bulletSpeed = 10;
-  @type("number") bulletCooldown = 400;
-
-  @type("number") defaultSpeed = 4;
-  @type("number") defaultBulletSpeed = 10;
-  @type("number") defaultBulletCooldown = 400;
-
-  lastBulletTime = 0; // Track the last time a bullet was fired
-  inputQueue: InputData[] = [];
-
-  resetTimeouts: Map<string, NodeJS.Timeout> = new Map<
-    string,
-    NodeJS.Timeout
-  >();
-
-  /**
-   * Apply a temporary change to a player's property.
-   * @param key The property to change.
-   * @param value The temporary value to apply.
-   * @param duration Duration in milliseconds before resetting to the default value.
-   */
-  applyTemporaryChange<K extends keyof this>(
-    key: K,
-    value: this[K],
-    duration: number
-  ): void {
-    const keyString = String(key); // Convert key to string for map operations
-
-    // Clear existing timeout if already set for this key
-    if (this.resetTimeouts.has(keyString)) {
-      clearTimeout(this.resetTimeouts.get(keyString)!);
-    }
-
-    // Apply the temporary value
-    this[key] = value;
-
-    // Schedule a reset to the default value
-    const timeout = setTimeout(() => {
-      const defaultKey = `default${
-        keyString.charAt(0).toUpperCase() + keyString.slice(1)
-      }` as keyof this;
-
-      // Reset to default if defaultKey exists
-      if (defaultKey in this) {
-        this[key] = this[defaultKey];
-      }
-
-      // Clean up the timeout
-      this.resetTimeouts.delete(keyString);
-    }, duration);
-
-    // Store the timeout reference
-    this.resetTimeouts.set(keyString, timeout);
-  }
-}
+import { Player } from "../schemas/Player";
+import { Bullet } from "../schemas/Bullet";
+import { ChatMessage } from "../schemas/ChatMessage";
+import type { InputData } from "../interfaces/InputData";
 
 export class MyRoomState extends Schema {
   @type("number") mapWidth = 2240;
@@ -137,7 +46,6 @@ export class Part4Room extends Room<MyRoomState> {
     this.spawnPickups();
 
     this.onMessage("chat", (client, { message }) => {
-      console.log({message})
       const player = this.state.players.get(client.sessionId);
 
       if (player && message?.trim() !== "") {
@@ -155,8 +63,6 @@ export class Part4Room extends Room<MyRoomState> {
           message: chatMessage.message,
           timestamp: chatMessage.timestamp,
         });
-
-        console.log(`[Chat] ${chatMessage.playerName}: ${chatMessage.message}`);
       }
     });
 

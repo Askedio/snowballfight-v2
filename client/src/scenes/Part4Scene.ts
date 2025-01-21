@@ -43,14 +43,25 @@ export class Part4Scene extends Phaser.Scene {
   disableChat = false;
 
   constructor() {
-    console.log("started scene");
     super({ key: "part4" });
 
     this.disableChat = false;
 
+    // Get the chat input element
+    const chatInput = document.getElementById("chatSend") as HTMLInputElement;
+
+    // Add a mouseleave event listener to the chat input
+    if (chatInput) {
+      chatInput.addEventListener("mouseleave", () => {
+        if (document.activeElement === chatInput) {
+          chatInput.blur(); // Remove focus when the mouse leaves the input
+        }
+      });
+    }
+
     document.getElementById("chatSend").addEventListener("keydown", (e) => {
       // Check if the pressed key is Enter (key code 13)
-      if (e.key === "Enter" || e.keyCode === 13) {
+      if (e.key === "Enter") {
         if (this.disableChat) {
           return; // Prevent further action if chat is disabled
         }
@@ -104,8 +115,10 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   async create() {
-    console.log("ran create");
-    this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
+    this.debugFPS = this.add.text(4, 4, "", {
+      color: "#ff0000",
+      font: "11px Helvetica Neue",
+    });
 
     this.add.image(0, 0, "Tileset").setOrigin(0, 0);
     this.cameras.main.setBounds(0, 0, 2240, 1344);
@@ -126,13 +139,14 @@ export class Part4Scene extends Phaser.Scene {
 
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
-      W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-      S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-      D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+      W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+      A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+      S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+      D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
     };
     const spaceBar = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
+      Phaser.Input.Keyboard.KeyCodes.SPACE,
+      false
     );
 
     const tabKey = this.input.keyboard.addKey(
@@ -164,6 +178,11 @@ export class Part4Scene extends Phaser.Scene {
 
     // Space bar for shooting
     spaceBar.on("down", () => {
+      const chatInput = document.getElementById("chatSend") as HTMLInputElement;
+      if (chatInput && document.activeElement === chatInput) {
+        return true; // Ignore space bar if the chat input is focused
+      }
+
       if (this.canShoot) {
         this.inputPayload.shoot = true;
       }
@@ -185,12 +204,6 @@ export class Part4Scene extends Phaser.Scene {
       const roomName = (<HTMLInputElement>(
         document.getElementById("room-name")
       )).value.trim();
-
-      console.log(
-        `Rejoining clicked, room: ${roomName || "default"} player name: ${
-          playerName || "No name"
-        }`
-      );
 
       if (roomName) {
         await this.room.leave();
@@ -227,7 +240,6 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
-      console.log("add player", player);
       const playerSprite = this.add.sprite(
         0,
         0,
@@ -239,14 +251,14 @@ export class Part4Scene extends Phaser.Scene {
         0, // X relative to the container
         -30, // Y above the sprite
         `HP: ${player.health || 100}`,
-        { fontSize: "10px", color: "#ffffff" }
+        { color: "#ffffff", font: "10px Helvetica Neue" }
       );
 
       const playerNameText = this.add.text(
         0, // X relative to the container
-        -50, // Y above the sprite
+        -42, // Y above the sprite
         `${player.name}`,
-        { fontSize: "12px", color: "#ffffff" }
+        { color: "#ffffff", font: "12px Helvetica Neue" }
       );
       playerNameText.setOrigin(0.5, 0.5); // Centered
 
@@ -340,7 +352,6 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player removal
     this.room.state.players.onRemove((player, sessionId) => {
-      console.log("player removed from state", player);
       const container = this.playerEntities[sessionId];
       if (container) {
         this.playExplosionGrey(container.x, container.y, 0.6);
@@ -377,21 +388,23 @@ export class Part4Scene extends Phaser.Scene {
 
     this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
       const time = new Date(timestamp).toLocaleTimeString();
-    
+
       // Add the chat message to the chat box
       const chatItem = document.createElement("li");
       chatItem.textContent = `${playerName}: ${message}`;
-      chatItem.className = "text-sm text-gray-200";
       chatBox.appendChild(chatItem);
-    
+
       // Scroll to the bottom of the chat box
       chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Remove the chat item after 1 minute
+      setTimeout(() => {
+        chatItem.remove();
+      }, 10000);
     });
-    
   }
 
   async connect() {
-    console.log("ran connect");
     const connectionStatusText = this.add
       .text(0, 0, "Trying to connect with the server...")
       .setStyle({ color: "#ff0000" })
@@ -400,16 +413,11 @@ export class Part4Scene extends Phaser.Scene {
     const client = new Client(BACKEND_URL);
     this.client = client;
 
-    // const roomToJoin = await client.getAvailableRooms();
-    //console.log(roomToJoin);
-
     try {
       // this should be like a hash in the url!
       const roomName = (<HTMLInputElement>(
         document.getElementById("room-name")
       )).value.trim();
-
-      console.log(`Joining room: ${roomName || "default"}`);
 
       if (roomName) {
         this.room = await client.joinOrCreate("user_room", {

@@ -1,4 +1,4 @@
-import { Pickup } from "./Pickup";
+import type { Pickup } from "./Pickup";
 import { DevilPickup } from "./pickups/Devil";
 import { SkullPickup } from "./pickups/Skull";
 import { SwordPickup } from "./pickups/Sword";
