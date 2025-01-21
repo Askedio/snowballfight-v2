@@ -228,3 +228,7 @@ input {
     transform: translateY(-30px);
   }
 }
+
+#error {
+  @apply text-red-500 text-center
+}

@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../backend";
 export class Part4Scene extends Phaser.Scene {
   room: Room;
   client: Client;
+  skin: string;
 
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -136,6 +137,9 @@ export class Part4Scene extends Phaser.Scene {
 
     if (!this.room?.state) {
       console.error("Unable to join, no state!");
+      document.getElementById("error").innerHTML =
+        "Sorry, there was a problem while loading the game.";
+
       return;
     }
 
@@ -199,15 +203,25 @@ export class Part4Scene extends Phaser.Scene {
 
     this.setRoomListeners();
 
+    document.getElementById("skinlist").addEventListener("click", (e: any) => {
+      if (e.target && e.target.nodeName === "IMG") {
+        const active = document.getElementsByClassName("active");
+        if (active.length) active[0].className = "";
+        const newid = document.getElementById(e.target.id).parentElement;
+        newid.className = "active";
+
+        this.skin = e.target.id;
+      }
+    });
+
     window.addEventListener("player-rejoin", async () => {
       const playerName = (<HTMLInputElement>(
         document.getElementById("player-name")
       )).value.trim();
 
-      
-      const roomName = (<HTMLInputElement>(
-        document.getElementById("room-name")
-      )).value.trim() || window.location.hash.substring(1);
+      const roomName =
+        (<HTMLInputElement>document.getElementById("room-name")).value.trim() ||
+        window.location.hash.substring(1);
 
       if (roomName) {
         await this.room.leave();
@@ -215,14 +229,13 @@ export class Part4Scene extends Phaser.Scene {
           customRoomName: roomName,
         });
         this.setRoomListeners();
-        this.room.send("rejoin", { playerName, roomName });
+        this.room.send("rejoin", { playerName, roomName, skin: this.skin });
         window.location.hash = roomName;
       } else {
-        this.room.send("rejoin", { playerName, roomName });
+        this.room.send("rejoin", { playerName, roomName, skin: this.skin });
       }
 
       window.dispatchEvent(new Event("joined"));
-
     });
   }
 

@@ -773,4 +773,10 @@ input {
     transform: translateY(-30px);
   }
 }
+
+#error {
+  text-align: center;
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity, 1));
+}
 /*# sourceMappingURL=index.61d3354a.css.map */

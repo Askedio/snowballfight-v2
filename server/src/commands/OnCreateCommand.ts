@@ -55,16 +55,16 @@ export class OnCreateCommand extends Command<
     });
 
     // Rejoin message handler
-    this.room.onMessage("rejoin", (client, { playerName, roomName }) => {
+    this.room.onMessage("rejoin", (client, { playerName, roomName, skin }) => {
       // Check if the player exists in the room state
       let player = this.room.state.players.get(client.sessionId);
 
       if (!player) {
         // If the player does not exist, create one
         console.log(
-          `${client.sessionId} creating player state in room ${roomName}.`
+          `${client.sessionId} creating player state in room ${roomName}, skin ${skin}.`
         );
-        this.createPlayer(client);
+        this.createPlayer(client, skin);
         player = this.room.state.players.get(client.sessionId); // Re-fetch the player
       }
 
@@ -72,6 +72,9 @@ export class OnCreateCommand extends Command<
         if (player.isDead) {
           console.log(`${client.sessionId} is respawning to room ${roomName}.`);
           player.health = 100; // Restore health
+          if (skin) {
+            player.skin = skin;
+          }
           player.isDead = false; // Mark as alive
           this.assignRandomPosition(player); // Respawn at a new position
         }
@@ -129,7 +132,7 @@ export class OnCreateCommand extends Command<
     });
   }
 
-  createPlayer(client: Client) {
+  createPlayer(client: Client, skin: string) {
     const player = new Player();
 
     // Assign a new random position
@@ -138,7 +141,11 @@ export class OnCreateCommand extends Command<
     // Respawn player with full health
     player.health = 100;
     player.isDead = false;
-    player.skin = this.assignRandomSkin();
+    if (!skin) {
+      player.skin = this.assignRandomSkin();
+    } else {
+      player.skin = skin
+    }
 
     this.room.state.players.set(client.sessionId, player);
   }

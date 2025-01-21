@@ -12,7 +12,7 @@ export class Player extends Schema {
   @type("number") tick: number;
   @type("boolean") isDead = false; // Track if the player is dead
   @type("string") name = "";
-  @type("string") skin = "playersa"; // Default skin
+  @type("string") skin = ""; // Default skin
   @type("boolean") isMoving = false; // Track if the player is moving
 
   @type("number") speed = 4;
