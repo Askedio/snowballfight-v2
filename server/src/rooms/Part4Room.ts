@@ -85,7 +85,6 @@ export class Player extends Schema {
       // Reset to default if defaultKey exists
       if (defaultKey in this) {
         this[key] = this[defaultKey];
-        console.log(`${String(key)} reset to default: ${this[key]}`);
       }
 
       // Clean up the timeout
@@ -107,10 +106,14 @@ export class MyRoomState extends Schema {
 }
 
 export class Part4Room extends Room<MyRoomState> {
+  LOBBY_CHANNEL = "default_room";
+
+  customRoomName: string;
+
   fixedTimeStep = 1000 / 60;
   private tilemapManager: TilemapManager;
 
-  onCreate(options: any) {
+  async onCreate(options: any) {
     this.setState(new MyRoomState());
 
     this.maxClients = 20; // Adjust the number as needed
@@ -133,43 +136,44 @@ export class Part4Room extends Room<MyRoomState> {
       }
     });
 
-  
     // Rejoin message handler
-    this.onMessage("rejoin", (client, { playerName }) => {
+    this.onMessage("rejoin", (client, { playerName, roomName }) => {
       // Check if the player exists in the room state
       let player = this.state.players.get(client.sessionId);
-    
+
       if (!player) {
         // If the player does not exist, create one
-        console.log(`${client.sessionId} is being added back.`);
+        console.log(
+          `${client.sessionId} creating player state in room ${roomName}.`
+        );
         this.createPlayer(client);
         player = this.state.players.get(client.sessionId); // Re-fetch the player
       }
-    
+
       if (player) {
         if (player.isDead) {
-          console.log(`${client.sessionId} is respawning.`);
+          console.log(`${client.sessionId} is respawning to room ${roomName}.`);
           player.health = 100; // Restore health
           player.isDead = false; // Mark as alive
           this.assignRandomPosition(player); // Respawn at a new position
         }
-    
+
         // Assign player name
         const generator = new RandomNameGenerator();
 
-        console.log(playerName, player);
         player.name = playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
       } else {
-        console.warn(`Failed to create or fetch player for ${client.sessionId}`);
+        console.warn(
+          `Failed to create or fetch player for ${client.sessionId}`
+        );
       }
     });
-    
+
     let elapsedTime = 0;
     this.setSimulationInterval((deltaTime) => {
       elapsedTime += deltaTime;
 
       while (elapsedTime >= this.fixedTimeStep) {
-        //console.log(elapsedTime, ">=", this.fixedTimeStep)
         elapsedTime -= this.fixedTimeStep;
         this.fixedTick(this.fixedTimeStep);
       }
@@ -227,10 +231,6 @@ export class Part4Room extends Room<MyRoomState> {
               this.state.pickups.splice(pickupIndex, 1); // Remove the pickup
 
               if (realPickup.isRedeployable) {
-                console.log(
-                  `Pickup ${realPickup.type} will redeploy in ${realPickup.redeployTimeout}ms`
-                );
-
                 setTimeout(() => {
                   // Re-create the pickup in the same position
                   const redeployedPickup = PickupFactory.createPickup(
@@ -246,9 +246,6 @@ export class Part4Room extends Room<MyRoomState> {
                       realPickup.redeployTimeout;
 
                     this.state.pickups.push(redeployedPickup); // Add it back to the game state
-                    console.log(
-                      `Pickup ${realPickup.type} redeployed at (${realPickup.x}, ${realPickup.y})`
-                    );
                   }
                 }, realPickup.redeployTimeout);
               }
@@ -292,8 +289,6 @@ export class Part4Room extends Room<MyRoomState> {
         ) {
           player.x = newX;
           player.y = newY;
-        } else {
-          // console.log("Collision detected! Movement blocked.");
         }
 
         if (input.shoot) {
@@ -389,7 +384,6 @@ export class Part4Room extends Room<MyRoomState> {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < 16 && realPickup.onBulletCollision()) {
-          console.log(pickup.type, "bullet colided");
           this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove pickup
           bulletsToRemove.push(bullet);
           return;
@@ -440,7 +434,6 @@ export class Part4Room extends Room<MyRoomState> {
         bullet.y < 0 ||
         bullet.y > mapBounds.height
       ) {
-        console.log("Bullet out of bounds.");
         bulletsToRemove.push(bullet);
       }
     });
@@ -466,25 +459,11 @@ export class Part4Room extends Room<MyRoomState> {
 
     //this.state.players.get(client.sessionId).connected = false;
 
-    try {
-      if (consented) {
-        throw new Error("consented leave");
-      }
-
-      // allow disconnected client to reconnect into this room until 20 seconds
-      await this.allowReconnection(client, 20);
-
-      // client returned! let's re-activate it.
-      //  this.state.players.get(client.sessionId).connected = true;
-    } catch (e) {
-      // 20 seconds expired. let's remove the client.
-      this.state.players.delete(client.sessionId);
-    }
-
-    //this.state.players.delete(client.sessionId);
+    this.state.players.delete(client.sessionId);
   }
 
   onDispose() {
+    this.presence.srem(this.LOBBY_CHANNEL, this.roomId);
     console.log("room", this.roomId, "disposing...");
   }
 
@@ -522,7 +501,6 @@ export class Part4Room extends Room<MyRoomState> {
       const randomType =
         itemTypes[Math.floor(Math.random() * itemTypes.length)];
 
-      console.log("create pickup?", randomType);
       const pickup = PickupFactory.createPickup(
         randomType,
         tile.x,

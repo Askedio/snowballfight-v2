@@ -5,6 +5,7 @@ import { BACKEND_URL } from "../backend";
 
 export class Part4Scene extends Phaser.Scene {
   room: Room;
+  client: Client;
 
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -40,6 +41,7 @@ export class Part4Scene extends Phaser.Scene {
   shootCooldown = 400;
 
   constructor() {
+    console.log("started scene")
     super({ key: "part4" });
   }
 
@@ -70,6 +72,7 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   async create() {
+    console.log("ran create")
     this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
 
     this.add.image(0, 0, "Tileset").setOrigin(0, 0);
@@ -120,7 +123,6 @@ export class Part4Scene extends Phaser.Scene {
             isDead: player.isDead,
           })
         );
-        console.log("Players state:", players);
       }
     }, 30000);
 
@@ -142,8 +144,33 @@ export class Part4Scene extends Phaser.Scene {
 
     this.createAnimations();
 
+   this.setRoomListeners()
+
+    window.addEventListener("player-rejoin", async () => {
+      const playerName = (<HTMLInputElement>(
+        document.getElementById("player-name")
+      )).value.trim();
+      const roomName = (<HTMLInputElement>(
+        document.getElementById("room-name")
+      )).value.trim();
+
+      console.log(`Rejoining clicked, room: ${roomName || "default"} player name: ${playerName || "No name"}`);
+      
+
+      if (roomName) {
+        await this.room.leave()
+        this.room = await this.client.joinOrCreate("user_room", {customRoomName: roomName});
+        this.setRoomListeners()
+        this.room.send("rejoin", { playerName, roomName });
+
+      } else {
+
+      this.room.send("rejoin", { playerName, roomName });}
+    });
+  }
+
+  setRoomListeners() {
     this.room.state.pickups.onAdd((pickup) => {
-      console.log("add picko", pickup);
       const pickupSprite = this.add.image(pickup.x, pickup.y, pickup.type); // Use type as the key for preloaded assets
       pickupSprite.setScale(0.08); // Reduce the size to 50% of the original
 
@@ -159,12 +186,12 @@ export class Part4Scene extends Phaser.Scene {
       if (sprite) {
         sprite.destroy(); // Remove the sprite from the scene
         delete this.pickupEntities[pickup.id]; // Clean up the reference
-        console.log(`Pickup sprite for ${pickup.type} removed from the scene.`);
       }
     });
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
+      console.log("add player", player)
       const playerSprite = this.add.sprite(
         0,
         0,
@@ -178,16 +205,14 @@ export class Part4Scene extends Phaser.Scene {
         `HP: ${player.health || 100}`,
         { fontSize: "10px", color: "#ffffff" }
       );
-      
 
       const playerNameText = this.add.text(
         0, // X relative to the container
         -50, // Y above the sprite
-        `name: ${player.name}`,
-        { fontSize: "10px", color: "#ffffff" }
+        `${player.name}`,
+        { fontSize: "12px", color: "#ffffff" }
       );
       playerNameText.setOrigin(0.5, 0.5); // Centered
-
 
       playerSprite.setOrigin(0.5, 0.5); // Centered
       playerHealthText.setOrigin(0.5, 0.5); // Centered
@@ -196,14 +221,14 @@ export class Part4Scene extends Phaser.Scene {
       const playerContainer = this.add.container(player.x, player.y, [
         playerSprite,
         playerHealthText,
-        playerNameText
+        playerNameText,
       ]);
 
       // Optionally set size (useful for debugging)
       playerContainer.setSize(playerSprite.width, playerSprite.height);
 
       this.playerEntities[sessionId] = playerContainer;
-   
+
       if (sessionId === this.room.sessionId) {
         this.currentPlayer = playerContainer;
         this.cameras.main.startFollow(this.currentPlayer, true);
@@ -217,9 +242,6 @@ export class Part4Scene extends Phaser.Scene {
         const sprite = container.list.find(
           (item) => item instanceof Phaser.GameObjects.Sprite
         ) as Phaser.GameObjects.Sprite;
-
-
-       //console.log(player)
 
         const healthText = container.list.find(
           (item) => item instanceof Phaser.GameObjects.Text
@@ -260,7 +282,7 @@ export class Part4Scene extends Phaser.Scene {
             }
 
             healthText.setText(`HP: ${player.health}`);
-            nameText.setText(`name: ${player.name}`);
+            nameText.setText(`${player.name}`);
           }
         }
       });
@@ -276,15 +298,13 @@ export class Part4Scene extends Phaser.Scene {
       }
 
       if (sessionId === this.room.sessionId) {
-        console.log("You have died!");
         this.handlePlayerDeath();
-      } else {
-        console.log(`Player ${sessionId} has died.`);
       }
     });
 
     // Handle player removal
     this.room.state.players.onRemove((player, sessionId) => {
+      console.log("player removed from state", player)
       const container = this.playerEntities[sessionId];
       if (container) {
         this.playExplosionGrey(container.x, container.y, 0.6);
@@ -316,40 +336,41 @@ export class Part4Scene extends Phaser.Scene {
         delete this.bulletEntities[bulletId];
       }
     });
-
-    window.addEventListener("player-rejoin", () => {
-      const playerName = (<HTMLInputElement>(
-        document.getElementById("player-name")
-      )).value;
-      const deathModal = document.getElementById("death-modal");
-      if (deathModal) {
-        deathModal.classList.remove("show");
-      }
-      console.log("Sending rejoin request to the server", playerName);
-
-      this.room.send("rejoin", {playerName});
-    });
   }
 
   async connect() {
+    console.log("ran connect")
     const connectionStatusText = this.add
       .text(0, 0, "Trying to connect with the server...")
       .setStyle({ color: "#ff0000" })
       .setPadding(4);
 
     const client = new Client(BACKEND_URL);
+    this.client = client;
 
-    const roomToJoin = await client.getAvailableRooms();
-
-    console.log(roomToJoin);
+    // const roomToJoin = await client.getAvailableRooms();
+    //console.log(roomToJoin);
 
     try {
-      this.room = await client.joinOrCreate("part4_room", {});
+      // this should be like a hash in the url!
+      const roomName = (<HTMLInputElement>(
+        document.getElementById("room-name")
+      )).value.trim();
+
+      console.log(`Joining room: ${roomName || "default"}`)
+
+      if (roomName) {
+        this.room = await client.joinOrCreate("user_room", {customRoomName: roomName});
+      } else {
+        this.room = await client.joinOrCreate("default_room", {});
+      }
 
       window.dispatchEvent(new Event("ready"));
       connectionStatusText.destroy();
     } catch (e) {
       console.log(e);
+
+      
       connectionStatusText.text = "Could not connect with the server.";
     }
   }
@@ -369,17 +390,22 @@ export class Part4Scene extends Phaser.Scene {
     try {
       this.room.send("input", this.inputPayload);
     } catch (e: any) {
-      console.log("detect error, exit?");
+      console.log("Detect error, exit?");
       console.error(e);
     }
   }
 
   private handlePlayerDeath() {
-    const deathModal = document.getElementById("death-modal");
-    console.log("died");
-    if (deathModal) {
-      deathModal.classList.add("show");
-    }
+    const joinModal = document.getElementById("join-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalMessage = document.getElementById("modal-message");
+    const joinButton = document.getElementById("join-button");
+
+    modalTitle.textContent = "You Died!";
+    modalMessage.textContent = "Rejoin the snowball fight!";
+    joinButton.textContent = "Rejoin Game";
+
+    joinModal.classList.add("show");
   }
 
   updatePlayerStats() {
@@ -389,14 +415,14 @@ export class Part4Scene extends Phaser.Scene {
     if (player) {
       document.getElementById(
         "active-player-kills"
-      ).innerText = `Kills: ${player.kills}`;
+      ).innerText = `${player.kills}`;
       document.getElementById(
         "active-player-deaths"
-      ).innerText = `Deaths: ${player.deaths}`;
+      ).innerText = `${player.deaths}`;
 
       document.getElementById(
         "active-player-speed"
-      ).innerText = `Speed: ${player.speed}`;
+      ).innerText = `${player.speed}`;
     }
   }
 
@@ -410,6 +436,7 @@ export class Part4Scene extends Phaser.Scene {
     const players = Array.from(this.room.state.players.entries()).map(
       ([sessionId, player]) => ({
         sessionId,
+        name: player.name,
         kills: player.kills,
         deaths: player.deaths,
         isDead: player.isDead,
@@ -420,7 +447,7 @@ export class Part4Scene extends Phaser.Scene {
       const row = document.createElement("tr");
 
       const nameCell = document.createElement("td");
-      nameCell.textContent = player.sessionId;
+      nameCell.textContent = player.name || player.sessionId;
       row.appendChild(nameCell);
 
       const killsCell = document.createElement("td");

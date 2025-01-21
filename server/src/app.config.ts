@@ -1,6 +1,6 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
-import type { Server } from "colyseus";
+import { matchMaker, type Server } from "colyseus";
 
 /**
  * Import your Room files
@@ -20,7 +20,13 @@ export default config({
      * Define your room handlers:
      */
 
-    gameServer.define("part4_room", Part4Room);
+    gameServer.define("default_room", Part4Room);
+
+    gameServer.define("dynamic_room", Part4Room);
+
+    gameServer
+  .define("user_room", Part4Room)
+  .filterBy(['customRoomName'])
 
     //
     // keep gameServer reference, so we can

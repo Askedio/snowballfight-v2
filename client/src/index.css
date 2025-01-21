@@ -2,72 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
-
+/* General Styles */
 * {
-    margin: 0;
-    padding: 0;
-  }
-  html,
-  body {
-    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-      "Lucida Sans", Arial, sans-serif;
-    background-color: black;
-    height: 100%;
-    overflow: hidden;
-  }
-  a {
-    color: red;
-  }
-  input {
-    outline: none;
-  }
-  div.menu {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 1em;
-    color: white;
-  }
-  div.menu > div {
-    margin-bottom: 0.1em;
-  }
-  #game-container {
-    width: 100%;
-    height: 100%;
-  }
-  /* Modal styles */
-  .modal {
-    @apply fixed rounded-md flex-row gap-12;
+  @apply m-0 p-0 box-border;
+}
 
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    text-align: center;
-  }
-  .modal.show {
-    display: block;
-  }
-  .modal button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+html,
+body {
+  @apply font-sans bg-black text-white h-full overflow-hidden;
+}
 
-    @apply bg-gray-200 rounded-md
-  }
-  .modal button:hover {
-    background-color: #ddd;
-  }
+a {
+  @apply text-red-500 hover:underline;
+}
 
-  #player-name {
-    width: 100%;
-    padding: 8px 6px;
-    display: block;
+input {
+  @apply outline-none;
+}
 
-    @apply border rounded-md
+/* Game Container */
+#game-container {
+  @apply w-full h-full;
+}
+
+/* Menu Styles */
+.menu {
+  @apply absolute top-0 left-1/2 transform -translate-x-1/2 text-white text-lg bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center;
+
+  #player-stats {
+    @apply flex flex-row items-center space-x-6 mb-0;
+
+    p {
+      @apply m-0 p-2;
+
+      span {
+        @apply bg-gray-700 p-3;
+      }
+    }
   }
+}
+
+.menu > div {
+  @apply mb-2;
+}
+
+/* Modal Styles */
+.modal {
+  @apply z-20 m-12 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center hidden border border-gray-600;
+}
+
+.modal.show {
+  @apply block;
+}
+
+#modal-message {
+  @apply text-center;
+}
+
+.modal h2 {
+  @apply text-2xl font-bold mb-4;
+}
+
+.modal p {
+  @apply mb-4;
+}
+
+.modal input {
+  @apply w-full p-3 mb-4 border border-gray-300 rounded-lg text-black;
+}
+
+.modal button {
+  @apply bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-full;
+}
+
+.modal button:focus {
+  @apply outline-none ring-2 ring-blue-400;
+}
+
+.instructions {
+  @apply mt-8 text-xs text-gray-400 text-center;
+}
+
+/* Leaderboard Styles */
+#leaderboard {
+  @apply bg-gray-900/75 text-white rounded-lg p-4 shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30;
+}
+
+#leaderboard h3 {
+  @apply text-xl font-bold mb-4;
+}
+
+#leaderboard table {
+  @apply w-full text-left border-collapse;
+}
+
+#leaderboard th {
+  @apply py-2 px-4 bg-gray-700 text-white font-semibold;
+}
+
+#leaderboard td {
+  @apply py-2 px-4 border-t border-gray-700;
+}
+
+#leaderboard tbody tr:nth-child(even) {
+  @apply bg-gray-800;
+}

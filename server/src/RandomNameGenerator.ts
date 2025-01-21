@@ -1,9 +1,9 @@
 import { nameByRace } from "fantasy-name-generator";
 
 export class RandomNameGenerator {
-  private races: { 
-    race: string; 
-    options?: { gender?: "male" | "female"; allowMultipleNames?: boolean } 
+  private races: {
+    race: string;
+    options?: { gender?: "male" | "female"; allowMultipleNames?: boolean };
   }[] = [
     { race: "angel", options: { gender: this.getRandomGender() } },
     { race: "cavePerson", options: { gender: this.getRandomGender() } },
@@ -30,7 +30,8 @@ export class RandomNameGenerator {
   }
 
   public generateRandomName(): { race: string; name: string } {
-    const randomRace = this.races[Math.floor(Math.random() * this.races.length)];
+    const randomRace =
+      this.races[Math.floor(Math.random() * this.races.length)];
     const name = nameByRace(randomRace.race, randomRace.options || {});
     return { race: randomRace.race, name };
   }

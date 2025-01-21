@@ -4,66 +4,65 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snowball Fight! Throw snowballs at your friends online for free!</title>
+    <title>
+      Snowball Fight! Throw snowballs at your friends online for free!
+    </title>
     <link href="/index.61d3354a.css" type="text/css" rel="stylesheet">
   </head>
   <body>
     <div class="menu">
       <div id="player-stats">
-        <p id="active-player-kills">Kills: 0</p>
-        <p id="active-player-deaths">Deaths: 0</p>
-        <p id="active-player-speed">Speed: 0</p>
-      </div>
-      <div id="leaderboard" style="display: none">
-        <h3>Leaderboard</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Kills</th>
-              <th>Deaths</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboard-body"></tbody>
-        </table>
+        <p>Kills: <span id="active-player-kills">0</span></p>
+        <p>Deaths: <span id="active-player-deaths">0</span></p>
+        <p>Speed: <span id="active-player-speed">0</span></p>
       </div>
     </div>
-    
 
+    <div id="leaderboard" style="display: none">
+      <h3>Leaderboard</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Kills</th>
+            <th>Deaths</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
 
     <!-- Modal -->
-    <div id="death-modal" class="modal">
-      <h2>You Died!</h2>
-      <p>Click below to rejoin the game.</p>
-
-      <input id="player-name" type="text" placeholder="player name">
-      <button id="rejoin-button">Rejoin</button>
-
-      <br>WASD/Arrows, Space to shoot.
+    <div id="join-modal" class="modal">
+      <h2 id="modal-title" class="text-2xl font-bold mb-4">Welcome to Snowball Fight!</h2>
+      <p id="modal-message" class="mb-4">Click Join Game to play!</p>
+      <input id="player-name" type="text" placeholder="Player name (optional)" class="input-field">
+      <input id="room-name" type="text" placeholder="Room name (optional)" class="input-field">
+      <button id="join-button" class="btn-primary">Join Game</button>
+      <p class="instructions">Use WASD/Arrow keys to move, Space to shoot.</p>
     </div>
 
-   
     <script src="/index.b71e74eb.js" defer=""></script>
     <script>// JavaScript to handle modal
-const deathModal = document.getElementById("death-modal");
-const rejoinButton = document.getElementById("rejoin-button");
+const joinModal = document.getElementById("join-modal");
+const rejoinButton = document.getElementById("join-button");
 // Show the modal
-function showDeathModal() {
-    deathModal.classList.add("show");
+function showJoinModal() {
+    joinModal.classList.add("show");
 }
 // Hide the modal
-function hideDeathModal() {
-    deathModal.classList.remove("show");
+function hideJoinModal() {
+    joinModal.classList.remove("show");
 }
 // Listen for rejoin button click
 rejoinButton.addEventListener("click", ()=>{
-    hideDeathModal();
+    hideJoinModal();
     // Emit an event to rejoin the game
     window.dispatchEvent(new Event("player-rejoin"));
 });
 window.addEventListener("ready", ()=>{
-    showDeathModal();
+    showJoinModal();
 });
 
 </script>

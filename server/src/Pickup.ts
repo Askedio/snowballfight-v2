@@ -1,6 +1,5 @@
 import { Schema, type } from "@colyseus/schema";
 
-
 export class Pickup extends Schema {
   @type("string") type: string; // e.g., 'devil', 'skull', etc.
   @type("number") x: number; // Spawn position X
@@ -20,7 +19,6 @@ export class Pickup extends Schema {
   @type("boolean") isRedeployable = true; // Can this pickup redeploy?
   @type("number") redeployTimeout = 500; // Time in ms before redeploying
 
-
   constructor(type: string, x: number, y: number, asset: string) {
     super();
     this.type = type;
@@ -29,14 +27,9 @@ export class Pickup extends Schema {
     this.asset = asset;
   }
 
-  onPlayerCollision(player: any): void {
-    // Default collision behavior
-    console.log(`Player collided with generic pickup: ${this.type}`);
-  }
+  onPlayerCollision(player: any): void {}
 
   onBulletCollision(): boolean {
-    // Default bullet collision behavior
-    // console.log(`Bullet hit pickup: ${this.type}`);
     return this.bulletKills;
   }
 }

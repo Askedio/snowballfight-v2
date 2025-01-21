@@ -7,7 +7,6 @@ export class TreasurePickup extends Pickup {
   }
 
   onPlayerCollision(player: any): void {
-    console.log("Player collected treasure!");
     player.health += 50; // Increase player's health
   }
 }
