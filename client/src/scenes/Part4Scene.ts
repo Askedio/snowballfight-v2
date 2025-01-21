@@ -5,6 +5,7 @@ import { BACKEND_URL } from "../backend";
 
 export class Part4Scene extends Phaser.Scene {
   room: Room;
+  roomName: string;
   client: Client;
   skin: string;
 
@@ -224,11 +225,30 @@ export class Part4Scene extends Phaser.Scene {
         window.location.hash.substring(1);
 
       if (roomName) {
-        await this.room.leave();
-        this.room = await this.client.joinOrCreate("user_room", {
-          customRoomName: roomName,
-        });
-        this.setRoomListeners();
+        if (roomName !== this.roomName) {
+          this.roomName = roomName;
+          console.log(
+            "leaving room, removeAllListeners, remove all users",
+            this.room.id
+          );
+          this.room.removeAllListeners();
+          await this.room.leave(true);
+
+          for (const sessionId in this.playerEntities) {
+            const container = this.playerEntities[sessionId];
+            if (container) {
+              this.playExplosionGrey(container.x, container.y, 0.6);
+
+              container.destroy();
+              delete this.playerEntities[sessionId];
+            }
+          }
+
+          this.room = await this.client.joinOrCreate("user_room", {
+            customRoomName: roomName,
+          });
+          this.setRoomListeners();
+        }
         this.room.send("rejoin", { playerName, roomName, skin: this.skin });
         window.location.hash = roomName;
       } else {
@@ -240,6 +260,7 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   setRoomListeners() {
+    console.log("listening in room", this.room.id, this.room.roomId);
     this.room.state.pickups.onAdd((pickup) => {
       const pickupSprite = this.add.image(pickup.x, pickup.y, pickup.type); // Use type as the key for preloaded assets
       pickupSprite.setScale(0.08); // Reduce the size to 50% of the original
@@ -261,6 +282,7 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
+      console.log("add player", player.name);
       const playerSprite = this.add.sprite(
         0,
         0,
@@ -373,6 +395,7 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player removal
     this.room.state.players.onRemove((player, sessionId) => {
+      console.log("remove player", player.name);
       const container = this.playerEntities[sessionId];
       if (container) {
         this.playExplosionGrey(container.x, container.y, 0.6);
@@ -445,17 +468,20 @@ export class Part4Scene extends Phaser.Scene {
         this.room = await client.joinOrCreate("user_room", {
           customRoomName: roomName,
         });
+
+        this.roomName = roomName;
       } else {
         this.room = await client.joinOrCreate("default_room", {});
       }
 
       window.dispatchEvent(new Event("ready"));
-      connectionStatusText.destroy();
     } catch (e) {
       console.log(e);
 
       connectionStatusText.text = "Could not connect with the server.";
     }
+
+    connectionStatusText.destroy();
   }
 
   update(time: number, delta: number): void {
