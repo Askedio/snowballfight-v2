@@ -60,12 +60,11 @@ export class Part4Scene extends Phaser.Scene {
     this.load.image("sword", "assets/images/pickups/sword.png");
     this.load.image("treasure", "assets/images/pickups/treasure.png");
     this.load.image("wings", "assets/images/pickups/wings.png");
-  
   }
 
   async create() {
     this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
-    
+
     this.add.image(0, 0, "Tileset").setOrigin(0, 0);
     this.cameras.main.setBounds(0, 0, 2240, 1344);
     this.physics.world.setBounds(0, 0, 2240 * 2, 1344 * 2);
@@ -92,9 +91,6 @@ export class Part4Scene extends Phaser.Scene {
     );
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
-
-   
-
 
     await this.connect();
 
@@ -135,19 +131,18 @@ export class Part4Scene extends Phaser.Scene {
 
     this.createAnimations();
 
-
     this.room.state.pickups.onAdd((pickup) => {
-      console.log("add picko", pickup)
+      console.log("add picko", pickup);
       const pickupSprite = this.add.image(pickup.x, pickup.y, pickup.type); // Use type as the key for preloaded assets
       pickupSprite.setScale(0.08); // Reduce the size to 50% of the original
 
       this.pickupEntities[pickup.id] = pickupSprite;
-    
+
       pickup.onChange(() => {
         pickupSprite.setPosition(pickup.x, pickup.y);
       });
     });
-    
+
     this.room.state.pickups.onRemove((pickup) => {
       const sprite = this.pickupEntities[pickup.id]; // Find the sprite associated with the pickup
       if (sprite) {
@@ -156,7 +151,6 @@ export class Part4Scene extends Phaser.Scene {
         console.log(`Pickup sprite for ${pickup.type} removed from the scene.`);
       }
     });
-
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {

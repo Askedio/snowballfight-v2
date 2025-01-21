@@ -1,5 +1,6 @@
 import { Schema, type } from "@colyseus/schema";
 
+
 export class Pickup extends Schema {
   @type("string") type: string; // e.g., 'devil', 'skull', etc.
   @type("number") x: number; // Spawn position X
@@ -15,5 +16,24 @@ export class Pickup extends Schema {
   @type("boolean") alwaysPlay = false; // Optional: always active
   @type("boolean") stopsPlayer = false; // Stops player movement when collided
   @type("string") asset: string; // Asset file path for rendering
-  @type("string") id: string; // Asset file path for rendering
+  @type("string") id: string; // Unique identifier
+
+  constructor(type: string, x: number, y: number, asset: string) {
+    super();
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    this.asset = asset;
+  }
+
+  onPlayerCollision(player: any): void {
+    // Default collision behavior
+    console.log(`Player collided with generic pickup: ${this.type}`);
+  }
+
+  onBulletCollision(): boolean {
+    // Default bullet collision behavior
+    console.log(`Bullet hit pickup: ${this.type}`);
+    return this.bulletKills;
+  }
 }

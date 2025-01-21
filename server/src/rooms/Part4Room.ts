@@ -3,7 +3,13 @@ import { Room } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 import { TilemapManager } from "../TilemapManager";
 import { Pickup } from "../Pickup";
-import nanoid from "nanoid"; // Default import
+import nanoid from "nanoid";
+import { TreasurePickup } from "../pickups/Treasure";
+import { SkullPickup } from "../pickups/Skull";
+import { DevilPickup } from "../pickups/Devil";
+import { SwordPickup } from "../pickups/Sword";
+import { WingsPickup } from "../pickups/Wings";
+import { PickupFactory } from "../PickupFactory";
 
 export interface InputData {
   left: boolean;
@@ -65,7 +71,7 @@ export class Part4Room extends Room<MyRoomState> {
       spawnLayerName
     );
 
-    this.spawnPickups()
+    this.spawnPickups();
 
     this.onMessage("input", (client, input: InputData) => {
       const player = this.state.players.get(client.sessionId);
@@ -131,35 +137,32 @@ export class Part4Room extends Room<MyRoomState> {
 
       this.state.players.forEach((player) => {
         if (player.isDead) return;
-      
+
         this.state.pickups.forEach((pickup) => {
+          const realPickup = PickupFactory.createPickup(
+            pickup.type,
+            pickup.x,
+            pickup.y,
+            pickup.asset
+          );
+
+          
           const dx = pickup.x - player.x;
           const dy = pickup.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
           const pickupRadius = 16; // Adjust as needed for the pickup size
           const playerRadius = 16; // Adjust as needed for the player size
-      
+
           if (distance < pickupRadius + playerRadius) {
-            console.log(`Player collided with pickup: ${pickup.type}`);
-      
-            // Destroy the pickup on collision if the flag is set
-            if (pickup.destroyOnCollision) {
-              console.log(`Pickup ${pickup.type} destroyed on collision.`);
-              this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove the pickup
-            }
-      
-            // Optional: Apply pickup effects
-            if (pickup.type === "treasure") {
-              console.log("Treasure collected!");
-              player.health += 50; // Example: Increase player health
-            } else if (pickup.type === "skull") {
-              console.log("Skull encountered!");
+            realPickup.onPlayerCollision(player);
+
+            if (realPickup.destroyOnCollision) {
+              this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove pickup
             }
           }
         });
       });
-      
 
       let input: InputData;
       let isCurrentlyMoving = false;
@@ -247,21 +250,21 @@ export class Part4Room extends Room<MyRoomState> {
       width: this.state.mapWidth,
       height: this.state.mapHeight,
     };
-  
+
     const bulletsToRemove: Bullet[] = [];
-  
+
     this.state.bullets.forEach((bullet, index) => {
       // Update bullet position
       bullet.x += bullet.dx;
       bullet.y += bullet.dy;
       bullet.lifetime -= this.fixedTimeStep;
-  
+
       // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
         bulletsToRemove.push(bullet);
         return;
       }
-  
+
       // Check if the bullet hits the collision layer
       const bulletSize = 5; // Adjust if bullets have a specific size
       if (
@@ -276,28 +279,48 @@ export class Part4Room extends Room<MyRoomState> {
         bulletsToRemove.push(bullet);
         return;
       }
-  
+
+      this.state.pickups.forEach((pickup) => {
+        const realPickup = PickupFactory.createPickup(
+          pickup.type,
+          pickup.x,
+          pickup.y,
+          pickup.asset
+        );
+
+        const dx = pickup.x - bullet.x;
+        const dy = pickup.y - bullet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 16 && realPickup.onBulletCollision()) {
+          console.log(pickup.type, "bullet colided");
+          this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove pickup
+          bulletsToRemove.push(bullet);
+          return;
+        }
+      });
+
       // Check collisions with players
       for (const [sessionId, player] of this.state.players.entries()) {
         if (player.isDead) continue; // Skip dead players
-  
+
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-  
+
           const hitRadius = 15; // Adjust hit radius based on player size
           if (distance < hitRadius) {
             player.health -= 20;
-  
+
             // Handle player death
             if (player.health <= 0) {
               console.log(`Player ${sessionId} was killed.`);
               this.broadcast("player-death", { sessionId }); // Emit death event
-  
+
               player.isDead = true;
               player.deaths += 1;
-  
+
               // Increment killer's kills count
               const killer = this.state.players.get(bullet.ownerId);
               if (killer) {
@@ -307,13 +330,13 @@ export class Part4Room extends Room<MyRoomState> {
                 );
               }
             }
-  
+
             bulletsToRemove.push(bullet);
             return;
           }
         }
       }
-  
+
       // Check if the bullet is out of bounds
       if (
         bullet.x < 0 ||
@@ -325,7 +348,7 @@ export class Part4Room extends Room<MyRoomState> {
         bulletsToRemove.push(bullet);
       }
     });
-  
+
     // Remove bullets from ArraySchema
     bulletsToRemove.forEach((bullet) => {
       const index = this.state.bullets.indexOf(bullet);
@@ -334,7 +357,6 @@ export class Part4Room extends Room<MyRoomState> {
       }
     });
   }
-  
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
@@ -397,23 +419,22 @@ export class Part4Room extends Room<MyRoomState> {
       treasure: "assets/images/pickups/treasure.png",
       wings: "assets/images/pickups/wings.png",
     };
-  
-    const spawnTiles = this.tilemapManager.getItemSpawnTiles(); // Add this method to TilemapManager
-  
-    spawnTiles.forEach((tile) => {
-      const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
-      const pickup = new Pickup();
-      pickup.type = randomType;
-      pickup.x = tile.x;
-      pickup.y = tile.y;
-      pickup.asset = assets[randomType];
-      pickup.health = 100; // Default health
-      pickup.destroyable = true;
-      pickup.destroyOnCollision = true;
-      pickup.id = nanoid(); // Generate a unique ID for the pickup
 
+    const spawnTiles = this.tilemapManager.getItemSpawnTiles(); // Add this method to TilemapManager
+
+    spawnTiles.forEach((tile) => {
+      const randomType =
+        itemTypes[Math.floor(Math.random() * itemTypes.length)];
+        const pickup = PickupFactory.createPickup(
+          randomType,
+          tile.x,
+          tile.y,
+          assets[randomType]
+        );
+    
+
+      pickup.id = nanoid(); // Generate unique ID
       this.state.pickups.push(pickup);
     });
   }
-  
 }
