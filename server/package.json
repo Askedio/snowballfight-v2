@@ -30,6 +30,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
+    "@colyseus/command": "^0.3.1",
     "@colyseus/monitor": "^0.15.1",
     "@colyseus/tools": "^0.15.15",
     "@kayahr/tiled": "^0.0.1",
