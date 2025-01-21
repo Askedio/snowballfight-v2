@@ -24,10 +24,7 @@ export class PickupFactory {
       case "wings":
         return new WingsPickup(x, y, asset);
       default:
-        console.warn(
-          `Unknown pickup type: ${type}. Falling back to generic Pickup.`
-        );
-        return new Pickup(type, x, y, asset);
+       return null
     }
   }
 }

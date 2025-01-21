@@ -12,7 +12,7 @@ export class SwordPickup extends Pickup {
     }
   
     onBulletCollision(): boolean {
-      console.log("Bullet hit sword pickup!");
+      // console.log("Bullet hit sword pickup!");
       return this.bulletKills; // Allow bullets to destroy it if bulletKills is true
     }
   }

@@ -17,6 +17,9 @@ export class Pickup extends Schema {
   @type("boolean") stopsPlayer = false; // Stops player movement when collided
   @type("string") asset: string; // Asset file path for rendering
   @type("string") id: string; // Unique identifier
+  @type("boolean") isRedeployable = true; // Can this pickup redeploy?
+  @type("number") redeployTimeout = 500; // Time in ms before redeploying
+
 
   constructor(type: string, x: number, y: number, asset: string) {
     super();
@@ -33,7 +36,7 @@ export class Pickup extends Schema {
 
   onBulletCollision(): boolean {
     // Default bullet collision behavior
-    console.log(`Bullet hit pickup: ${this.type}`);
+    // console.log(`Bullet hit pickup: ${this.type}`);
     return this.bulletKills;
   }
 }

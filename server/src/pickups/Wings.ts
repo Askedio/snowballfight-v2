@@ -8,11 +8,14 @@ export class WingsPickup extends Pickup {
   
     onPlayerCollision(player: any): void {
       console.log("Player collected wings!");
-      player.speed += 1; // Example: Increase player's speed
+
+      if(player.speed >= 6) return;
+      
+      player.applyTemporaryChange("speed", player.speed + 0.5, 10000); // Increase speed for 10 seconds
     }
   
     onBulletCollision(): boolean {
-      console.log("Bullet hit wings pickup!");
+      // console.log("Bullet hit wings pickup!");
       return this.bulletKills; // Allow bullets to destroy it if bulletKills is true
     }
   }

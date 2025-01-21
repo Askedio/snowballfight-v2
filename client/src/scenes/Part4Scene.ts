@@ -9,6 +9,7 @@ export class Part4Scene extends Phaser.Scene {
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
   playerHealth: { [sessionId: string]: Phaser.GameObjects.Text } = {};
+  playerName: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   bulletEntities: { [bulletId: string]: Phaser.GameObjects.Image } = {};
   pickupEntities: { [pickupId: string]: Phaser.GameObjects.Image } = {}; // Add this line
 
@@ -49,6 +50,12 @@ export class Part4Scene extends Phaser.Scene {
       "assets/sprites/players.json"
     );
 
+    this.load.atlas(
+      "explosiongrey",
+      "assets/sprites/explosiongrey.png",
+      "assets/sprites/explosiongrey.json"
+    );
+
     // load the PNG file
     this.load.image("Tileset", "assets/maps/winter/map.png");
 
@@ -75,6 +82,13 @@ export class Part4Scene extends Phaser.Scene {
 
     map.createLayer("base", tileset);
 
+    await this.connect();
+
+    if (!this.room?.state) {
+      console.error("Unable to join, no state!");
+      return;
+    }
+
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
       W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -92,12 +106,11 @@ export class Part4Scene extends Phaser.Scene {
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
 
-    await this.connect();
-
     setInterval(() => {
       if (this.room?.state?.players) {
         const players = Array.from(this.room.state.players.entries()).map(
           ([sessionId, player]) => ({
+            name: player.name,
             sessionId,
             x: player.x,
             y: player.y,
@@ -119,8 +132,6 @@ export class Part4Scene extends Phaser.Scene {
     spaceBar.on("down", () => {
       if (this.canShoot) {
         this.inputPayload.shoot = true;
-        this.room.send("input", this.inputPayload); // Notify the server of shooting
-        this.startShootCooldown();
       }
     });
 
@@ -167,6 +178,16 @@ export class Part4Scene extends Phaser.Scene {
         `HP: ${player.health || 100}`,
         { fontSize: "10px", color: "#ffffff" }
       );
+      
+
+      const playerNameText = this.add.text(
+        0, // X relative to the container
+        -50, // Y above the sprite
+        `name: ${player.name}`,
+        { fontSize: "10px", color: "#ffffff" }
+      );
+      playerNameText.setOrigin(0.5, 0.5); // Centered
+
 
       playerSprite.setOrigin(0.5, 0.5); // Centered
       playerHealthText.setOrigin(0.5, 0.5); // Centered
@@ -175,14 +196,14 @@ export class Part4Scene extends Phaser.Scene {
       const playerContainer = this.add.container(player.x, player.y, [
         playerSprite,
         playerHealthText,
+        playerNameText
       ]);
 
       // Optionally set size (useful for debugging)
       playerContainer.setSize(playerSprite.width, playerSprite.height);
 
       this.playerEntities[sessionId] = playerContainer;
-      this.playerHealth[sessionId] = playerHealthText;
-
+   
       if (sessionId === this.room.sessionId) {
         this.currentPlayer = playerContainer;
         this.cameras.main.startFollow(this.currentPlayer, true);
@@ -196,9 +217,15 @@ export class Part4Scene extends Phaser.Scene {
         const sprite = container.list.find(
           (item) => item instanceof Phaser.GameObjects.Sprite
         ) as Phaser.GameObjects.Sprite;
+
+
+       //console.log(player)
+
         const healthText = container.list.find(
           (item) => item instanceof Phaser.GameObjects.Text
         ) as Phaser.GameObjects.Text;
+
+        const nameText = container.list[2] as Phaser.GameObjects.Text;
 
         if (container) {
           container.setPosition(player.x, player.y);
@@ -233,6 +260,7 @@ export class Part4Scene extends Phaser.Scene {
             }
 
             healthText.setText(`HP: ${player.health}`);
+            nameText.setText(`name: ${player.name}`);
           }
         }
       });
@@ -241,6 +269,11 @@ export class Part4Scene extends Phaser.Scene {
     // Listen for player death event from the server
     this.room.onMessage("player-death", (data) => {
       const { sessionId } = data;
+
+      const container = this.playerEntities[sessionId];
+      if (container) {
+        this.playExplosionGrey(container.x, container.y, 0.6);
+      }
 
       if (sessionId === this.room.sessionId) {
         console.log("You have died!");
@@ -254,6 +287,8 @@ export class Part4Scene extends Phaser.Scene {
     this.room.state.players.onRemove((player, sessionId) => {
       const container = this.playerEntities[sessionId];
       if (container) {
+        this.playExplosionGrey(container.x, container.y, 0.6);
+
         container.destroy();
         delete this.playerEntities[sessionId];
       }
@@ -275,18 +310,24 @@ export class Part4Scene extends Phaser.Scene {
     this.room.state.bullets.onRemove((bullet, bulletId) => {
       const bulletEntity = this.bulletEntities[bulletId];
       if (bulletEntity) {
+        this.playExplosionGrey(bulletEntity.x, bulletEntity.y);
+
         bulletEntity.destroy();
         delete this.bulletEntities[bulletId];
       }
     });
 
     window.addEventListener("player-rejoin", () => {
+      const playerName = (<HTMLInputElement>(
+        document.getElementById("player-name")
+      )).value;
       const deathModal = document.getElementById("death-modal");
       if (deathModal) {
         deathModal.classList.remove("show");
       }
-      console.log("Sending rejoin request to the server");
-      this.room.send("rejoin", {});
+      console.log("Sending rejoin request to the server", playerName);
+
+      this.room.send("rejoin", {playerName});
     });
   }
 
@@ -298,12 +339,17 @@ export class Part4Scene extends Phaser.Scene {
 
     const client = new Client(BACKEND_URL);
 
+    const roomToJoin = await client.getAvailableRooms();
+
+    console.log(roomToJoin);
+
     try {
       this.room = await client.joinOrCreate("part4_room", {});
 
       window.dispatchEvent(new Event("ready"));
       connectionStatusText.destroy();
     } catch (e) {
+      console.log(e);
       connectionStatusText.text = "Could not connect with the server.";
     }
   }
@@ -320,8 +366,12 @@ export class Part4Scene extends Phaser.Scene {
     this.inputPayload.up = this.cursorKeys.up.isDown || this.wasdKeys.W.isDown;
     this.inputPayload.down =
       this.cursorKeys.down.isDown || this.wasdKeys.S.isDown;
-
-    this.room.send("input", this.inputPayload);
+    try {
+      this.room.send("input", this.inputPayload);
+    } catch (e: any) {
+      console.log("detect error, exit?");
+      console.error(e);
+    }
   }
 
   private handlePlayerDeath() {
@@ -330,13 +380,6 @@ export class Part4Scene extends Phaser.Scene {
     if (deathModal) {
       deathModal.classList.add("show");
     }
-  }
-
-  private startShootCooldown() {
-    this.canShoot = false;
-    setTimeout(() => {
-      this.canShoot = true;
-    }, this.shootCooldown);
   }
 
   updatePlayerStats() {
@@ -350,6 +393,10 @@ export class Part4Scene extends Phaser.Scene {
       document.getElementById(
         "active-player-deaths"
       ).innerText = `Deaths: ${player.deaths}`;
+
+      document.getElementById(
+        "active-player-speed"
+      ).innerText = `Speed: ${player.speed}`;
     }
   }
 
@@ -397,7 +444,47 @@ export class Part4Scene extends Phaser.Scene {
     leaderboard.style.display = "none";
   }
 
+  playExplosionGrey(x: number, y: number, scale = 0.2) {
+    if (!this.withinScreenView(x, y, 100)) {
+      return;
+    }
+
+    const explosion = this.add.sprite(x, y, "explosiongrey");
+    explosion.setScale(scale); // Scale down to 50% of its original size
+
+    explosion.play("explosiongrey");
+    explosion.on("animationcomplete", () => {
+      explosion.destroy(); // Clean up after the animation finishes
+    });
+  }
+
+  withinScreenView(x: number, y: number, offset: number = 0): boolean {
+    const camera = this.cameras.main;
+
+    // Calculate the screen bounds with offset
+    const left = camera.scrollX - offset;
+    const right = camera.scrollX + camera.width + offset;
+    const top = camera.scrollY - offset;
+    const bottom = camera.scrollY + camera.height + offset;
+
+    // Check if the coordinates are within the bounds
+    return x >= left && x <= right && y >= top && y <= bottom;
+  }
+
   createAnimations() {
+    this.anims.create({
+      key: "explosiongrey",
+      frames: this.anims.generateFrameNames("explosiongrey", {
+        start: 13, // Start frame (from Effect-fx03_13.png)
+        end: 24, // End frame (from Effect-fx03_24.png)
+        prefix: "Effect-fx03_", // Common prefix for filenames
+        suffix: ".png", // File extension
+      }),
+      frameRate: 15, // Adjust the frame rate as needed
+      repeat: 0, // Do not loop the animation
+      hideOnComplete: true, // Hide the sprite when the animation finishes
+    });
+
     const skins = ["playersa", "playersb", "playersc", "playersd"];
 
     skins.forEach((skin) => {

@@ -3,13 +3,9 @@ import { Room } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 import { TilemapManager } from "../TilemapManager";
 import { Pickup } from "../Pickup";
-import nanoid from "nanoid";
-import { TreasurePickup } from "../pickups/Treasure";
-import { SkullPickup } from "../pickups/Skull";
-import { DevilPickup } from "../pickups/Devil";
-import { SwordPickup } from "../pickups/Sword";
-import { WingsPickup } from "../pickups/Wings";
+import { nanoid } from "nanoid";
 import { PickupFactory } from "../PickupFactory";
+import { RandomNameGenerator } from "../RandomNameGenerator";
 
 export interface InputData {
   left: boolean;
@@ -35,14 +31,70 @@ export class Player extends Schema {
   @type("number") rotation = 0; // Rotation in radians
   @type("number") health = 100;
   @type("number") kills = 0;
+
   @type("number") deaths = 0;
   @type("number") tick: number;
   @type("boolean") isDead = false; // Track if the player is dead
+  @type("string") name = "";
   @type("string") skin = "playersa"; // Default skin
   @type("boolean") isMoving = false; // Track if the player is moving
 
+  @type("number") speed = 4;
+  @type("number") bulletSpeed = 10;
+  @type("number") bulletCooldown = 400;
+
+  @type("number") defaultSpeed = 4;
+  @type("number") defaultBulletSpeed = 10;
+  @type("number") defaultBulletCooldown = 400;
+
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
+
+  resetTimeouts: Map<string, NodeJS.Timeout> = new Map<
+    string,
+    NodeJS.Timeout
+  >();
+
+  /**
+   * Apply a temporary change to a player's property.
+   * @param key The property to change.
+   * @param value The temporary value to apply.
+   * @param duration Duration in milliseconds before resetting to the default value.
+   */
+  applyTemporaryChange<K extends keyof this>(
+    key: K,
+    value: this[K],
+    duration: number
+  ): void {
+    const keyString = String(key); // Convert key to string for map operations
+
+    // Clear existing timeout if already set for this key
+    if (this.resetTimeouts.has(keyString)) {
+      clearTimeout(this.resetTimeouts.get(keyString)!);
+    }
+
+    // Apply the temporary value
+    this[key] = value;
+
+    // Schedule a reset to the default value
+    const timeout = setTimeout(() => {
+      const defaultKey = `default${
+        keyString.charAt(0).toUpperCase() + keyString.slice(1)
+      }` as keyof this;
+
+      // Reset to default if defaultKey exists
+      if (defaultKey in this) {
+        this[key] = this[defaultKey];
+        console.log(`${String(key)} reset to default: ${this[key]}`);
+      }
+
+      // Clean up the timeout
+      this.resetTimeouts.delete(keyString);
+    }, duration);
+
+    // Store the timeout reference
+    this.resetTimeouts.set(keyString, timeout);
+  }
 }
 
 export class MyRoomState extends Schema {
@@ -56,11 +108,12 @@ export class MyRoomState extends Schema {
 
 export class Part4Room extends Room<MyRoomState> {
   fixedTimeStep = 1000 / 60;
-  bulletSpeed = 5;
   private tilemapManager: TilemapManager;
 
   onCreate(options: any) {
     this.setState(new MyRoomState());
+
+    this.maxClients = 20; // Adjust the number as needed
 
     const mapFilePath = "../client/static/assets/maps/winter/map.json"; // Update with the correct path
     const collisionLayerName = "Colissins";
@@ -80,25 +133,37 @@ export class Part4Room extends Room<MyRoomState> {
       }
     });
 
+  
     // Rejoin message handler
-    this.onMessage("rejoin", (client) => {
-      const player = this.state.players.get(client.sessionId);
-
+    this.onMessage("rejoin", (client, { playerName }) => {
+      // Check if the player exists in the room state
+      let player = this.state.players.get(client.sessionId);
+    
+      if (!player) {
+        // If the player does not exist, create one
+        console.log(`${client.sessionId} is being added back.`);
+        this.createPlayer(client);
+        player = this.state.players.get(client.sessionId); // Re-fetch the player
+      }
+    
       if (player) {
         if (player.isDead) {
           console.log(`${client.sessionId} is respawning.`);
           player.health = 100; // Restore health
           player.isDead = false; // Mark as alive
           this.assignRandomPosition(player); // Respawn at a new position
-        } else {
-          console.warn(`${client.sessionId} tried to rejoin while alive.`);
         }
+    
+        // Assign player name
+        const generator = new RandomNameGenerator();
+
+        console.log(playerName, player);
+        player.name = playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
       } else {
-        console.log(`${client.sessionId} is being added back.`);
-        this.createPlayer(client);
+        console.warn(`Failed to create or fetch player for ${client.sessionId}`);
       }
     });
-
+    
     let elapsedTime = 0;
     this.setSimulationInterval((deltaTime) => {
       elapsedTime += deltaTime;
@@ -126,7 +191,6 @@ export class Part4Room extends Room<MyRoomState> {
   }
 
   fixedTick(timeStep: number) {
-    const velocity = 2;
     const playerSize = 32; // Adjust based on your player sprite size
 
     this.state.players.forEach((player) => {
@@ -146,7 +210,8 @@ export class Part4Room extends Room<MyRoomState> {
             pickup.asset
           );
 
-          
+          if (!realPickup) return;
+
           const dx = pickup.x - player.x;
           const dy = pickup.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
@@ -158,7 +223,35 @@ export class Part4Room extends Room<MyRoomState> {
             realPickup.onPlayerCollision(player);
 
             if (realPickup.destroyOnCollision) {
-              this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove pickup
+              const pickupIndex = this.state.pickups.indexOf(pickup);
+              this.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+
+              if (realPickup.isRedeployable) {
+                console.log(
+                  `Pickup ${realPickup.type} will redeploy in ${realPickup.redeployTimeout}ms`
+                );
+
+                setTimeout(() => {
+                  // Re-create the pickup in the same position
+                  const redeployedPickup = PickupFactory.createPickup(
+                    realPickup.type,
+                    realPickup.x,
+                    realPickup.y,
+                    realPickup.asset
+                  );
+                  if (redeployedPickup) {
+                    redeployedPickup.id = nanoid(); // Assign a new ID
+                    redeployedPickup.isRedeployable = realPickup.isRedeployable;
+                    redeployedPickup.redeployTimeout =
+                      realPickup.redeployTimeout;
+
+                    this.state.pickups.push(redeployedPickup); // Add it back to the game state
+                    console.log(
+                      `Pickup ${realPickup.type} redeployed at (${realPickup.x}, ${realPickup.y})`
+                    );
+                  }
+                }, realPickup.redeployTimeout);
+              }
             }
           }
         });
@@ -168,6 +261,8 @@ export class Part4Room extends Room<MyRoomState> {
       let isCurrentlyMoving = false;
 
       while ((input = player.inputQueue.shift())) {
+        const velocity = player.speed || 2;
+
         const angle = player.rotation;
         let newX = player.x;
         let newY = player.y;
@@ -198,7 +293,7 @@ export class Part4Room extends Room<MyRoomState> {
           player.x = newX;
           player.y = newY;
         } else {
-          console.log("Collision detected! Movement blocked.");
+          // console.log("Collision detected! Movement blocked.");
         }
 
         if (input.shoot) {
@@ -215,7 +310,7 @@ export class Part4Room extends Room<MyRoomState> {
 
   fireBullet(player: Player) {
     const now = Date.now();
-    const cooldown = 400; // Bullet cooldown in milliseconds
+    const cooldown = player.bulletCooldown; // Bullet cooldown in milliseconds
 
     if (now - player.lastBulletTime < cooldown) {
       return; // Skip firing if cooldown hasn't elapsed
@@ -228,8 +323,8 @@ export class Part4Room extends Room<MyRoomState> {
     const bullet = new Bullet();
     bullet.x = player.x + Math.cos(angle) * 15; // Offset from the player's position
     bullet.y = player.y + Math.sin(angle) * 15;
-    bullet.dx = Math.cos(angle) * this.bulletSpeed;
-    bullet.dy = Math.sin(angle) * this.bulletSpeed;
+    bullet.dx = Math.cos(angle) * player.bulletSpeed;
+    bullet.dy = Math.sin(angle) * player.bulletSpeed;
     const client = this.clients.find(
       (c) => this.state.players.get(c.sessionId) === player
     );
@@ -275,7 +370,6 @@ export class Part4Room extends Room<MyRoomState> {
           bulletSize
         )
       ) {
-        console.log("Bullet hit the collision layer.");
         bulletsToRemove.push(bullet);
         return;
       }
@@ -287,6 +381,8 @@ export class Part4Room extends Room<MyRoomState> {
           pickup.y,
           pickup.asset
         );
+
+        if (!realPickup) return;
 
         const dx = pickup.x - bullet.x;
         const dy = pickup.y - bullet.y;
@@ -358,7 +454,7 @@ export class Part4Room extends Room<MyRoomState> {
     });
   }
 
-  onJoin(client: Client, options: any) {
+  async onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
     return;
   }
@@ -368,18 +464,18 @@ export class Part4Room extends Room<MyRoomState> {
 
     //this.state.players.get(client.sessionId).connected = false;
 
+    //this.state.players.get(client.sessionId).connected = false;
+
     try {
       if (consented) {
-        this.state.players.delete(client.sessionId);
-        return;
-        //throw new Error("consented leave");
+        throw new Error("consented leave");
       }
 
       // allow disconnected client to reconnect into this room until 20 seconds
       await this.allowReconnection(client, 20);
 
       // client returned! let's re-activate it.
-      this.createPlayer(client);
+      //  this.state.players.get(client.sessionId).connected = true;
     } catch (e) {
       // 20 seconds expired. let's remove the client.
       this.state.players.delete(client.sessionId);
@@ -425,13 +521,16 @@ export class Part4Room extends Room<MyRoomState> {
     spawnTiles.forEach((tile) => {
       const randomType =
         itemTypes[Math.floor(Math.random() * itemTypes.length)];
-        const pickup = PickupFactory.createPickup(
-          randomType,
-          tile.x,
-          tile.y,
-          assets[randomType]
-        );
-    
+
+      console.log("create pickup?", randomType);
+      const pickup = PickupFactory.createPickup(
+        randomType,
+        tile.x,
+        tile.y,
+        assets[randomType]
+      );
+
+      if (!pickup) return;
 
       pickup.id = nanoid(); // Generate unique ID
       this.state.pickups.push(pickup);
