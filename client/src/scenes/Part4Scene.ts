@@ -10,6 +10,7 @@ export class Part4Scene extends Phaser.Scene {
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
   playerHealth: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   bulletEntities: { [bulletId: string]: Phaser.GameObjects.Image } = {};
+  pickupEntities: { [pickupId: string]: Phaser.GameObjects.Image } = {}; // Add this line
 
   debugFPS: Phaser.GameObjects.Text;
 
@@ -53,6 +54,13 @@ export class Part4Scene extends Phaser.Scene {
 
     // load the JSON file
     this.load.tilemapTiledJSON("tilemap", "assets/maps/winter/map.json");
+
+    this.load.image("devil", "assets/images/pickups/devil.png");
+    this.load.image("skull", "assets/images/pickups/skull.png");
+    this.load.image("sword", "assets/images/pickups/sword.png");
+    this.load.image("treasure", "assets/images/pickups/treasure.png");
+    this.load.image("wings", "assets/images/pickups/wings.png");
+  
   }
 
   async create() {
@@ -126,6 +134,29 @@ export class Part4Scene extends Phaser.Scene {
     });
 
     this.createAnimations();
+
+
+    this.room.state.pickups.onAdd((pickup) => {
+      console.log("add picko", pickup)
+      const pickupSprite = this.add.image(pickup.x, pickup.y, pickup.type); // Use type as the key for preloaded assets
+      pickupSprite.setScale(0.08); // Reduce the size to 50% of the original
+
+      this.pickupEntities[pickup.id] = pickupSprite;
+    
+      pickup.onChange(() => {
+        pickupSprite.setPosition(pickup.x, pickup.y);
+      });
+    });
+    
+    this.room.state.pickups.onRemove((pickup) => {
+      const sprite = this.pickupEntities[pickup.id]; // Find the sprite associated with the pickup
+      if (sprite) {
+        sprite.destroy(); // Remove the sprite from the scene
+        delete this.pickupEntities[pickup.id]; // Clean up the reference
+        console.log(`Pickup sprite for ${pickup.type} removed from the scene.`);
+      }
+    });
+
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {

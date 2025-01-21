@@ -2,6 +2,8 @@ import type { Client } from "colyseus";
 import { Room } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 import { TilemapManager } from "../TilemapManager";
+import { Pickup } from "../Pickup";
+import nanoid from "nanoid"; // Default import
 
 export interface InputData {
   left: boolean;
@@ -41,16 +43,15 @@ export class MyRoomState extends Schema {
   @type("number") mapWidth = 2240;
   @type("number") mapHeight = 1600;
 
- 
   @type({ map: Player }) players = new MapSchema<Player>();
   @type([Bullet]) bullets = new ArraySchema<Bullet>();
+  @type([Pickup]) pickups = new ArraySchema<Pickup>(); // Add pickups
 }
 
 export class Part4Room extends Room<MyRoomState> {
   fixedTimeStep = 1000 / 60;
   bulletSpeed = 5;
- private tilemapManager: TilemapManager;
-
+  private tilemapManager: TilemapManager;
 
   onCreate(options: any) {
     this.setState(new MyRoomState());
@@ -58,8 +59,13 @@ export class Part4Room extends Room<MyRoomState> {
     const mapFilePath = "../client/static/assets/maps/winter/map.json"; // Update with the correct path
     const collisionLayerName = "Colissins";
     const spawnLayerName = "spawns";
-    this.tilemapManager = new TilemapManager(mapFilePath, collisionLayerName, spawnLayerName);
+    this.tilemapManager = new TilemapManager(
+      mapFilePath,
+      collisionLayerName,
+      spawnLayerName
+    );
 
+    this.spawnPickups()
 
     this.onMessage("input", (client, input: InputData) => {
       const player = this.state.players.get(client.sessionId);
@@ -123,6 +129,38 @@ export class Part4Room extends Room<MyRoomState> {
         return;
       }
 
+      this.state.players.forEach((player) => {
+        if (player.isDead) return;
+      
+        this.state.pickups.forEach((pickup) => {
+          const dx = pickup.x - player.x;
+          const dy = pickup.y - player.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+      
+          const pickupRadius = 16; // Adjust as needed for the pickup size
+          const playerRadius = 16; // Adjust as needed for the player size
+      
+          if (distance < pickupRadius + playerRadius) {
+            console.log(`Player collided with pickup: ${pickup.type}`);
+      
+            // Destroy the pickup on collision if the flag is set
+            if (pickup.destroyOnCollision) {
+              console.log(`Pickup ${pickup.type} destroyed on collision.`);
+              this.state.pickups.splice(this.state.pickups.indexOf(pickup), 1); // Remove the pickup
+            }
+      
+            // Optional: Apply pickup effects
+            if (pickup.type === "treasure") {
+              console.log("Treasure collected!");
+              player.health += 50; // Example: Increase player health
+            } else if (pickup.type === "skull") {
+              console.log("Skull encountered!");
+            }
+          }
+        });
+      });
+      
+
       let input: InputData;
       let isCurrentlyMoving = false;
 
@@ -151,11 +189,17 @@ export class Part4Room extends Room<MyRoomState> {
         }
 
         // Use TilemapManager to check for collisions
-        if (!this.tilemapManager.isColliding(newX, newY, playerSize, playerSize)) {
+        if (
+          !this.tilemapManager.isColliding(newX, newY, playerSize, playerSize)
+        ) {
           player.x = newX;
           player.y = newY;
         } else {
           console.log("Collision detected! Movement blocked.");
+        }
+
+        if (input.shoot) {
+          this.fireBullet(player);
         }
 
         player.tick = input.tick;
@@ -203,41 +247,57 @@ export class Part4Room extends Room<MyRoomState> {
       width: this.state.mapWidth,
       height: this.state.mapHeight,
     };
-
+  
     const bulletsToRemove: Bullet[] = [];
-
+  
     this.state.bullets.forEach((bullet, index) => {
+      // Update bullet position
       bullet.x += bullet.dx;
       bullet.y += bullet.dy;
       bullet.lifetime -= this.fixedTimeStep;
-
+  
       // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
         bulletsToRemove.push(bullet);
         return;
       }
-
+  
+      // Check if the bullet hits the collision layer
+      const bulletSize = 5; // Adjust if bullets have a specific size
+      if (
+        this.tilemapManager.isColliding(
+          bullet.x - bulletSize / 2,
+          bullet.y - bulletSize / 2,
+          bulletSize,
+          bulletSize
+        )
+      ) {
+        console.log("Bullet hit the collision layer.");
+        bulletsToRemove.push(bullet);
+        return;
+      }
+  
       // Check collisions with players
       for (const [sessionId, player] of this.state.players.entries()) {
         if (player.isDead) continue; // Skip dead players
-
+  
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
+  
           const hitRadius = 15; // Adjust hit radius based on player size
           if (distance < hitRadius) {
             player.health -= 20;
-
+  
             // Handle player death
             if (player.health <= 0) {
               console.log(`Player ${sessionId} was killed.`);
               this.broadcast("player-death", { sessionId }); // Emit death event
-
+  
               player.isDead = true;
               player.deaths += 1;
-
+  
               // Increment killer's kills count
               const killer = this.state.players.get(bullet.ownerId);
               if (killer) {
@@ -247,13 +307,13 @@ export class Part4Room extends Room<MyRoomState> {
                 );
               }
             }
-
+  
             bulletsToRemove.push(bullet);
             return;
           }
         }
       }
-
+  
       // Check if the bullet is out of bounds
       if (
         bullet.x < 0 ||
@@ -261,11 +321,11 @@ export class Part4Room extends Room<MyRoomState> {
         bullet.y < 0 ||
         bullet.y > mapBounds.height
       ) {
-        console.log('outa bounds', mapBounds)
+        console.log("Bullet out of bounds.");
         bulletsToRemove.push(bullet);
       }
     });
-
+  
     // Remove bullets from ArraySchema
     bulletsToRemove.forEach((bullet) => {
       const index = this.state.bullets.indexOf(bullet);
@@ -274,6 +334,7 @@ export class Part4Room extends Room<MyRoomState> {
       }
     });
   }
+  
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
@@ -326,4 +387,33 @@ export class Part4Room extends Room<MyRoomState> {
     const availableSkins = ["playersa", "playersb", "playersc", "playersd"];
     return availableSkins[Math.floor(Math.random() * availableSkins.length)];
   }
+
+  private spawnPickups() {
+    const itemTypes = ["devil", "skull", "sword", "treasure", "wings"];
+    const assets = {
+      devil: "assets/images/pickups/devil.png",
+      skull: "assets/images/pickups/skull.png",
+      sword: "assets/images/pickups/sword.png",
+      treasure: "assets/images/pickups/treasure.png",
+      wings: "assets/images/pickups/wings.png",
+    };
+  
+    const spawnTiles = this.tilemapManager.getItemSpawnTiles(); // Add this method to TilemapManager
+  
+    spawnTiles.forEach((tile) => {
+      const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+      const pickup = new Pickup();
+      pickup.type = randomType;
+      pickup.x = tile.x;
+      pickup.y = tile.y;
+      pickup.asset = assets[randomType];
+      pickup.health = 100; // Default health
+      pickup.destroyable = true;
+      pickup.destroyOnCollision = true;
+      pickup.id = nanoid(); // Generate a unique ID for the pickup
+
+      this.state.pickups.push(pickup);
+    });
+  }
+  
 }
