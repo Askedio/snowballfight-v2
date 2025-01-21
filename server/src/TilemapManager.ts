@@ -127,23 +127,24 @@ export class TilemapManager {
     return result.length > 0;
   }
 
-  getItemSpawnTiles(): { x: number; y: number }[] {
+  getItemSpawnTiles(offsetX = 20, offsetY = 45): { x: number; y: number }[] {
     const itemSpawnTiles: { x: number; y: number }[] = [];
     const itemLayer = this.mapJson.layers.find(
-      (layer: any) => layer.name === "itemspawns"
+        (layer: any) => layer.name === "itemspawns"
     );
 
     if (itemLayer && itemLayer.type === "tilelayer") {
-      (itemLayer.data as number[]).forEach((tileIndex, index) => {
-        if (tileIndex !== 0) {
-          // Non-zero indicates a spawn tile
-          const x = (index % this.mapJson.width) * this.tileWidth;
-          const y = Math.floor(index / this.mapJson.width) * this.tileHeight;
-          itemSpawnTiles.push({ x, y });
-        }
-      });
+        (itemLayer.data as number[]).forEach((tileIndex, index) => {
+            if (tileIndex !== 0) {
+                // Non-zero indicates a spawn tile
+                const x = (index % this.mapJson.width) * this.tileWidth + offsetX;
+                const y = Math.floor(index / this.mapJson.width) * this.tileHeight + offsetY;
+                itemSpawnTiles.push({ x, y });
+            }
+        });
     }
 
     return itemSpawnTiles;
-  }
+}
+
 }

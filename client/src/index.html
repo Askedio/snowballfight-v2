@@ -9,7 +9,7 @@
     </title>
     <link href="./index.css" type="text/css" rel="stylesheet" />
   </head>
-  <body>
+  <body oncontextmenu="return false;">
     <div class="menu">
       <div id="player-stats">
         <p>Kills: <span id="active-player-kills">0</span></p>
@@ -35,8 +35,13 @@
 
     <!-- Modal -->
     <div id="join-modal" class="modal">
+      <div id="killedBy"></div>
+
       <h2 id="modal-title" class="text-2xl font-bold mb-4">Welcome to Snowball Fight!</h2>
       <p id="modal-message" class="mb-4">Click Join Game to play!</p>
+
+      
+
       <input
         id="player-name"
         type="text"
@@ -49,8 +54,23 @@
         placeholder="Room name (optional)"
         class="input-field"
       />
+      
+      <div id="skins">
+        <ul id="skinlist">
+          <li><img id="playera" src="/static/assets/images/skins/player/playersa_01.png"></li>
+          <li><img id="playerb" src="/static/assets/images/skins/player/playersb_01.png"></li>
+          <li><img id="playerc" src="/static/assets/images/skins/player/playersc_01.png"></li>
+          <li><img id="playerd" src="/static/assets/images/skins/player/playersd_01.png"></li>
+        </ul>
+      </div>
+
       <button id="join-button" class="btn-primary">Join Game</button>
       <p class="instructions">Use WASD/Arrow keys to move, Space to shoot.</p>
+    </div>
+
+    <div id="chat">
+      <ul id="chatBox"></ul>
+      <input id="chatSend" type="text" placeholder="Type to chat...">
     </div>
 
     <script src="index.ts" type="module"></script>

@@ -40,9 +40,41 @@ export class Part4Scene extends Phaser.Scene {
   canShoot = true;
   shootCooldown = 400;
 
+  disableChat = false;
+
   constructor() {
-    console.log("started scene")
+    console.log("started scene");
     super({ key: "part4" });
+
+    this.disableChat = false;
+
+    document.getElementById("chatSend").addEventListener("keydown", (e) => {
+      // Check if the pressed key is Enter (key code 13)
+      if (e.key === "Enter" || e.keyCode === 13) {
+        if (this.disableChat) {
+          return; // Prevent further action if chat is disabled
+        }
+
+        this.disableChat = true; // Disable chat temporarily
+
+        const chatInput = document.getElementById(
+          "chatSend"
+        ) as HTMLInputElement;
+        const message = chatInput.value.trim(); // Trim leading/trailing spaces
+
+        if (message) {
+          this.room.send("chat", { message });
+          chatInput.value = ""; // Clear the input field
+        }
+
+        // Re-enable chat after 1 second
+        setTimeout(() => {
+          this.disableChat = false;
+        }, 1000);
+
+        e.preventDefault(); // Prevent default behavior (e.g., line break in input)
+      }
+    });
   }
 
   preload() {
@@ -72,7 +104,7 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   async create() {
-    console.log("ran create")
+    console.log("ran create");
     this.debugFPS = this.add.text(4, 4, "", { color: "#ff0000" });
 
     this.add.image(0, 0, "Tileset").setOrigin(0, 0);
@@ -144,7 +176,7 @@ export class Part4Scene extends Phaser.Scene {
 
     this.createAnimations();
 
-   this.setRoomListeners()
+    this.setRoomListeners();
 
     window.addEventListener("player-rejoin", async () => {
       const playerName = (<HTMLInputElement>(
@@ -154,18 +186,22 @@ export class Part4Scene extends Phaser.Scene {
         document.getElementById("room-name")
       )).value.trim();
 
-      console.log(`Rejoining clicked, room: ${roomName || "default"} player name: ${playerName || "No name"}`);
-      
+      console.log(
+        `Rejoining clicked, room: ${roomName || "default"} player name: ${
+          playerName || "No name"
+        }`
+      );
 
       if (roomName) {
-        await this.room.leave()
-        this.room = await this.client.joinOrCreate("user_room", {customRoomName: roomName});
-        this.setRoomListeners()
+        await this.room.leave();
+        this.room = await this.client.joinOrCreate("user_room", {
+          customRoomName: roomName,
+        });
+        this.setRoomListeners();
         this.room.send("rejoin", { playerName, roomName });
-
       } else {
-
-      this.room.send("rejoin", { playerName, roomName });}
+        this.room.send("rejoin", { playerName, roomName });
+      }
     });
   }
 
@@ -191,7 +227,7 @@ export class Part4Scene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
-      console.log("add player", player)
+      console.log("add player", player);
       const playerSprite = this.add.sprite(
         0,
         0,
@@ -290,7 +326,7 @@ export class Part4Scene extends Phaser.Scene {
 
     // Listen for player death event from the server
     this.room.onMessage("player-death", (data) => {
-      const { sessionId } = data;
+      const { sessionId, killer } = data;
 
       const container = this.playerEntities[sessionId];
       if (container) {
@@ -298,13 +334,13 @@ export class Part4Scene extends Phaser.Scene {
       }
 
       if (sessionId === this.room.sessionId) {
-        this.handlePlayerDeath();
+        this.handlePlayerDeath(killer);
       }
     });
 
     // Handle player removal
     this.room.state.players.onRemove((player, sessionId) => {
-      console.log("player removed from state", player)
+      console.log("player removed from state", player);
       const container = this.playerEntities[sessionId];
       if (container) {
         this.playExplosionGrey(container.x, container.y, 0.6);
@@ -336,10 +372,26 @@ export class Part4Scene extends Phaser.Scene {
         delete this.bulletEntities[bulletId];
       }
     });
+
+    const chatBox = document.getElementById("chatBox") as HTMLUListElement;
+
+    this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
+      const time = new Date(timestamp).toLocaleTimeString();
+    
+      // Add the chat message to the chat box
+      const chatItem = document.createElement("li");
+      chatItem.textContent = `${playerName}: ${message}`;
+      chatItem.className = "text-sm text-gray-200";
+      chatBox.appendChild(chatItem);
+    
+      // Scroll to the bottom of the chat box
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+    
   }
 
   async connect() {
-    console.log("ran connect")
+    console.log("ran connect");
     const connectionStatusText = this.add
       .text(0, 0, "Trying to connect with the server...")
       .setStyle({ color: "#ff0000" })
@@ -357,10 +409,12 @@ export class Part4Scene extends Phaser.Scene {
         document.getElementById("room-name")
       )).value.trim();
 
-      console.log(`Joining room: ${roomName || "default"}`)
+      console.log(`Joining room: ${roomName || "default"}`);
 
       if (roomName) {
-        this.room = await client.joinOrCreate("user_room", {customRoomName: roomName});
+        this.room = await client.joinOrCreate("user_room", {
+          customRoomName: roomName,
+        });
       } else {
         this.room = await client.joinOrCreate("default_room", {});
       }
@@ -370,7 +424,6 @@ export class Part4Scene extends Phaser.Scene {
     } catch (e) {
       console.log(e);
 
-      
       connectionStatusText.text = "Could not connect with the server.";
     }
   }
@@ -395,11 +448,13 @@ export class Part4Scene extends Phaser.Scene {
     }
   }
 
-  private handlePlayerDeath() {
+  private handlePlayerDeath(killer: any) {
     const joinModal = document.getElementById("join-modal");
     const modalTitle = document.getElementById("modal-title");
     const modalMessage = document.getElementById("modal-message");
     const joinButton = document.getElementById("join-button");
+
+    document.getElementById("killedBy").innerHTML = `Killed By ${killer.name}`;
 
     modalTitle.textContent = "You Died!";
     modalMessage.textContent = "Rejoin the snowball fight!";

@@ -16,6 +16,12 @@ export interface InputData {
   tick: number;
 }
 
+export class ChatMessage extends Schema {
+  @type("string") playerName: string;
+  @type("string") message: string;
+  @type("number") timestamp: number;
+}
+
 export class Bullet extends Schema {
   @type("number") x: number;
   @type("number") y: number;
@@ -102,7 +108,8 @@ export class MyRoomState extends Schema {
 
   @type({ map: Player }) players = new MapSchema<Player>();
   @type([Bullet]) bullets = new ArraySchema<Bullet>();
-  @type([Pickup]) pickups = new ArraySchema<Pickup>(); // Add pickups
+  @type([Pickup]) pickups = new ArraySchema<Pickup>();
+  @type([ChatMessage]) chat = new ArraySchema<ChatMessage>();
 }
 
 export class Part4Room extends Room<MyRoomState> {
@@ -128,6 +135,30 @@ export class Part4Room extends Room<MyRoomState> {
     );
 
     this.spawnPickups();
+
+    this.onMessage("chat", (client, { message }) => {
+      console.log({message})
+      const player = this.state.players.get(client.sessionId);
+
+      if (player && message?.trim() !== "") {
+        const chatMessage = new ChatMessage();
+        chatMessage.playerName = player.name || "Anonymous";
+        chatMessage.message = message;
+        chatMessage.timestamp = Date.now();
+
+        // Add the chat message to the state
+        this.state.chat.push(chatMessage);
+
+        // Broadcast the chat message to all clients
+        this.broadcast("chat", {
+          playerName: chatMessage.playerName,
+          message: chatMessage.message,
+          timestamp: chatMessage.timestamp,
+        });
+
+        console.log(`[Chat] ${chatMessage.playerName}: ${chatMessage.message}`);
+      }
+    });
 
     this.onMessage("input", (client, input: InputData) => {
       const player = this.state.players.get(client.sessionId);
@@ -405,9 +436,6 @@ export class Part4Room extends Room<MyRoomState> {
 
             // Handle player death
             if (player.health <= 0) {
-              console.log(`Player ${sessionId} was killed.`);
-              this.broadcast("player-death", { sessionId }); // Emit death event
-
               player.isDead = true;
               player.deaths += 1;
 
@@ -419,6 +447,9 @@ export class Part4Room extends Room<MyRoomState> {
                   `Player ${bullet.ownerId} now has ${killer.kills} kills.`
                 );
               }
+
+              console.log(`Player ${sessionId} was killed.`);
+              this.broadcast("player-death", { sessionId, killer }); // Emit death event
             }
 
             bulletsToRemove.push(bullet);
