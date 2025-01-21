@@ -1,7 +1,5 @@
 import Phaser from "phaser";
 
-import { SceneSelector } from "./scenes/SceneSelector";
-
 import { Part4Scene } from "./scenes/Part4Scene";
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -12,24 +10,72 @@ const config: Phaser.Types.Core.GameConfig = {
     smoothStep: true,
   },
   scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: "#000000",
-  parent: "phaser-example",
+  backgroundColor: "#CCE4F0",
+  parent: "game-container",
   physics: {
     default: "arcade",
   },
-  scene: [SceneSelector, Part4Scene],
+  scene: [Part4Scene],
 };
 
 const game = new Phaser.Game(config);
 
 
-window.addEventListener('resize', event => {
+window.addEventListener("resize", (event) => {
   game.scale.setGameSize(window.innerWidth, window.innerHeight);
-  game.scale.refresh()
+  game.scale.refresh();
+});
 
-})
+ // JavaScript to handle modal
+ const joinModal = document.getElementById("join-modal");
+ const rejoinButton = document.getElementById("join-button");
+
+ // Show the modal
+ function showJoinModal() {
+   joinModal.classList.add("show");
+ }
+
+ // Hide the modal
+ function hideJoinModal() {
+   joinModal.classList.remove("show");
+ }
+
+ function onReady() {
+   const loading = document.getElementById("loading");
+   loading.classList.add("onReady");
+
+   const container = document.getElementById("game-container");
+   container.classList.add("show");
+
+   setTimeout(() => {
+     showJoinModal();
+   }, 900);
+ }
+
+ function onJoined() {
+   const chatOnReady = document.getElementById("chatOnReady");
+   chatOnReady.classList.add("show");
+
+   const menu = document.getElementById("menu");
+   menu.classList.add("show");
+ }
+
+ // Listen for rejoin button click
+ rejoinButton.addEventListener("click", () => {
+   hideJoinModal();
+   // Emit an event to rejoin the game
+   window.dispatchEvent(new Event("player-rejoin"));
+ });
+
+ window.addEventListener("ready", () => {
+   onReady();
+ });
+
+ window.addEventListener("joined", () => {
+   onJoined();
+ });

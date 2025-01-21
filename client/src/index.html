@@ -10,7 +10,7 @@
     <link href="./index.css" type="text/css" rel="stylesheet" />
   </head>
   <body oncontextmenu="return false;">
-    <div class="menu">
+    <div id="menu" class="menu onReady">
       <div id="player-stats">
         <p>Kills: <span id="active-player-kills">0</span></p>
         <p>Deaths: <span id="active-player-deaths">0</span></p>
@@ -37,10 +37,10 @@
     <div id="join-modal" class="modal">
       <div id="killedBy"></div>
 
-      <h2 id="modal-title" class="text-2xl font-bold mb-4">Welcome to Snowball Fight!</h2>
+      <h2 id="modal-title" class="text-2xl font-bold mb-4">
+        Welcome to Snowball Fight!
+      </h2>
       <p id="modal-message" class="mb-4">Click Join Game to play!</p>
-
-      
 
       <input
         id="player-name"
@@ -54,13 +54,33 @@
         placeholder="Room name (optional)"
         class="input-field"
       />
-      
+
       <div id="skins">
         <ul id="skinlist">
-          <li><img id="playera" src="/static/assets/images/skins/player/playersa_01.png"></li>
-          <li><img id="playerb" src="/static/assets/images/skins/player/playersb_01.png"></li>
-          <li><img id="playerc" src="/static/assets/images/skins/player/playersc_01.png"></li>
-          <li><img id="playerd" src="/static/assets/images/skins/player/playersd_01.png"></li>
+          <li>
+            <img
+              id="playera"
+              src="/static/assets/images/skins/player/playersa_01.png"
+            />
+          </li>
+          <li>
+            <img
+              id="playerb"
+              src="/static/assets/images/skins/player/playersb_01.png"
+            />
+          </li>
+          <li>
+            <img
+              id="playerc"
+              src="/static/assets/images/skins/player/playersc_01.png"
+            />
+          </li>
+          <li>
+            <img
+              id="playerd"
+              src="/static/assets/images/skins/player/playersd_01.png"
+            />
+          </li>
         </ul>
       </div>
 
@@ -68,37 +88,38 @@
       <p class="instructions">Use WASD/Arrow keys to move, Space to shoot.</p>
     </div>
 
-    <div id="chat">
-      <ul id="chatBox"></ul>
-      <input id="chatSend" type="text" placeholder="Type to chat..." />
+    <div id="chatOnReady" class="onReady">
+      <div id="chat">
+        <ul id="chatBox"></ul>
+        <input id="chatSend" type="text" placeholder="Type to chat..." />
+      </div>
     </div>
 
+    <div id="loading">
+      <div class="loading-container">
+        <img
+          class="loading-image"
+          src="../static/assets/images/weapons/snowball.png"
+          alt="Loading..."
+        />
+        <img
+          class="loading-image"
+          src="../static/assets/images/weapons/snowball.png"
+          alt="Loading..."
+        />
+        <img
+          class="loading-image"
+          src="../static/assets/images/weapons/snowball.png"
+          alt="Loading..."
+        />
+      </div>
+
+      prepairing the battlefield...
+
+    </div>
+
+    <div id="game-container" class="onReady"></div>
+
     <script src="index.ts" type="module"></script>
-    <script>
-      // JavaScript to handle modal
-      const joinModal = document.getElementById("join-modal");
-      const rejoinButton = document.getElementById("join-button");
-
-      // Show the modal
-      function showJoinModal() {
-        joinModal.classList.add("show");
-      }
-
-      // Hide the modal
-      function hideJoinModal() {
-        joinModal.classList.remove("show");
-      }
-
-      // Listen for rejoin button click
-      rejoinButton.addEventListener("click", () => {
-        hideJoinModal();
-        // Emit an event to rejoin the game
-        window.dispatchEvent(new Event("player-rejoin"));
-      });
-
-      window.addEventListener("ready", () => {
-        showJoinModal();
-      });
-    </script>
   </body>
 </html>

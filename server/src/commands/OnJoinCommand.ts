@@ -6,10 +6,5 @@ export class OnJoinCommand extends Command<
   Part4Room,
   { client: Client; options: any }
 > {
-  execute(payload: this["payload"]) {
-    const { client, options } = payload;
-
-    console.log("joined", options);
-    return;
-  }
+  execute(payload: this["payload"]) {}
 }

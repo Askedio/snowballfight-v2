@@ -9,7 +9,7 @@
 
 html,
 body {
-  @apply font-sans bg-black text-white h-full overflow-hidden;
+  @apply font-sans bg-[#CCE4F0] text-white h-full overflow-hidden;
 }
 
 a {
@@ -27,16 +27,16 @@ input {
 
 /* Menu Styles */
 .menu {
-  @apply absolute top-0 left-1/2 transform -translate-x-1/2 text-white text-lg bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center;
+  @apply text-sm absolute top-0 left-1/2 transform -translate-x-1/2 text-white text-lg bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center;
 
   #player-stats {
-    @apply flex flex-row items-center space-x-6 mb-0;
+    @apply flex flex-row items-center space-x-6 mb-0 text-xs;
 
     p {
-      @apply m-0 p-2;
+      @apply m-0 px-3 flex items-center gap-3;
 
       span {
-        @apply bg-gray-700 p-3;
+        @apply bg-gray-700 py-1.5 w-[48px] block text-center;
       }
     }
   }
@@ -51,11 +51,12 @@ input {
   @apply z-20 m-12 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center hidden border border-gray-600;
 }
 
-.modal.show {
-  @apply block;
+.show {
+  @apply !block;
 }
 
-#modal-message, #modal-title {
+#modal-message,
+#modal-title {
   @apply text-center;
 }
 
@@ -153,19 +154,19 @@ input {
 
     scrollbar-width: thin; /* For Firefox */
     scrollbar-color: gray transparent; /* For Firefox */
-  
+
     &::-webkit-scrollbar {
       @apply w-1; /* Thin scrollbar width */
     }
-  
+
     &::-webkit-scrollbar-thumb {
       @apply bg-gray-500 rounded; /* Gray scrollbar thumb with rounded edges */
     }
-  
+
     &::-webkit-scrollbar-thumb:hover {
       @apply bg-gray-400; /* Slightly lighter gray on hover */
     }
-  
+
     &::-webkit-scrollbar-track {
       @apply bg-transparent; /* Transparent track for contrast */
     }
@@ -182,11 +183,48 @@ input {
   #chatSend {
     @apply w-full p-1.5 bg-gray-700/70 border border-white/10 text-white;
 
-    
-
     &:active,
     &:hover {
       @apply bg-white/20;
     }
+  }
+}
+
+.onReady {
+  @apply hidden;
+}
+
+
+#loading {
+  @apply absolute text-black text-sm fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  @apply mb-6 h-[60px]
+
+}
+.loading-image {
+  animation: bounce 1s infinite ease-in-out;
+  margin: 0 10px;
+}
+.loading-image:nth-child(1) {
+  animation-delay: 0s;
+}
+.loading-image:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.loading-image:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-30px);
   }
 }

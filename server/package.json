@@ -6,7 +6,7 @@
   "main": "lib/index.js",
   "scripts": {
     "start": "tsx watch src/index.ts",
-    "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
+    "loadtest": "npx tsx loadtest/example.ts --room default_room --numClients 50 --endpoint ws://localhost:3002",
     "build": "npm run clean && tsc",
     "clean": "node node_modules/rimraf/bin lib",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000"

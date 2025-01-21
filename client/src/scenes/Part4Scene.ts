@@ -89,6 +89,8 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.image("snowball", "assets/images/weapons/snowball.png");
+
     this.load.atlas(
       "players",
       "assets/sprites/players.png",
@@ -201,9 +203,11 @@ export class Part4Scene extends Phaser.Scene {
       const playerName = (<HTMLInputElement>(
         document.getElementById("player-name")
       )).value.trim();
+
+      
       const roomName = (<HTMLInputElement>(
         document.getElementById("room-name")
-      )).value.trim();
+      )).value.trim() || window.location.hash.substring(1);
 
       if (roomName) {
         await this.room.leave();
@@ -212,9 +216,13 @@ export class Part4Scene extends Phaser.Scene {
         });
         this.setRoomListeners();
         this.room.send("rejoin", { playerName, roomName });
+        window.location.hash = roomName;
       } else {
         this.room.send("rejoin", { playerName, roomName });
       }
+
+      window.dispatchEvent(new Event("joined"));
+
     });
   }
 
@@ -414,10 +422,11 @@ export class Part4Scene extends Phaser.Scene {
     this.client = client;
 
     try {
-      // this should be like a hash in the url!
-      const roomName = (<HTMLInputElement>(
-        document.getElementById("room-name")
-      )).value.trim();
+      let roomName = "default_room";
+
+      if (window.location.hash) {
+        roomName = window.location.hash.substring(1);
+      }
 
       if (roomName) {
         this.room = await client.joinOrCreate("user_room", {
@@ -548,7 +557,7 @@ export class Part4Scene extends Phaser.Scene {
     });
   }
 
-  withinScreenView(x: number, y: number, offset: number = 0): boolean {
+  withinScreenView(x: number, y: number, offset = 0): boolean {
     const camera = this.cameras.main;
 
     // Calculate the screen bounds with offset
