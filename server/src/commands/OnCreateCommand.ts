@@ -82,7 +82,7 @@ export class OnCreateCommand extends Command<
         // Assign player name
         const generator = new RandomNameGenerator();
 
-        player.name = playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
+        player.name = player.name || playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
       } else {
         console.warn(
           `Failed to create or fetch player for ${client.sessionId}`
