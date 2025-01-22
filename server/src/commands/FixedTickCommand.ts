@@ -273,6 +273,9 @@ export class FixedTickCommand extends Command<
 
           if (pickup.destroyBulletOnCollision) {
             bullet.colissionType = "pickup";
+            // to-do: get where it intersected with the item better!
+            // bullet.x = pickupSource.x;
+            // bullet.y = pickupSource.y;
             this.room.broadcast("bullet-destroyed", {
               bullet,
               pickup: pickupSource,

@@ -12,9 +12,8 @@ export class CratePickup extends Pickup {
     this.rotation = 6;
 
     this.colissionShape = "box";
-    this.colissionHeight = 60;
-    this.colissionWidth = 60;
-    this.bringToTop = true;
+    this.colissionHeight = 80;
+    this.colissionWidth = 80;
 
     this.blocking = true;
     this.health = config.health || 40;

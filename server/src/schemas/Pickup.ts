@@ -16,7 +16,7 @@ export class Pickup extends Schema {
   @type("number") health = 100; // How much health this item has
   @type("number") damange = 20; // How much damage a bullet does to this item
 
-  @type("number") radius = 14; // The size of the pickup collision zone
+  @type("number") radius = 12; // The size of the pickup collision zone
 
   @type("string") colissionShape: string;
   @type("number") colissionOffsetX: number;

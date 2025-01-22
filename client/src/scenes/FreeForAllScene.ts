@@ -563,6 +563,7 @@ export class FreeForAllScene extends Phaser.Scene {
     this.room.state.bullets.onAdd((bullet, bulletId) => {
       const bulletEntity = this.add.image(bullet.x, bullet.y, "snowball");
       bulletEntity.setOrigin(0.5, 0.5);
+      bulletEntity.setDepth(3);
       this.bulletEntities[bulletId] = bulletEntity;
 
       bullet.onChange(() => {
@@ -572,11 +573,13 @@ export class FreeForAllScene extends Phaser.Scene {
       });
     });
 
+    this.room.onMessage("bullet-destroyed", ({ bullet }) => {
+      this.playExplosionGrey(bullet.x, bullet.y);
+    });
+
     this.room.state.bullets.onRemove((bullet, bulletId) => {
       const bulletEntity = this.bulletEntities[bulletId];
       if (bulletEntity) {
-        this.playExplosionGrey(bulletEntity.x, bulletEntity.y);
-
         bulletEntity.destroy();
         delete this.bulletEntities[bulletId];
       }
@@ -746,7 +749,7 @@ export class FreeForAllScene extends Phaser.Scene {
 
     const explosion = this.add.sprite(x, y, "explosiongrey");
     explosion.setScale(scale); // Scale down to 50% of its original size
-
+    explosion.setDepth(11);
     explosion.play("explosiongrey");
     explosion.on("animationcomplete", () => {
       explosion.destroy(); // Clean up after the animation finishes
