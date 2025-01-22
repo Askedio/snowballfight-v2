@@ -8,6 +8,9 @@ export class DevilPickup extends Pickup {
     this.asset = "devil";
     this.destroyOnCollision = true;
     this.bulletKills = true;
+
+    this.playAudioOnPickup = true;
+    this.audioKey = "laugh1"
   }
 
   onPlayerCollision(player: any): void {

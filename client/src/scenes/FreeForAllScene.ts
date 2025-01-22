@@ -174,6 +174,24 @@ export class FreeForAllScene extends Phaser.Scene {
     this.load.audio("shoot1", "assets/sounds/shoot1.mp3");
 
     this.load.audio(
+      "footstep1",
+      "assets/sounds/footsteps/Footstep_Snow_Walk_06.mp3"
+    );
+    this.load.audio(
+      "footstep2",
+      "assets/sounds/footsteps/Footstep_Snow_Walk_07.mp3"
+    );
+
+    this.load.audio(
+      "footstepRun1",
+      "assets/sounds/footsteps/Footstep_Snow_Run_06.mp3"
+    );
+    this.load.audio(
+      "footstepRun2",
+      "assets/sounds/footsteps/Footstep_Snow_Run_07.mp3"
+    );
+
+    this.load.audio(
       "smash1",
       "assets/sounds/smashes/Snow_Ball_Smash_Hard_01.mp3"
     );
@@ -399,11 +417,6 @@ export class FreeForAllScene extends Phaser.Scene {
 
       // Add the container to the pickup entities
       this.pickupEntities[pickup.id] = pickupContainer;
-
-      // Handle position updates when the pickup state changes
-      pickup.onChange(() => {
-        pickupContainer.setPosition(pickup.x, pickup.y);
-      });
     });
 
     this.room.state.pickups.onRemove((pickup) => {
@@ -510,6 +523,9 @@ export class FreeForAllScene extends Phaser.Scene {
             sprite.setRotation(player.rotation);
 
             if (player.isMoving) {
+              // to-do: add foot steps sound for current and remote players, diff sounds
+              //this.playSpatialSound(player, "footstep1")
+
               if (
                 sprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
                 !sprite.anims.isPlaying
@@ -540,7 +556,7 @@ export class FreeForAllScene extends Phaser.Scene {
         this.playExplosionGrey(container.x, container.y, 0.6);
       }
 
-      // this.playSpatialSound(player, "smash1");
+      this.playSpatialSound(player, "smash1");
 
       if (sessionId === this.room.sessionId) {
         this.handlePlayerDeath(killer);
@@ -575,6 +591,8 @@ export class FreeForAllScene extends Phaser.Scene {
 
     this.room.onMessage("bullet-destroyed", ({ bullet }) => {
       this.playExplosionGrey(bullet.x, bullet.y);
+
+      this.playSpatialSound(bullet, "bullet1");
     });
 
     this.room.state.bullets.onRemove((bullet, bulletId) => {
@@ -583,6 +601,10 @@ export class FreeForAllScene extends Phaser.Scene {
         bulletEntity.destroy();
         delete this.bulletEntities[bulletId];
       }
+    });
+
+    this.room.onMessage("play-sound", ({ item, key }) => {
+      this.playSpatialSound(item, key);
     });
 
     const chatBox = document.getElementById("chatBox") as HTMLUListElement;
@@ -705,7 +727,7 @@ export class FreeForAllScene extends Phaser.Scene {
     leaderboardBody.innerHTML = ""; // Clear previous content
 
     const players = Array.from(this.room.state.players.entries()).map(
-      ([sessionId, player]) => ({
+      ([sessionId, player]: any) => ({
         sessionId,
         name: player.name || "",
         kills: player.kills || 0,
@@ -799,57 +821,34 @@ export class FreeForAllScene extends Phaser.Scene {
     });
   }
 
-  playSpatialSound(target, sound: string, multiplier = 0.6) {
+  playSpatialSound(target, sound: string, multiplier = 0.3) {
     const playerX = target.x;
     const playerY = target.y;
-    const currentPlayerX = this.currentPlayer.x; // Assuming this.currentPlayer has the current player's position
+    const currentPlayerX = this.currentPlayer.x;
     const currentPlayerY = this.currentPlayer.y;
 
-    // Calculate the distance between the player who died and the current player
+    // Calculate the distance between the target and the current player
     const dx = playerX - currentPlayerX;
     const dy = playerY - currentPlayerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Normalize the distance (you can adjust the range for your game)
-    const maxDistance = 1000; // Maximum distance for full volume (you can adjust this)
-    const volume = Phaser.Math.Clamp(1 - distance / maxDistance, 0, 1); // Volume ranges from 0 to 1 based on distance
+    // Dynamically adjust max distance based on map size
+    const maxDistance =
+      Math.sqrt(
+        this.room.state.mapWidth ** 2 + this.room.state.mapHeight ** 2
+      ) / 2;
 
-    // Calculate the pan value based on the horizontal position of the current player relative to the player who died
-    const pan = Phaser.Math.Clamp(dx / maxDistance, -1, 1); // Pan ranges from -1 (left) to 1 (right)
+    // Normalize the distance to determine volume (1 at close range, 0 at max distance)
+    const volume =
+      Phaser.Math.Clamp(1 - distance / maxDistance, 0, 1) * multiplier;
 
-    // Now using the 3D audio options to make the sound spatial
-    const soundConfig = {
-      x: playerX, // Position of the sound source (the player who died)
-      y: playerY, // Same for the y-coordinate
-      z: 0, // Assuming 2D, but can be extended to 3D (e.g., z=playerHeight for 3D space)
-      panningModel: "equalpower", // Use equal power panning model for a natural stereo effect
-      distanceModel: "inverse", // Inverse model for sound attenuation (distance decreases with the square of distance)
-      refDistance: 1, // Reference distance where the sound volume is at its normal level
-      maxDistance: 1500, // Maximum distance where the sound is still audible
-      rolloffFactor: 1, // Rolloff factor to control how fast the sound diminishes over distance
-      coneInnerAngle: 360, // Angle for the sound cone (full 360 degrees for omnidirectional sound)
-      coneOuterAngle: 0, // Outer angle for the sound cone (0 for no outer cone)
-      coneOuterGain: 0, // Outer gain for the sound cone (0 for no sound outside of the cone)
-      follow: undefined, // Optional: If you want the sound to follow an entity
-    };
+    // Calculate the pan value (-1 for far left, 1 for far right)
+    const pan = Phaser.Math.Clamp(dx / maxDistance, -1, 1);
 
-    // Play the explosion sound based on the volume and pan with 3D options
-    this.sound.play(target, {
-      volume: volume * multiplier, // Adjust the multiplier to scale the sound as needed
-      pan: pan, // Set pan based on the horizontal offset between the player who died and the current player
-      source: {
-        x: soundConfig.x,
-        y: soundConfig.y,
-        z: soundConfig.z,
-        panningModel: "equalpower",
-        distanceModel: "inverse",
-        refDistance: soundConfig.refDistance,
-        maxDistance: soundConfig.maxDistance,
-        rolloffFactor: soundConfig.rolloffFactor,
-        coneInnerAngle: soundConfig.coneInnerAngle,
-        coneOuterAngle: soundConfig.coneOuterAngle,
-        coneOuterGain: soundConfig.coneOuterGain,
-      },
+    // Play the sound with the calculated volume and pan
+    this.sound.play(sound, {
+      volume, // Final volume scaled by the multiplier
+      pan, // Panning based on the horizontal offset
     });
   }
 }

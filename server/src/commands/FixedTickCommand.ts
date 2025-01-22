@@ -100,6 +100,13 @@ export class FixedTickCommand extends Command<
               isBlockedByPickup = true; // Prevent movement if pickup blocks
             }
 
+            if (pickup.playAudioOnPickup && pickup.audioKey) {
+              this.room.broadcast("play-sound", {
+                item: pickup,
+                key: pickup.audioKey,
+              });
+            }
+
             // Handle pickup destruction and redeployment
             if (pickup.destroyOnCollision) {
               const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
@@ -324,7 +331,7 @@ export class FixedTickCommand extends Command<
                 sessionId,
                 player,
                 killer: shooter,
-              }); // Emit death event
+              });
 
               bullet.colissionType = "player";
               this.room.broadcast("bullet-destroyed", {

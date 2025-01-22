@@ -45,6 +45,9 @@ export class Pickup extends Schema {
 
   @type("boolean") bringToTop = false;
 
+  @type("boolean") playAudioOnPickup = false;
+  @type("string") audioKey: string;
+
   constructor(type: string, x: number, y: number) {
     super();
     this.type = type;
