@@ -13,6 +13,9 @@ export class Pickup extends Schema {
   @type("number") y: number; // Spawn position Y
   @type("number") rotation: number;
 
+  @type("number") health = 100; // How much health this item has
+  @type("number") damange = 20; // How much damage a bullet does to this item
+
   @type("number") radius = 14; // The size of the pickup collision zone
 
   @type("string") colissionShape: string;
@@ -25,11 +28,8 @@ export class Pickup extends Schema {
   @type("boolean") destroyable = true; // Can this pickup be destroyed?
   @type("boolean") blocking = false; // Does it block player movement?
   @type("boolean") bulletKills = false; // Can bullets destroy it?
-  @type("boolean") killOnCollision = false; // Destroyed when a player collides
   @type("boolean") destroyOnCollision = false; // Destroyed when a player collides
-  @type("boolean") destroyBulletOnCollision = false; // Bullet is destroyed on collision
-
-  @type("number") health = 100; // Health of the pickup (if destroyable)
+  @type("boolean") destroyBulletOnCollision = true; // Bullet is destroyed on collision
 
   @type("string") explosionType = "default"; // Optional: explosion effect
   @type("boolean") disablePlayBulletKillSound = false;

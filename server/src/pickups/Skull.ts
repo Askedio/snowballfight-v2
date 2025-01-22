@@ -1,8 +1,10 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class SkullPickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("skull", x, y);
+  constructor(config: Partial<Pickup>) {
+    super("skull", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
     this.asset = "skull";
     this.destroyOnCollision = true;
   }

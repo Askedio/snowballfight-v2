@@ -1,17 +1,19 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class TreasurePickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("treasure", x, y);
+  constructor(config: Partial<Pickup>) {
+    super("treasure", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
     this.asset = "treasure";
     this.destroyOnCollision = true;
   }
 
   onPlayerCollision(player: any): void {
-    if (player.health >= 200) {
+    if (player.health >= 100) {
       return;
     }
 
-    player.health += 50; // Increase player's health
+    player.health += 20; // Increase player's health
   }
 }

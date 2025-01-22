@@ -8,26 +8,26 @@ import { TreePickup } from "./Tree";
 import { SnowmanPickup } from "./Snowman";
 import { CratePickup } from "./Crate";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class PickupFactory {
-  static createPickup(type: string, x: number, y: number): Pickup {
+  static createPickup(type: string, x: number, y: number, config: Partial<Pickup> = {}): Pickup | null {
+    const baseConfig = { type, x, y, ...config };
     switch (type) {
       case "crate":
-        return new CratePickup(x, y);
+        return new CratePickup(baseConfig);
       case "snowman":
-        return new SnowmanPickup(x, y);
+        return new SnowmanPickup(baseConfig);
       case "tree":
-        return new TreePickup(x, y);
+        return new TreePickup(baseConfig);
       case "devil":
-        return new DevilPickup(x, y);
+        return new DevilPickup(baseConfig);
       case "skull":
-        return new SkullPickup(x, y);
+        return new SkullPickup(baseConfig);
       case "sword":
-        return new SwordPickup(x, y);
+        return new SwordPickup(baseConfig);
       case "treasure":
-        return new TreasurePickup(x, y);
+        return new TreasurePickup(baseConfig);
       case "wings":
-        return new WingsPickup(x, y);
+        return new WingsPickup(baseConfig);
       default:
         return null;
     }

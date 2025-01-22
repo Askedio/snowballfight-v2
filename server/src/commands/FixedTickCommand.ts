@@ -151,7 +151,7 @@ export class FixedTickCommand extends Command<
 
   fireBullet(player: Player) {
     const now = Date.now();
-    const cooldown = player.bulletCooldown; // Bullet cooldown in milliseconds
+    const cooldown = player.bulletCooldown || 100; // Default cooldown to 100ms if undefined
 
     if (now - player.lastBulletTime < cooldown) {
       return; // Skip firing if cooldown hasn't elapsed
@@ -159,26 +159,35 @@ export class FixedTickCommand extends Command<
 
     player.lastBulletTime = now; // Update the last bullet fired time
 
-    const angle = player.rotation;
+    const bulletFireRate = player.bulletFireRate || 1; // Default to 1 bullet if undefined
+    const bulletFireDelay = player.bulletFireDelay || 100; // Delay between bullets in milliseconds
 
-    const bullet = new Bullet();
-    bullet.x = player.x + Math.cos(angle) * 15; // Offset from the player's position
-    bullet.y = player.y + Math.sin(angle) * 15;
-    bullet.dx = Math.cos(angle) * player.bulletSpeed;
-    bullet.dy = Math.sin(angle) * player.bulletSpeed;
-    const client = this.room.clients.find(
-      (c) => this.room.state.players.get(c.sessionId) === player
-    );
-    if (client) {
-      bullet.ownerId = client.sessionId;
-    } else {
-      console.warn(
-        `No client found for player at position (${player.x}, ${player.y})`
-      );
-      return; // Do not create the bullet if we can't find the client
+    for (let i = 0; i < bulletFireRate; i++) {
+      setTimeout(() => {
+        const angle = player.rotation;
+
+        const bullet = new Bullet();
+        bullet.x = player.x + Math.cos(angle) * 15; // Offset from the player's position
+        bullet.y = player.y + Math.sin(angle) * 15;
+        bullet.dx = Math.cos(angle) * player.bulletSpeed;
+        bullet.dy = Math.sin(angle) * player.bulletSpeed;
+
+        const client = this.room.clients.find(
+          (c) => this.room.state.players.get(c.sessionId) === player
+        );
+
+        if (client) {
+          bullet.ownerId = client.sessionId;
+        } else {
+          console.warn(
+            `No client found for player at position (${player.x}, ${player.y})`
+          );
+          return; // Do not create the bullet if we can't find the client
+        }
+
+        this.room.state.bullets.push(bullet);
+      }, i * bulletFireDelay); // Delay each bullet by bulletFireDelay * i
     }
-
-    this.room.state.bullets.push(bullet);
   }
 
   updateBullets() {
@@ -219,36 +228,68 @@ export class FixedTickCommand extends Command<
         return;
       }
 
-      this.room.state.pickups.forEach((pickup) => {
-        const realPickup = PickupFactory.createPickup(
-          pickup.type,
-          pickup.x,
-          pickup.y
+      this.room.state.pickups.forEach((pickupSource, index) => {
+        const pickup = PickupFactory.createPickup(
+          pickupSource.type,
+          pickupSource.x,
+          pickupSource.y,
+          pickupSource
         );
 
-        if (!realPickup) return;
+        if (!pickup) {
+          return;
+        }
 
-        const dx = pickup.x - bullet.x;
-        const dy = pickup.y - bullet.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const isColliding = this.collisionSystem.detectCollision(
+          {
+            type: pickupSource.colissionShape || "circle",
+            x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
+            y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
+            width: pickupSource.colissionWidth,
+            height: pickupSource.colissionHeight,
+            radius: pickupSource.radius,
+            rotation: pickupSource.rotation,
+          },
+          {
+            type: "circle", // Shape type
+            x: bullet.x,
+            y: bullet.y,
+            radius: bulletSize,
+          }
+        );
 
-        if (distance < 16 && realPickup.onBulletCollision()) {
-          this.room.state.pickups.splice(
-            this.room.state.pickups.indexOf(pickup),
-            1
-          ); // Remove pickup
+        if (isColliding) {
+          const onBulletCollision = pickup.onBulletCollision();
+          // Update main pickup with new properties after colission
 
-          bullet.colissionType = "pickup";
-          this.room.broadcast("bullet-destroyed", { bullet, pickup });
+          // not ideal for just 1 setting...
+          pickupSource.health = pickup.health;
 
-          bulletsToRemove.push(bullet);
+          if (onBulletCollision) {
+            this.room.state.pickups.splice(
+              this.room.state.pickups.indexOf(pickupSource),
+              1
+            ); // Remove pickup
+          }
+
+          if (pickup.destroyBulletOnCollision) {
+            bullet.colissionType = "pickup";
+            this.room.broadcast("bullet-destroyed", {
+              bullet,
+              pickup: pickupSource,
+            });
+
+            bulletsToRemove.push(bullet);
+          }
           return;
         }
       });
 
       // Check collisions with players
       for (const [sessionId, player] of this.room.state.players.entries()) {
-        if (player.isDead) continue; // Skip dead players
+        if (player.isDead) {
+          continue; // Skip dead players
+        }
 
         if (bullet.ownerId !== sessionId) {
           const dx = bullet.x - player.x;
@@ -256,7 +297,12 @@ export class FixedTickCommand extends Command<
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < player.hitRadius) {
-            player.health -= 20;
+            const shooter = this.room.state.players.get(bullet.ownerId);
+            if (!shooter) {
+              return;
+            }
+
+            player.health -= shooter.bulletDamage;
 
             // Handle player death
             if (player.health <= 0) {
@@ -264,26 +310,25 @@ export class FixedTickCommand extends Command<
               player.deaths += 1;
 
               // Increment killer's kills count
-              const killer = this.room.state.players.get(bullet.ownerId);
-              if (killer) {
-                killer.kills += 1;
-                console.log(
-                  `Player ${bullet.ownerId} now has ${killer.kills} kills.`
-                );
-              }
+
+              shooter.kills += 1;
+              console.log(
+                `Player ${bullet.ownerId} now has ${shooter.kills} kills.`
+              );
 
               console.log(`Player ${sessionId} was killed.`);
+
               this.room.broadcast("player-death", {
                 sessionId,
                 player,
-                killer,
+                killer: shooter,
               }); // Emit death event
 
               bullet.colissionType = "player";
               this.room.broadcast("bullet-destroyed", {
                 bullet,
                 player,
-                killer,
+                killer: shooter,
               });
             }
 

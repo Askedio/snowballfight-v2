@@ -1,9 +1,11 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class CratePickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("crate", x, y);
-    this.destroyOnCollision = true; // Pickup is destroyed on player collision
+  constructor(config: Partial<Pickup>) {
+    super("crate", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
+    this.destroyOnCollision = true;
     this.asset = "winterobjects";
     this.isSprite = true;
     this.spriteFrame = "Crate.png";

@@ -252,23 +252,6 @@ export class FreeForAllScene extends Phaser.Scene {
     tabKey.on("up", this.hideLeaderboard.bind(this));
 
     setInterval(() => {
-      if (this.room?.state?.players) {
-        const players = Array.from(this.room.state.players.entries()).map(
-          ([sessionId, player]) => ({
-            name: player.name,
-            sessionId,
-            x: player.x,
-            y: player.y,
-            health: player.health,
-            kills: player.kills,
-            deaths: player.deaths,
-            isDead: player.isDead,
-          })
-        );
-      }
-    }, 30000);
-
-    setInterval(() => {
       this.updatePlayerStats();
     }, 1000);
 
@@ -459,7 +442,11 @@ export class FreeForAllScene extends Phaser.Scene {
       playerSprite.setOrigin(0.5, 0.5); // Centered
       playerHealthText.setOrigin(0.5, 0.5); // Centered
 
-      const containerItems: any = [playerSprite, playerHealthText, playerNameText];
+      const containerItems: any = [
+        playerSprite,
+        playerHealthText,
+        playerNameText,
+      ];
 
       let debugBorder: Phaser.GameObjects.Graphics | null = null;
 
@@ -694,16 +681,16 @@ export class FreeForAllScene extends Phaser.Scene {
 
     const player = this.room.state.players.get(this.room.sessionId);
     if (player) {
-      document.getElementById(
-        "active-player-kills"
-      ).innerText = `${player.kills}`;
-      document.getElementById(
-        "active-player-deaths"
-      ).innerText = `${player.deaths}`;
+      document.getElementById("active-player-kills").innerText = `${
+        player.kills || 0
+      }`;
+      document.getElementById("active-player-deaths").innerText = `${
+        player.deaths || 0
+      }`;
 
-      document.getElementById(
-        "active-player-speed"
-      ).innerText = `${player.speed}`;
+      document.getElementById("active-player-speed").innerText = `${
+        player.speed || 4
+      }`;
     }
   }
 
@@ -717,10 +704,10 @@ export class FreeForAllScene extends Phaser.Scene {
     const players = Array.from(this.room.state.players.entries()).map(
       ([sessionId, player]) => ({
         sessionId,
-        name: player.name,
-        kills: player.kills,
-        deaths: player.deaths,
-        isDead: player.isDead,
+        name: player.name || "",
+        kills: player.kills || 0,
+        deaths: player.deaths || 0,
+        isDead: player.isDead || false,
       })
     );
 

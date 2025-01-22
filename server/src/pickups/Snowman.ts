@@ -1,10 +1,12 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class SnowmanPickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("snowman", x, y);
+  constructor(config: Partial<Pickup>) {
+    super("snowman", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
     this.asset = "snowman";
-    this.destroyOnCollision = true; // Pickup is destroyed on player collision
+    this.destroyOnCollision = true;
     this.bulletKills = true;
     this.scale = 0.4;
     this.colissionOffsetY = 14;

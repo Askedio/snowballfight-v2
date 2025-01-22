@@ -1,23 +1,29 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class TreePickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("tree", x, y);
+  constructor(config: Partial<Pickup>) {
+    super("tree", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
     this.asset = "tree";
-    this.destroyBulletOnCollision = true;
     this.scale = 0.7;
     this.bringToTop = true;
     this.blocking = true;
-    this.colissionOffsetY = 47
+    this.colissionOffsetY = 47;
+
+    this.health = config.health || 100
   }
 
   onPlayerCollision(player: any): void {
-    if (player.speed >= 6) return;
-
-    player.applyTemporaryChange("speed", player.speed + 0.5, 10000);
+    // 
   }
 
   onBulletCollision(): boolean {
-    return this.bulletKills;
+   
+    this.health -= this.damange;
+
+    console.log(this.health)
+
+    return this.health <= 0;
   }
 }

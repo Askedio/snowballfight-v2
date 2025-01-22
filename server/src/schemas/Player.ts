@@ -18,13 +18,19 @@ export class Player extends Schema {
   @type("string") skin = ""; // Default skin
   @type("boolean") isMoving = false; // Track if the player is moving
 
-  @type("number") speed = 4;
+  @type("number") speed = 4; // The speed the player moves at
   @type("number") bulletSpeed = 10;
   @type("number") bulletCooldown = 400;
+  @type("number") bulletFireRate = 1; // Bullet lifetime in ms
+  @type("number") bulletFireDelay = 100; // Time between bullet fires.
+  @type("number") bulletDamage = 20; // Bullet lifetime in ms
 
+  // Used for applyTemporaryChange
   @type("number") defaultSpeed = 4;
   @type("number") defaultBulletSpeed = 10;
   @type("number") defaultBulletCooldown = 400;
+  @type("number") defaultBulletFireRate = 1;
+  @type("number") defaultBulletFireDelay = 100;
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];

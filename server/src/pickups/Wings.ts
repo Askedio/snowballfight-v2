@@ -1,10 +1,12 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class WingsPickup extends Pickup {
-  constructor(x: number, y: number) {
-    super("wings", x, y);
+  constructor(config: Partial<Pickup>) {
+    super("wings", config.x || 0, config.y || 0);
+    Object.assign(this, config); // Assign all additional parameters
+  
     this.asset = "wings";
-    this.destroyOnCollision = true; // Pickup is destroyed on player collision
+    this.destroyOnCollision = true;
   }
 
   onPlayerCollision(player: any): void {

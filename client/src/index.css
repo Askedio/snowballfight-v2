@@ -194,17 +194,15 @@ input {
   @apply hidden;
 }
 
-
 #loading {
-  @apply absolute text-black text-sm fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+  @apply absolute text-black text-sm fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
 }
 
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  @apply mb-6 h-[60px]
-
+  @apply mb-6 h-[60px];
 }
 .loading-image {
   animation: bounce 1s infinite ease-in-out;
@@ -221,7 +219,8 @@ input {
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -230,5 +229,9 @@ input {
 }
 
 #error {
-  @apply text-red-500 text-center fixed bottom-3 left-1/2 transform -translate-x-1/2 
+  @apply bg-red-500 text-white text-center fixed bottom-0 rounded-t-lg p-3 left-1/2 transform -translate-x-1/2;
+}
+
+#error:empty {
+  @apply hidden;
 }
