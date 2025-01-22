@@ -6,22 +6,18 @@ import type { InputData } from "../interfaces/InputData";
 import { Bullet } from "../schemas/Bullet";
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
-import { Collision } from "../classes/Collision";
+import type { Collision } from "../classes/Collision";
 
 export class FixedTickCommand extends Command<
   FreeForAllRoom,
-  { tilemapManager: TilemapManager }
+  { tilemapManager: TilemapManager; collisionSystem: Collision }
 > {
   private tilemapManager: TilemapManager;
-  collisionSystem: Collision;
-
-  constructor() {
-    super();
-    this.collisionSystem = new Collision();
-  }
+  private collisionSystem: Collision;
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
+    this.collisionSystem = payload.collisionSystem;
 
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
@@ -44,18 +40,26 @@ export class FixedTickCommand extends Command<
           newY += Math.sin(angle) * velocity;
           isCurrentlyMoving = true;
         }
+
         if (input.down) {
           newX -= Math.cos(angle) * velocity * 0.5;
           newY -= Math.sin(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
+
         if (input.left) {
           player.rotation -= isCurrentlyMoving ? 0.05 : 0.02;
           isCurrentlyMoving = isCurrentlyMoving || false;
         }
+
         if (input.right) {
           player.rotation += isCurrentlyMoving ? 0.05 : 0.02;
           isCurrentlyMoving = isCurrentlyMoving || false;
+        }
+
+        // Handle shooting
+        if (input.shoot) {
+          this.fireBullet(player);
         }
 
         // Check for collisions with pickups
@@ -133,11 +137,6 @@ export class FixedTickCommand extends Command<
         } else {
           player.x = newX;
           player.y = newY;
-        }
-
-        // Handle shooting
-        if (input.shoot) {
-          this.fireBullet(player);
         }
 
         // Update player state

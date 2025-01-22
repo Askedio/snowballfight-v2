@@ -3,9 +3,8 @@ import { Pickup } from "../schemas/Pickup";
 export class CratePickup extends Pickup {
   constructor(config: Partial<Pickup>) {
     super("crate", config.x || 0, config.y || 0);
-    Object.assign(this, config); // Assign all additional parameters
-  
-    this.destroyOnCollision = true;
+    Object.assign(this, config);
+
     this.asset = "winterobjects";
     this.isSprite = true;
     this.spriteFrame = "Crate.png";
@@ -16,15 +15,18 @@ export class CratePickup extends Pickup {
     this.colissionHeight = 60;
     this.colissionWidth = 60;
     this.bringToTop = true;
+
+    this.blocking = true;
+    this.health = config.health || 40;
   }
 
   onPlayerCollision(player: any): void {
-    if (player.speed >= 6) return;
-
-    player.applyTemporaryChange("speed", player.speed + 0.5, 10000);
+    //
   }
 
   onBulletCollision(): boolean {
-    return this.bulletKills;
+    this.health -= this.damange;
+
+    return this.health <= 0;
   }
 }

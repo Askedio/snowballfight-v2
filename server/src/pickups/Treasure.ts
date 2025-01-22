@@ -3,7 +3,7 @@ import { Pickup } from "../schemas/Pickup";
 export class TreasurePickup extends Pickup {
   constructor(config: Partial<Pickup>) {
     super("treasure", config.x || 0, config.y || 0);
-    Object.assign(this, config); // Assign all additional parameters
+    Object.assign(this, config);
   
     this.asset = "treasure";
     this.destroyOnCollision = true;
