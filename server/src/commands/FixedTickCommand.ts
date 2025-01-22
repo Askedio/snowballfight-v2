@@ -15,30 +15,30 @@ export class FixedTickCommand extends Command<
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
-  
+
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
         player.isMoving = false;
         return;
       }
-  
+
       let input: InputData;
       let isCurrentlyMoving = false;
-  
+
       while ((input = player.inputQueue.shift())) {
         const velocity = player.speed || 2;
         const angle = player.rotation;
         let newX = player.x;
         let newY = player.y;
-  
+
         // Check for movement input
         if (input.left) {
-          player.rotation -= 0.05;
-          isCurrentlyMoving = true;
+          player.rotation -= 0.03;
+          isCurrentlyMoving = false;
         }
         if (input.right) {
-          player.rotation += 0.05;
-          isCurrentlyMoving = true;
+          player.rotation += 0.03;
+          isCurrentlyMoving = false;
         }
         if (input.up) {
           newX += Math.cos(angle) * velocity;
@@ -50,7 +50,7 @@ export class FixedTickCommand extends Command<
           newY -= Math.sin(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
-  
+
         // Check for collisions with pickups
         let isBlockedByPickup = false;
         this.room.state.pickups.forEach((pickup) => {
@@ -60,27 +60,27 @@ export class FixedTickCommand extends Command<
             pickup.y
           );
           if (!realPickup) return;
-  
+
           const dx = pickup.x - newX;
           const dy = pickup.y - newY;
           const distance = Math.sqrt(dx * dx + dy * dy);
-  
+
           const pickupRadius = pickup.radius;
           const playerRadius = player.playerRadius;
-  
+
           // Collision detection with blocking pickups
           if (distance < pickupRadius + playerRadius) {
             realPickup.onPlayerCollision(player); // Trigger collision effect
-  
+
             if (realPickup.blocking) {
               isBlockedByPickup = true; // Prevent movement if pickup blocks
             }
-  
+
             // Handle pickup destruction and redeployment
             if (realPickup.destroyOnCollision) {
               const pickupIndex = this.room.state.pickups.indexOf(pickup);
               this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
-  
+
               if (realPickup.isRedeployable) {
                 setTimeout(() => {
                   const redeployedPickup = PickupFactory.createPickup(
@@ -91,8 +91,9 @@ export class FixedTickCommand extends Command<
                   if (redeployedPickup) {
                     redeployedPickup.id = nanoid();
                     redeployedPickup.isRedeployable = realPickup.isRedeployable;
-                    redeployedPickup.redeployTimeout = realPickup.redeployTimeout;
-  
+                    redeployedPickup.redeployTimeout =
+                      realPickup.redeployTimeout;
+
                     this.room.state.pickups.push(redeployedPickup); // Add it back
                   }
                 }, realPickup.redeployTimeout);
@@ -100,36 +101,34 @@ export class FixedTickCommand extends Command<
             }
           }
         });
-  
-        // Apply movement if not blocked by pickups or the tilemap
-        if (
-          !isBlockedByPickup &&
-          !this.tilemapManager.isColliding(
-            newX,
-            newY,
-            player.playerSize,
-            player.playerSize
-          )
-        ) {
+
+        const isColliding = this.tilemapManager.isColliding(
+          newX,
+          newY,
+          player.playerSize,
+          player.playerSize
+        );
+
+        if (isBlockedByPickup || isColliding) {
+          isCurrentlyMoving = false;
+        } else {
           player.x = newX;
           player.y = newY;
         }
-  
+
         // Handle shooting
         if (input.shoot) {
           this.fireBullet(player);
         }
-  
+
         // Update player state
         player.tick = input.tick;
         player.isMoving = isCurrentlyMoving;
       }
     });
-  
+
     this.updateBullets();
   }
-  
-  
 
   fireBullet(player: Player) {
     const now = Date.now();
