@@ -8,6 +8,7 @@ export class FreeForAllScene extends Phaser.Scene {
   roomName: string;
   client: Client;
   skin: string;
+  debugging = false;
 
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -15,7 +16,10 @@ export class FreeForAllScene extends Phaser.Scene {
   playerName: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   bulletEntities: { [bulletId: string]: Phaser.GameObjects.Image } = {};
   pickupEntities: {
-    [pickupId: string]: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    [pickupId: string]:
+      | Phaser.GameObjects.Image
+      | Phaser.GameObjects.Sprite
+      | Phaser.GameObjects.Container;
   } = {}; // Add this line
 
   debugFPS: Phaser.GameObjects.Text;
@@ -340,33 +344,82 @@ export class FreeForAllScene extends Phaser.Scene {
 
   setRoomListeners() {
     this.room.state.pickups.onAdd((pickup) => {
-      let pickupEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+      // Create a container to hold the pickup sprite and the debugging border
+      const pickupContainer = this.add.container(pickup.x, pickup.y);
 
+      // Create the pickup sprite
+      let pickupEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
       if (pickup.isSprite) {
         pickupEntity = this.add.sprite(
-          pickup.x,
-          pickup.y,
+          0, // Position relative to the container
+          0,
           pickup.asset,
           pickup.spriteFrame
         );
       } else {
-        pickupEntity = this.add.image(pickup.x, pickup.y, pickup.asset);
+        pickupEntity = this.add.image(0, 0, pickup.asset);
       }
 
+      // Scale and rotate the sprite if needed
       pickupEntity.setScale(pickup.scale);
 
+      // Add the sprite to the container
+      pickupContainer.add(pickupEntity);
+
+      // Create a debugging border based on the collision shape
+      let debugBorder: Phaser.GameObjects.Graphics | null = null;
+
+      const offsetX = pickup.colissionOffsetX || 0;
+      const offsetY = pickup.colissionOffsetY || 0;
+
+      if (this.debugging) {
+        if (!pickup.colissionShape || pickup.colissionShape === "circle") {
+          debugBorder = this.add.graphics();
+          debugBorder.lineStyle(2, 0xff0000);
+          debugBorder.strokeCircle(offsetX, offsetY, pickup.radius);
+        } else if (pickup.colissionShape === "box") {
+          debugBorder = this.add.graphics();
+          debugBorder.lineStyle(2, 0xff0000); // Red border with transparency
+
+          // Define the inset amount (how much the border should shrink inward)
+          const insetAmount = 8; // Adjust this value as needed
+
+          // Calculate the inset dimensions
+          const insetWidth = pickup.colissionWidth - insetAmount * 2;
+          const insetHeight = pickup.colissionHeight - insetAmount * 2;
+
+          // Draw the inset border
+          debugBorder.strokeRect(
+            offsetX - insetWidth / 2,
+            offsetY - insetHeight / 2,
+            insetWidth,
+            insetHeight
+          );
+        }
+      }
+
+      // Add the debug border to the container
+      if (debugBorder) {
+        pickupContainer.add(debugBorder);
+      }
+
       if (pickup.rotation) {
-        pickupEntity.rotation = pickup.rotation;
+        pickupContainer.setRotation(pickup.rotation);
       }
 
+      // Set the depth if the pickup should appear above other elements
       if (pickup.bringToTop) {
-        pickupEntity.setDepth(2);
+        pickupContainer.setDepth(10);
+      } else {
+        pickupContainer.setDepth(2);
       }
 
-      this.pickupEntities[pickup.id] = pickupEntity;
+      // Add the container to the pickup entities
+      this.pickupEntities[pickup.id] = pickupContainer;
 
+      // Handle position updates when the pickup state changes
       pickup.onChange(() => {
-        pickupEntity.setPosition(pickup.x, pickup.y);
+        pickupContainer.setPosition(pickup.x, pickup.y);
       });
     });
 
@@ -401,20 +454,33 @@ export class FreeForAllScene extends Phaser.Scene {
         `${player.name}`,
         { color: "#ffffff", font: "12px Helvetica Neue" }
       );
-      playerNameText.setOrigin(0.5, 0.5); // Centered
 
+      playerNameText.setOrigin(0.5, 0.5); // Centered
       playerSprite.setOrigin(0.5, 0.5); // Centered
       playerHealthText.setOrigin(0.5, 0.5); // Centered
 
+      const containerItems: any = [playerSprite, playerHealthText, playerNameText];
+
+      let debugBorder: Phaser.GameObjects.Graphics | null = null;
+
+      if (this.debugging) {
+        debugBorder = this.add.graphics();
+        debugBorder.lineStyle(2, 0xff0000);
+        debugBorder.strokeCircle(0, 0, player.playerRadius);
+        containerItems.push(debugBorder);
+      }
+
       // Add both to a container
-      const playerContainer = this.add.container(player.x, player.y, [
-        playerSprite,
-        playerHealthText,
-        playerNameText,
-      ]);
+      const playerContainer = this.add.container(
+        player.x,
+        player.y,
+        containerItems
+      );
 
       // Optionally set size (useful for debugging)
       playerContainer.setSize(playerSprite.width, playerSprite.height);
+
+      playerContainer.setDepth(3);
 
       this.playerEntities[sessionId] = playerContainer;
 

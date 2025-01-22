@@ -298,6 +298,10 @@ img, video {
   display: table;
 }
 
+.shrink {
+  flex-shrink: 1;
+}
+
 .resize {
   resize: both;
 }

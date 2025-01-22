@@ -6,12 +6,19 @@ import type { InputData } from "../interfaces/InputData";
 import { Bullet } from "../schemas/Bullet";
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
+import { Collision } from "../classes/Collision";
 
 export class FixedTickCommand extends Command<
   FreeForAllRoom,
   { tilemapManager: TilemapManager }
 > {
   private tilemapManager: TilemapManager;
+  collisionSystem: Collision;
+
+  constructor() {
+    super();
+    this.collisionSystem = new Collision();
+  }
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
@@ -32,14 +39,6 @@ export class FixedTickCommand extends Command<
         let newY = player.y;
 
         // Check for movement input
-        if (input.left) {
-          player.rotation -= 0.03;
-          isCurrentlyMoving = false;
-        }
-        if (input.right) {
-          player.rotation += 0.03;
-          isCurrentlyMoving = false;
-        }
         if (input.up) {
           newX += Math.cos(angle) * velocity;
           newY += Math.sin(angle) * velocity;
@@ -50,53 +49,73 @@ export class FixedTickCommand extends Command<
           newY -= Math.sin(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
+        if (input.left) {
+          player.rotation -= isCurrentlyMoving ? 0.05 : 0.02;
+          isCurrentlyMoving = isCurrentlyMoving || false;
+        }
+        if (input.right) {
+          player.rotation += isCurrentlyMoving ? 0.05 : 0.02;
+          isCurrentlyMoving = isCurrentlyMoving || false;
+        }
 
         // Check for collisions with pickups
         let isBlockedByPickup = false;
-        this.room.state.pickups.forEach((pickup) => {
-          const realPickup = PickupFactory.createPickup(
-            pickup.type,
-            pickup.x,
-            pickup.y
+        this.room.state.pickups.forEach((pickupSource) => {
+          const pickup = PickupFactory.createPickup(
+            pickupSource.type,
+            pickupSource.x,
+            pickupSource.y
           );
-          if (!realPickup) return;
 
-          const dx = pickup.x - newX;
-          const dy = pickup.y - newY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (!pickup) {
+            return;
+          }
 
-          const pickupRadius = pickup.radius;
-          const playerRadius = player.playerRadius;
+          const isColliding = this.collisionSystem.detectCollision(
+            {
+              type: pickupSource.colissionShape || "circle",
+              x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
+              y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
+              width: pickupSource.colissionWidth,
+              height: pickupSource.colissionHeight,
+              radius: pickupSource.radius,
+              rotation: pickupSource.rotation,
+            },
+            {
+              type: "circle", // Shape type
+              x: newX,
+              y: newY,
+              radius: player.playerRadius,
+            }
+          );
 
-          // Collision detection with blocking pickups
-          if (distance < pickupRadius + playerRadius) {
-            realPickup.onPlayerCollision(player); // Trigger collision effect
+          if (isColliding) {
+            pickup.onPlayerCollision(player); // Trigger collision effect
 
-            if (realPickup.blocking) {
+            if (pickup.blocking) {
               isBlockedByPickup = true; // Prevent movement if pickup blocks
             }
 
             // Handle pickup destruction and redeployment
-            if (realPickup.destroyOnCollision) {
-              const pickupIndex = this.room.state.pickups.indexOf(pickup);
+            if (pickup.destroyOnCollision) {
+              const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
               this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
 
-              if (realPickup.isRedeployable) {
+              if (pickup.isRedeployable) {
                 setTimeout(() => {
                   const redeployedPickup = PickupFactory.createPickup(
-                    realPickup.type,
-                    realPickup.x,
-                    realPickup.y
+                    pickup.type,
+                    pickup.x,
+                    pickup.y
                   );
                   if (redeployedPickup) {
                     redeployedPickup.id = nanoid();
-                    redeployedPickup.isRedeployable = realPickup.isRedeployable;
-                    redeployedPickup.redeployTimeout =
-                      realPickup.redeployTimeout;
+                    redeployedPickup.isRedeployable = pickup.isRedeployable;
+                    redeployedPickup.redeployTimeout = pickup.redeployTimeout;
 
                     this.room.state.pickups.push(redeployedPickup); // Add it back
                   }
-                }, realPickup.redeployTimeout);
+                }, pickup.redeployTimeout);
               }
             }
           }

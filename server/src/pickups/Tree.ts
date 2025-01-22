@@ -8,6 +8,7 @@ export class TreePickup extends Pickup {
     this.scale = 0.7;
     this.bringToTop = true;
     this.blocking = true;
+    this.colissionOffsetY = 47
   }
 
   onPlayerCollision(player: any): void {

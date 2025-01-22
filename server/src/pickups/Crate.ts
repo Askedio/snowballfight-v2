@@ -7,8 +7,13 @@ export class CratePickup extends Pickup {
     this.asset = "winterobjects";
     this.isSprite = true;
     this.spriteFrame = "Crate.png";
-    this.scale = .7;
-    this.rotation = 6
+    this.scale = 0.7;
+    this.rotation = 6;
+
+    this.colissionShape = "box";
+    this.colissionHeight = 60;
+    this.colissionWidth = 60;
+    this.bringToTop = true;
   }
 
   onPlayerCollision(player: any): void {

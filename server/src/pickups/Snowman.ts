@@ -7,6 +7,10 @@ export class SnowmanPickup extends Pickup {
     this.destroyOnCollision = true; // Pickup is destroyed on player collision
     this.bulletKills = true;
     this.scale = 0.4;
+    this.colissionOffsetY = 14;
+    this.colissionOffsetX = 1;
+    this.bringToTop = true
+    this.radius = 24
   }
 
   onPlayerCollision(player: any): void {
