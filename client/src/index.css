@@ -235,3 +235,11 @@ input {
 #error:empty {
   @apply hidden;
 }
+
+#fps {
+  @apply absolute right-3 top-3 text-xs text-white/80;
+}
+
+#connectionStatusText {
+  @apply absolute left-3 bottom-3 text-black text-xs
+}

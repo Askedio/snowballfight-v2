@@ -814,4 +814,23 @@ input {
 #error:empty {
   display: none;
 }
+
+#fps {
+  color: #fffc;
+  font-size: .75rem;
+  line-height: 1rem;
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+}
+
+#connectionStatusText {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+  font-size: .75rem;
+  line-height: 1rem;
+  position: absolute;
+  bottom: .75rem;
+  left: .75rem;
+}
 /*# sourceMappingURL=index.61d3354a.css.map */
