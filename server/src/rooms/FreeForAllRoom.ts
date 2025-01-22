@@ -3,13 +3,28 @@ import { Room } from "colyseus";
 import { TilemapManager } from "../TilemapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
-import type { MyRoomState } from "../states/MyRoomState";
+import { FreeForAllRoomState } from "../states/FreeForAllRoomState";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { OnCreateCommand } from "../commands/OnCreateCommand";
 import { FixedTickCommand } from "../commands/FixedTickCommand";
 import { Collision } from "../classes/Collision";
 
-export class FreeForAllRoom extends Room<MyRoomState> {
+export class FreeForAllRoom extends Room<FreeForAllRoomState> {
+  // Game configuration
+  maxClients = 20
+  mode = "ffa";
+  scoring = "kills";
+  teams = false;
+
+  // Map configuration
+  map = "../client/static/assets/maps/winter/map.json";
+  layers = {
+    base: "base",
+    colissions: "Colissins",
+    land: "Tile Layer 1",
+    spawnLayer: "spawns",
+  };
+
   tilemapManager: TilemapManager;
   dispatcher = new Dispatcher(this);
   customRoomName: string;
@@ -17,16 +32,14 @@ export class FreeForAllRoom extends Room<MyRoomState> {
   collisionSystem: Collision;
 
   async onCreate(options: any) {
-    const mapFilePath = "../client/static/assets/maps/winter/map.json";
-    const collisionLayerName = "Colissins";
-    const spawnLayerName = "spawns";
+    this.setState(new FreeForAllRoomState());
 
     this.collisionSystem = new Collision();
 
     this.tilemapManager = new TilemapManager(
-      mapFilePath,
-      collisionLayerName,
-      spawnLayerName
+      this.map,
+      this.layers.colissions,
+      this.layers.spawnLayer
     );
 
     this.dispatcher.dispatch(new OnCreateCommand(), {

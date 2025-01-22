@@ -1,7 +1,6 @@
 import { Command } from "@colyseus/command";
 import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
 import type { Client } from "colyseus";
-import { MyRoomState } from "../states/MyRoomState";
 import type { TilemapManager } from "../TilemapManager";
 import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
@@ -19,10 +18,6 @@ export class OnCreateCommand extends Command<
   fixedTimeStep = 1000 / 60;
 
   execute(payload: this["payload"]) {
-    this.room.setState(new MyRoomState());
-
-    this.room.maxClients = 20; // Adjust the number as needed
-
     this.tilemapManager = payload.tilemapManager;
 
     this.spawnPickups();

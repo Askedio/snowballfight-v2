@@ -222,6 +222,10 @@ export class FreeForAllScene extends Phaser.Scene {
   }
 
   async create() {
+    document.getElementById("error").innerHTML = "";
+
+    await this.connect();
+
     this.debugFPS = this.add.text(4, 4, "", {
       color: "#ff0000",
       font: "11px Helvetica Neue",
@@ -235,9 +239,7 @@ export class FreeForAllScene extends Phaser.Scene {
 
     const tileset = map.addTilesetImage("Tileset");
 
-    map.createLayer("base", tileset);
-
-    await this.connect();
+    map.createLayer("base", tileset); // base
 
     this.createAnimations();
 
