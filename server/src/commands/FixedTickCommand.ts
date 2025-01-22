@@ -35,7 +35,7 @@ export class FixedTickCommand extends Command<
         let newX = player.x;
         let newY = player.y;
 
-        const isReloading = input.r || input.pointer.reload
+        const isReloading = input.r || input.pointer.reload;
 
         if (
           isReloading &&
@@ -194,7 +194,10 @@ export class FixedTickCommand extends Command<
     const now = Date.now();
     const cooldown = player.bulletCooldown || 100; // Default cooldown to 100ms if undefined
 
-    if (now - player.lastBulletTime < cooldown || player.ammo <= 0) {
+    if (
+      now - player.lastBulletTime < cooldown ||
+      (!player.ammoUnlimited && player.ammo <= 0)
+    ) {
       return; // Skip firing if cooldown hasn't elapsed
     }
 
@@ -226,7 +229,10 @@ export class FixedTickCommand extends Command<
           return; // Do not create the bullet if we can't find the client
         }
 
-        player.ammo -= 1;
+        if (!player.ammoUnlimited) {
+          player.ammo -= 1;
+        }
+        
         this.room.state.bullets.push(bullet);
       }, i * bulletFireDelay); // Delay each bullet by bulletFireDelay * i
     }

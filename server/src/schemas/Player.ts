@@ -26,10 +26,12 @@ export class Player extends Schema {
   @type("number") bulletDamage = 20; // Bullet lifetime in ms
 
   @type("number") ammo = 10;
+  @type("number") previousAmmo = 10;
   @type("number") defaultAmmo = 10;
   @type("boolean") ammoUnlimited = false;
+  @type("boolean") defaultAmmoUnlimited = false;
   @type("number") lastReloadTime = 0;
-  
+
   // Used for applyTemporaryChange
   @type("number") defaultSpeed = 4;
   @type("number") defaultBulletSpeed = 10;
@@ -54,7 +56,8 @@ export class Player extends Schema {
   applyTemporaryChange<K extends keyof this>(
     key: K,
     value: this[K],
-    duration: number
+    duration: number,
+    manulValue?: any
   ): void {
     const keyString = String(key); // Convert key to string for map operations
 
@@ -75,10 +78,14 @@ export class Player extends Schema {
         keyString.charAt(0).toUpperCase() + keyString.slice(1)
       }` as keyof this;
 
-      // Reset to default if defaultKey exists
-      if (defaultKey in this) {
-        // @ts-ignore
-        this[key] = this[defaultKey];
+      if (manulValue) {
+        this[key] = manulValue;
+      } else {
+        // Reset to default if defaultKey exists
+        if (defaultKey in this) {
+          // @ts-ignore
+          this[key] = this[defaultKey];
+        }
       }
 
       // Clean up the timeout
