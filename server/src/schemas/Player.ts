@@ -7,6 +7,9 @@ export class Player extends Schema {
   @type("number") rotation = 0; // Rotation in radians
   @type("number") health = 100;
   @type("number") kills = 0;
+  @type("number") hitRadius = 15;
+  @type("number") playerRadius = 16; // Player radius for their hitbox
+  @type("number") playerSize = 32; // Player size for colissions
 
   @type("number") deaths = 0;
   @type("number") tick: number;

@@ -1,8 +1,9 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class SwordPickup extends Pickup {
-  constructor(x: number, y: number, asset: string) {
-    super("sword", x, y, asset);
+  constructor(x: number, y: number) {
+    super("sword", x, y);
+    this.asset = "sword";
     this.destroyOnCollision = true; // Pickup is destroyed on player collision
   }
 
@@ -11,6 +12,6 @@ export class SwordPickup extends Pickup {
   }
 
   onBulletCollision(): boolean {
-    return this.bulletKills; // Allow bullets to destroy it if bulletKills is true
+    return this.bulletKills;
   }
 }

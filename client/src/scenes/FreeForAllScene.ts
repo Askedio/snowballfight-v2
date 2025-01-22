@@ -3,7 +3,7 @@ import type { Room } from "colyseus.js";
 import { Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
 
-export class Part4Scene extends Phaser.Scene {
+export class FreeForAllScene extends Phaser.Scene {
   room: Room;
   roomName: string;
   client: Client;
@@ -14,7 +14,9 @@ export class Part4Scene extends Phaser.Scene {
   playerHealth: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   playerName: { [sessionId: string]: Phaser.GameObjects.Text } = {};
   bulletEntities: { [bulletId: string]: Phaser.GameObjects.Image } = {};
-  pickupEntities: { [pickupId: string]: Phaser.GameObjects.Image } = {}; // Add this line
+  pickupEntities: {
+    [pickupId: string]: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+  } = {}; // Add this line
 
   debugFPS: Phaser.GameObjects.Text;
 
@@ -105,6 +107,85 @@ export class Part4Scene extends Phaser.Scene {
       "assets/sprites/explosiongrey.json"
     );
 
+    this.load.atlas(
+      "winterobjects",
+      "assets/sprites/winterobjects.png",
+      "assets/sprites/winterobjects.json"
+    );
+
+    this.load.atlas(
+      "health",
+      "assets/sprites/health.png",
+      "assets/sprites/health.json"
+    );
+
+    this.load.image(
+      "tree",
+      "assets/maps/winter/png/128/objects/non-tileable/Tree.png"
+    );
+    this.load.image(
+      "snowman",
+      "assets/maps/winter/png/128/objects/non-tileable/IceMan.png"
+    );
+    this.load.image("cannon", "assets/images/weapons/snowballfire.png");
+
+    this.load.atlas(
+      "kaboom",
+      "assets/sprites/explosion.png",
+      "assets/sprites/explosion.json"
+    );
+
+    this.load.atlas(
+      "explosion2",
+      "assets/sprites/explosion2.png",
+      "assets/sprites/explosion2.json"
+    );
+
+    this.load.audio("explosion", "assets/sounds/explosion.mp3");
+    this.load.audio(
+      "bullet1",
+      "assets/sounds/impacts/bullet_impact_snow_01.mp3"
+    );
+    this.load.audio(
+      "bullet2",
+      "assets/sounds/impacts/bullet_impact_snow_02.mp3"
+    );
+    this.load.audio(
+      "bullet3",
+      "assets/sounds/impacts/bullet_impact_snow_03.mp3"
+    );
+    this.load.audio(
+      "bullet4",
+      "assets/sounds/impacts/bullet_impact_snow_04.mp3"
+    );
+    this.load.audio(
+      "bullet5",
+      "assets/sounds/impacts/bullet_impact_snow_05.mp3"
+    );
+    this.load.audio("chime1", "assets/sounds/chime1.mp3");
+    this.load.audio("chime2", "assets/sounds/chime2.wav");
+    this.load.audio("chime3", "assets/sounds/chime3.wav");
+    this.load.audio("laugh1", "assets/sounds/laugh1.mp3");
+    this.load.audio("move1", "assets/sounds/move1.wav");
+    this.load.audio("shoot1", "assets/sounds/shoot1.mp3");
+
+    this.load.audio(
+      "smash1",
+      "assets/sounds/smashes/Snow_Ball_Smash_Hard_01.mp3"
+    );
+    this.load.audio(
+      "smash2",
+      "assets/sounds/smashes/Snow_Ball_Smash_Hard_02.mp3"
+    );
+    this.load.audio(
+      "smash3",
+      "assets/sounds/smashes/Snow_Ball_Smash_Medium_04.mp3"
+    );
+    this.load.audio(
+      "smash4",
+      "assets/sounds/smashes/Snow_Ball_Smash_Hard_05.mp3"
+    );
+
     // load the PNG file
     this.load.image("Tileset", "assets/maps/winter/map.png");
 
@@ -135,6 +216,10 @@ export class Part4Scene extends Phaser.Scene {
     map.createLayer("base", tileset);
 
     await this.connect();
+
+    this.createAnimations();
+
+    this.setRoomListeners();
 
     if (!this.room?.state) {
       console.error("Unable to join, no state!");
@@ -200,10 +285,6 @@ export class Part4Scene extends Phaser.Scene {
       this.inputPayload.shoot = false;
     });
 
-    this.createAnimations();
-
-    this.setRoomListeners();
-
     document.getElementById("skinlist").addEventListener("click", (e: any) => {
       if (e.target && e.target.nodeName === "IMG") {
         const active = document.getElementsByClassName("active");
@@ -237,8 +318,6 @@ export class Part4Scene extends Phaser.Scene {
           for (const sessionId in this.playerEntities) {
             const container = this.playerEntities[sessionId];
             if (container) {
-              this.playExplosionGrey(container.x, container.y, 0.6);
-
               container.destroy();
               delete this.playerEntities[sessionId];
             }
@@ -260,15 +339,34 @@ export class Part4Scene extends Phaser.Scene {
   }
 
   setRoomListeners() {
-    console.log("listening in room", this.room.id, this.room.roomId);
     this.room.state.pickups.onAdd((pickup) => {
-      const pickupSprite = this.add.image(pickup.x, pickup.y, pickup.type); // Use type as the key for preloaded assets
-      pickupSprite.setScale(0.08); // Reduce the size to 50% of the original
+      let pickupEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 
-      this.pickupEntities[pickup.id] = pickupSprite;
+      if (pickup.isSprite) {
+        pickupEntity = this.add.sprite(
+          pickup.x,
+          pickup.y,
+          pickup.asset,
+          pickup.spriteFrame
+        );
+      } else {
+        pickupEntity = this.add.image(pickup.x, pickup.y, pickup.asset);
+      }
+
+      pickupEntity.setScale(pickup.scale);
+
+      if (pickup.rotation) {
+        pickupEntity.rotation = pickup.rotation;
+      }
+
+      if (pickup.bringToTop) {
+        pickupEntity.setDepth(2);
+      }
+
+      this.pickupEntities[pickup.id] = pickupEntity;
 
       pickup.onChange(() => {
-        pickupSprite.setPosition(pickup.x, pickup.y);
+        pickupEntity.setPosition(pickup.x, pickup.y);
       });
     });
 
@@ -381,12 +479,15 @@ export class Part4Scene extends Phaser.Scene {
 
     // Listen for player death event from the server
     this.room.onMessage("player-death", (data) => {
-      const { sessionId, killer } = data;
+      const { sessionId, player, killer } = data;
 
       const container = this.playerEntities[sessionId];
+
       if (container) {
         this.playExplosionGrey(container.x, container.y, 0.6);
       }
+
+      // this.playSpatialSound(player, "smash1");
 
       if (sessionId === this.room.sessionId) {
         this.handlePlayerDeath(killer);
@@ -500,11 +601,14 @@ export class Part4Scene extends Phaser.Scene {
       this.room.send("input", this.inputPayload);
     } catch (e: any) {
       console.log("Detect error, exit?");
+      document.getElementById("error").innerHTML =
+        "Sorry, there was a problem while loading the game.";
+
       console.error(e);
     }
   }
 
-  private handlePlayerDeath(killer: any) {
+  handlePlayerDeath(killer: any) {
     const joinModal = document.getElementById("join-modal");
     const modalTitle = document.getElementById("modal-title");
     const modalMessage = document.getElementById("modal-message");
@@ -636,6 +740,60 @@ export class Part4Scene extends Phaser.Scene {
         frameRate: 5,
         repeat: -1,
       });
+    });
+  }
+
+  playSpatialSound(target, sound: string, multiplier = 0.6) {
+    const playerX = target.x;
+    const playerY = target.y;
+    const currentPlayerX = this.currentPlayer.x; // Assuming this.currentPlayer has the current player's position
+    const currentPlayerY = this.currentPlayer.y;
+
+    // Calculate the distance between the player who died and the current player
+    const dx = playerX - currentPlayerX;
+    const dy = playerY - currentPlayerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Normalize the distance (you can adjust the range for your game)
+    const maxDistance = 1000; // Maximum distance for full volume (you can adjust this)
+    const volume = Phaser.Math.Clamp(1 - distance / maxDistance, 0, 1); // Volume ranges from 0 to 1 based on distance
+
+    // Calculate the pan value based on the horizontal position of the current player relative to the player who died
+    const pan = Phaser.Math.Clamp(dx / maxDistance, -1, 1); // Pan ranges from -1 (left) to 1 (right)
+
+    // Now using the 3D audio options to make the sound spatial
+    const soundConfig = {
+      x: playerX, // Position of the sound source (the player who died)
+      y: playerY, // Same for the y-coordinate
+      z: 0, // Assuming 2D, but can be extended to 3D (e.g., z=playerHeight for 3D space)
+      panningModel: "equalpower", // Use equal power panning model for a natural stereo effect
+      distanceModel: "inverse", // Inverse model for sound attenuation (distance decreases with the square of distance)
+      refDistance: 1, // Reference distance where the sound volume is at its normal level
+      maxDistance: 1500, // Maximum distance where the sound is still audible
+      rolloffFactor: 1, // Rolloff factor to control how fast the sound diminishes over distance
+      coneInnerAngle: 360, // Angle for the sound cone (full 360 degrees for omnidirectional sound)
+      coneOuterAngle: 0, // Outer angle for the sound cone (0 for no outer cone)
+      coneOuterGain: 0, // Outer gain for the sound cone (0 for no sound outside of the cone)
+      follow: undefined, // Optional: If you want the sound to follow an entity
+    };
+
+    // Play the explosion sound based on the volume and pan with 3D options
+    this.sound.play(target, {
+      volume: volume * multiplier, // Adjust the multiplier to scale the sound as needed
+      pan: pan, // Set pan based on the horizontal offset between the player who died and the current player
+      source: {
+        x: soundConfig.x,
+        y: soundConfig.y,
+        z: soundConfig.z,
+        panningModel: "equalpower",
+        distanceModel: "inverse",
+        refDistance: soundConfig.refDistance,
+        maxDistance: soundConfig.maxDistance,
+        rolloffFactor: soundConfig.rolloffFactor,
+        coneInnerAngle: soundConfig.coneInnerAngle,
+        coneOuterAngle: soundConfig.coneOuterAngle,
+        coneOuterGain: soundConfig.coneOuterGain,
+      },
     });
   }
 }

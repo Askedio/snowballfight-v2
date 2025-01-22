@@ -302,6 +302,10 @@ img, video {
   resize: both;
 }
 
+.border {
+  border-width: 1px;
+}
+
 .text-2xl {
   font-size: 1.5rem;
   line-height: 2rem;
@@ -566,14 +570,15 @@ input {
   margin-bottom: 1rem;
 
   & ul {
-    background-color: #fff6;
+    background-color: #ffffff1a;
     border-width: 1px;
     border-color: #ffffff80;
     border-radius: .5rem;
-    width: 12rem;
-    margin-top: .5rem;
+    width: fit-content;
+    margin-top: .25rem;
     margin-left: auto;
     margin-right: auto;
+    padding: .375rem;
     list-style-type: none;
     display: block;
   }
@@ -581,6 +586,7 @@ input {
   & ul {
     & li {
       border-radius: .375rem;
+      margin-top: .25rem;
       display: inline-block;
     }
 
@@ -775,8 +781,13 @@ input {
 }
 
 #error {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
   text-align: center;
   --tw-text-opacity: 1;
   color: rgb(239 68 68 / var(--tw-text-opacity, 1));
+  position: fixed;
+  bottom: .75rem;
+  left: 50%;
 }
 /*# sourceMappingURL=index.61d3354a.css.map */

@@ -113,10 +113,10 @@ input {
   @apply mb-4;
 
   ul {
-    @apply block w-48 mx-auto mt-2 list-none border border-white/50 rounded-lg bg-white/40;
+    @apply block w-fit mx-auto mt-1 p-1.5 list-none border border-white/50 rounded-lg bg-white/10;
 
     li {
-      @apply inline-block rounded-md;
+      @apply inline-block rounded-md mt-1;
 
       img {
         @apply cursor-pointer opacity-40;
@@ -230,5 +230,5 @@ input {
 }
 
 #error {
-  @apply text-red-500 text-center
+  @apply text-red-500 text-center fixed bottom-3 left-1/2 transform -translate-x-1/2 
 }

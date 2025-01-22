@@ -1,8 +1,9 @@
 import { Pickup } from "../schemas/Pickup";
 
 export class SkullPickup extends Pickup {
-  constructor(x: number, y: number, asset: string) {
-    super("skull", x, y, asset);
+  constructor(x: number, y: number) {
+    super("skull", x, y);
+    this.asset = "skull";
     this.destroyOnCollision = true;
   }
 

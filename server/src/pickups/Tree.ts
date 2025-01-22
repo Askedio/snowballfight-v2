@@ -1,10 +1,13 @@
 import { Pickup } from "../schemas/Pickup";
 
-export class WingsPickup extends Pickup {
+export class TreePickup extends Pickup {
   constructor(x: number, y: number) {
-    super("wings", x, y);
-    this.asset = "wings";
-    this.destroyOnCollision = true; // Pickup is destroyed on player collision
+    super("tree", x, y);
+    this.asset = "tree";
+    this.destroyBulletOnCollision = true;
+    this.scale = 0.7;
+    this.bringToTop = true;
+    this.blocking = true;
   }
 
   onPlayerCollision(player: any): void {

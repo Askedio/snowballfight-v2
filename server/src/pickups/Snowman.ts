@@ -1,11 +1,12 @@
 import { Pickup } from "../schemas/Pickup";
 
-export class DevilPickup extends Pickup {
+export class SnowmanPickup extends Pickup {
   constructor(x: number, y: number) {
-    super("devil", x, y);
-    this.asset = "devil";
+    super("snowman", x, y);
+    this.asset = "snowman";
     this.destroyOnCollision = true; // Pickup is destroyed on player collision
     this.bulletKills = true;
+    this.scale = 0.4;
   }
 
   onPlayerCollision(player: any): void {

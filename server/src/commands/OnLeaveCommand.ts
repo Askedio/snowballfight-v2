@@ -1,9 +1,9 @@
 import { Command } from "@colyseus/command";
-import type { Part4Room } from "../rooms/Part4Room";
+import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
 import type { Client } from "colyseus";
 
 export class OnLeaveCommand extends Command<
-  Part4Room,
+  FreeForAllRoom,
   { client: Client }
 > {
   execute(payload: this["payload"]) {

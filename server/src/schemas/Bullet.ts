@@ -7,4 +7,5 @@ export class Bullet extends Schema {
     @type("number") dy: number;
     @type("number") lifetime = 2000; // Bullet lifetime in ms
     @type("string") ownerId: string;
+    @type("string") colissionType = "defult";
   }

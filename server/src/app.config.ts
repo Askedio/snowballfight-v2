@@ -6,7 +6,7 @@ import type { Server } from "colyseus";
  * Import your Room files
  */
 
-import { Part4Room } from "./rooms/Part4Room";
+import { FreeForAllRoom } from "./rooms/FreeForAllRoom";
 
 let gameServerRef: Server;
 
@@ -20,9 +20,9 @@ export default config({
      * Define your room handlers:
      */
 
-    gameServer.define("default_room", Part4Room);
+    gameServer.define("default_room", FreeForAllRoom);
 
-    gameServer.define("user_room", Part4Room).filterBy(["customRoomName"]);
+    gameServer.define("user_room", FreeForAllRoom).filterBy(["customRoomName"]);
 
     //
     // keep gameServer reference, so we can

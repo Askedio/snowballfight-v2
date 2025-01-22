@@ -1,6 +1,6 @@
 import { Command } from "@colyseus/command";
-import type { Part4Room } from "../rooms/Part4Room";
-import { PickupFactory } from "../PickupFactory";
+import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
+import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
 import type { InputData } from "../interfaces/InputData";
 import { Bullet } from "../schemas/Bullet";
@@ -8,83 +8,30 @@ import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
 
 export class FixedTickCommand extends Command<
-  Part4Room,
+  FreeForAllRoom,
   { tilemapManager: TilemapManager }
 > {
   private tilemapManager: TilemapManager;
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
-
-    const playerSize = 32; // Adjust based on your player sprite size
-
+  
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
         player.isMoving = false;
         return;
       }
-
-      this.room.state.players.forEach((player) => {
-        if (player.isDead) return;
-
-        this.room.state.pickups.forEach((pickup) => {
-          const realPickup = PickupFactory.createPickup(
-            pickup.type,
-            pickup.x,
-            pickup.y,
-            pickup.asset
-          );
-
-          if (!realPickup) return;
-
-          const dx = pickup.x - player.x;
-          const dy = pickup.y - player.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          const pickupRadius = 16; // Adjust as needed for the pickup size
-          const playerRadius = 16; // Adjust as needed for the player size
-
-          if (distance < pickupRadius + playerRadius) {
-            realPickup.onPlayerCollision(player);
-
-            if (realPickup.destroyOnCollision) {
-              const pickupIndex = this.room.state.pickups.indexOf(pickup);
-              this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
-
-              if (realPickup.isRedeployable) {
-                setTimeout(() => {
-                  // Re-create the pickup in the same position
-                  const redeployedPickup = PickupFactory.createPickup(
-                    realPickup.type,
-                    realPickup.x,
-                    realPickup.y,
-                    realPickup.asset
-                  );
-                  if (redeployedPickup) {
-                    redeployedPickup.id = nanoid(); // Assign a new ID
-                    redeployedPickup.isRedeployable = realPickup.isRedeployable;
-                    redeployedPickup.redeployTimeout =
-                      realPickup.redeployTimeout;
-
-                    this.room.state.pickups.push(redeployedPickup); // Add it back to the game state
-                  }
-                }, realPickup.redeployTimeout);
-              }
-            }
-          }
-        });
-      });
-
+  
       let input: InputData;
       let isCurrentlyMoving = false;
-
+  
       while ((input = player.inputQueue.shift())) {
         const velocity = player.speed || 2;
-
         const angle = player.rotation;
         let newX = player.x;
         let newY = player.y;
-
+  
+        // Check for movement input
         if (input.left) {
           player.rotation -= 0.05;
           isCurrentlyMoving = true;
@@ -103,26 +50,86 @@ export class FixedTickCommand extends Command<
           newY -= Math.sin(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
-
-        // Use TilemapManager to check for collisions
+  
+        // Check for collisions with pickups
+        let isBlockedByPickup = false;
+        this.room.state.pickups.forEach((pickup) => {
+          const realPickup = PickupFactory.createPickup(
+            pickup.type,
+            pickup.x,
+            pickup.y
+          );
+          if (!realPickup) return;
+  
+          const dx = pickup.x - newX;
+          const dy = pickup.y - newY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+  
+          const pickupRadius = pickup.radius;
+          const playerRadius = player.playerRadius;
+  
+          // Collision detection with blocking pickups
+          if (distance < pickupRadius + playerRadius) {
+            realPickup.onPlayerCollision(player); // Trigger collision effect
+  
+            if (realPickup.blocking) {
+              isBlockedByPickup = true; // Prevent movement if pickup blocks
+            }
+  
+            // Handle pickup destruction and redeployment
+            if (realPickup.destroyOnCollision) {
+              const pickupIndex = this.room.state.pickups.indexOf(pickup);
+              this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+  
+              if (realPickup.isRedeployable) {
+                setTimeout(() => {
+                  const redeployedPickup = PickupFactory.createPickup(
+                    realPickup.type,
+                    realPickup.x,
+                    realPickup.y
+                  );
+                  if (redeployedPickup) {
+                    redeployedPickup.id = nanoid();
+                    redeployedPickup.isRedeployable = realPickup.isRedeployable;
+                    redeployedPickup.redeployTimeout = realPickup.redeployTimeout;
+  
+                    this.room.state.pickups.push(redeployedPickup); // Add it back
+                  }
+                }, realPickup.redeployTimeout);
+              }
+            }
+          }
+        });
+  
+        // Apply movement if not blocked by pickups or the tilemap
         if (
-          !this.tilemapManager.isColliding(newX, newY, playerSize, playerSize)
+          !isBlockedByPickup &&
+          !this.tilemapManager.isColliding(
+            newX,
+            newY,
+            player.playerSize,
+            player.playerSize
+          )
         ) {
           player.x = newX;
           player.y = newY;
         }
-
+  
+        // Handle shooting
         if (input.shoot) {
           this.fireBullet(player);
         }
-
+  
+        // Update player state
         player.tick = input.tick;
         player.isMoving = isCurrentlyMoving;
       }
     });
-
+  
     this.updateBullets();
   }
+  
+  
 
   fireBullet(player: Player) {
     const now = Date.now();
@@ -172,6 +179,7 @@ export class FixedTickCommand extends Command<
 
       // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
+        bullet.colissionType = "timeout";
         bulletsToRemove.push(bullet);
         return;
       }
@@ -186,6 +194,9 @@ export class FixedTickCommand extends Command<
           bulletSize
         )
       ) {
+        bullet.colissionType = "colissionLayer";
+
+        this.room.broadcast("bullet-destroyed", { bullet });
         bulletsToRemove.push(bullet);
         return;
       }
@@ -194,8 +205,7 @@ export class FixedTickCommand extends Command<
         const realPickup = PickupFactory.createPickup(
           pickup.type,
           pickup.x,
-          pickup.y,
-          pickup.asset
+          pickup.y
         );
 
         if (!realPickup) return;
@@ -209,6 +219,10 @@ export class FixedTickCommand extends Command<
             this.room.state.pickups.indexOf(pickup),
             1
           ); // Remove pickup
+
+          bullet.colissionType = "pickup";
+          this.room.broadcast("bullet-destroyed", { bullet, pickup });
+
           bulletsToRemove.push(bullet);
           return;
         }
@@ -223,8 +237,7 @@ export class FixedTickCommand extends Command<
           const dy = bullet.y - player.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          const hitRadius = 15; // Adjust hit radius based on player size
-          if (distance < hitRadius) {
+          if (distance < player.hitRadius) {
             player.health -= 20;
 
             // Handle player death
@@ -242,7 +255,18 @@ export class FixedTickCommand extends Command<
               }
 
               console.log(`Player ${sessionId} was killed.`);
-              this.room.broadcast("player-death", { sessionId, killer }); // Emit death event
+              this.room.broadcast("player-death", {
+                sessionId,
+                player,
+                killer,
+              }); // Emit death event
+
+              bullet.colissionType = "player";
+              this.room.broadcast("bullet-destroyed", {
+                bullet,
+                player,
+                killer,
+              });
             }
 
             bulletsToRemove.push(bullet);
@@ -258,6 +282,7 @@ export class FixedTickCommand extends Command<
         bullet.y < 0 ||
         bullet.y > mapBounds.height
       ) {
+        bullet.colissionType = "outofbounds";
         bulletsToRemove.push(bullet);
       }
     });

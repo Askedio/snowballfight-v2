@@ -8,16 +8,14 @@ import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { OnCreateCommand } from "../commands/OnCreateCommand";
 import { FixedTickCommand } from "../commands/FixedTickCommand";
 
-export class Part4Room extends Room<MyRoomState> {
+export class FreeForAllRoom extends Room<MyRoomState> {
+  tilemapManager: TilemapManager;
   dispatcher = new Dispatcher(this);
-  private tilemapManager: TilemapManager;
-
   customRoomName: string;
-
   fixedTimeStep = 1000 / 60;
 
   async onCreate(options: any) {
-    const mapFilePath = "../client/static/assets/maps/winter/map.json"; // Update with the correct path
+    const mapFilePath = "../client/static/assets/maps/winter/map.json";
     const collisionLayerName = "Colissins";
     const spawnLayerName = "spawns";
     

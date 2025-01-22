@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-import { Part4Scene } from "./scenes/Part4Scene";
+import { FreeForAllScene } from "./scenes/FreeForAllScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -20,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
   },
-  scene: [Part4Scene],
+  scene: [FreeForAllScene],
 };
 
 const game = new Phaser.Game(config);
