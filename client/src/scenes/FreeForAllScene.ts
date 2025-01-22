@@ -38,6 +38,7 @@ export class FreeForAllScene extends Phaser.Scene {
     up: false,
     down: false,
     shoot: false,
+    pointer: undefined,
     tick: undefined,
   };
 
@@ -226,6 +227,14 @@ export class FreeForAllScene extends Phaser.Scene {
 
     await this.connect();
 
+    if (!this.room?.state) {
+      console.error("Unable to join, no state!");
+      document.getElementById("error").innerHTML =
+        "Sorry, there was a problem while loading the game.";
+
+      return;
+    }
+
     this.debugFPS = this.add.text(4, 4, "", {
       color: "#ff0000",
       font: "11px Helvetica Neue",
@@ -244,14 +253,6 @@ export class FreeForAllScene extends Phaser.Scene {
     this.createAnimations();
 
     this.setRoomListeners();
-
-    if (!this.room?.state) {
-      console.error("Unable to join, no state!");
-      document.getElementById("error").innerHTML =
-        "Sorry, there was a problem while loading the game.";
-
-      return;
-    }
 
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.wasdKeys = {
@@ -677,6 +678,14 @@ export class FreeForAllScene extends Phaser.Scene {
     this.inputPayload.up = this.cursorKeys.up.isDown || this.wasdKeys.W.isDown;
     this.inputPayload.down =
       this.cursorKeys.down.isDown || this.wasdKeys.S.isDown;
+
+    const pointer = this.input.activePointer;
+    this.inputPayload.pointer = {
+      x: pointer.worldX,
+      y: pointer.worldY,
+      shoot: pointer.leftButtonDown()
+    };
+
     try {
       this.room.send("input", this.inputPayload);
     } catch (e: any) {

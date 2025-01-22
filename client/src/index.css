@@ -27,7 +27,7 @@ input {
 
 /* Menu Styles */
 .menu {
-  @apply text-sm absolute top-0 w-full md:w-fit md:left-1/2 md:transform md:-translate-x-1/2 text-white text-lg bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center;
+  @apply text-sm absolute top-0 md:w-fit left-1/2 transform -translate-x-1/2 text-white text-lg bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center;
 
   #player-stats {
     @apply flex flex-row items-center md:space-x-6 mb-0 text-xs;

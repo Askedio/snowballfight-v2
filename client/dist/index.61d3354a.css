@@ -360,6 +360,8 @@ input {
 }
 
 .menu {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
   background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
   --tw-bg-opacity: .75;
   --tw-text-opacity: 1;
@@ -370,20 +372,17 @@ input {
   border-bottom-right-radius: .5rem;
   border-bottom-left-radius: .5rem;
   align-items: center;
-  width: 100%;
   font-size: 1.125rem;
   line-height: 1.75rem;
   display: flex;
   position: absolute;
   top: 0;
+  left: 50%;
 }
 
 @media (width >= 768px) {
   .menu {
-    --tw-translate-x: -50%;
-    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
     width: fit-content;
-    left: 50%;
   }
 }
 

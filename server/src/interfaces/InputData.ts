@@ -5,5 +5,6 @@ export interface InputData {
     down: boolean;
     shoot: boolean;
     tick: number;
+    pointer: any
   }
   

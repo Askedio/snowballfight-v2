@@ -26,6 +26,7 @@ export class FixedTickCommand extends Command<
       }
 
       let input: InputData;
+
       let isCurrentlyMoving = false;
 
       while ((input = player.inputQueue.shift())) {
@@ -48,17 +49,39 @@ export class FixedTickCommand extends Command<
         }
 
         if (input.left) {
-          player.rotation -= isCurrentlyMoving ? 0.05 : 0.02;
-          isCurrentlyMoving = isCurrentlyMoving || false;
+          // Move perpendicular to the rotation angle (left direction)
+          newX += Math.sin(player.rotation) * velocity * 0.3;
+          newY -= Math.cos(player.rotation) * velocity * 0.3;
+          isCurrentlyMoving = true;
+        } else if (input.right) {
+          // Move perpendicular to the rotation angle (right direction)
+          newX -= Math.sin(player.rotation) * velocity * 0.3;
+          newY += Math.cos(player.rotation) * velocity * 0.3;
+          isCurrentlyMoving = true;
         }
 
-        if (input.right) {
-          player.rotation += isCurrentlyMoving ? 0.05 : 0.02;
-          isCurrentlyMoving = isCurrentlyMoving || false;
-        }
+        if (input.pointer) {
+          // Calculate the distance between the pointer and the player
+          const dx = input.pointer.x - player.x;
+          const dy = input.pointer.y - player.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
+          // Check if the pointer is outside the player's radius
+          if (distance > player.playerSize) {
+            const smoothingFactor = 0.1; // Adjust for slower or faster smoothing (0.1 is smooth, closer to 1 is faster)
+
+            const targetAngle = Math.atan2(dy, dx);
+
+            // Smoothly interpolate the player's rotation towards the target angle
+            player.rotation += this.smoothAngle(
+              player.rotation,
+              targetAngle,
+              smoothingFactor
+            );
+          }
+        }
         // Handle shooting
-        if (input.shoot) {
+        if (input.shoot || input.pointer.shoot) {
           this.fireBullet(player);
         }
 
@@ -366,5 +389,15 @@ export class FixedTickCommand extends Command<
         this.room.state.bullets.splice(index, 1);
       }
     });
+  }
+
+  private smoothAngle(current: number, target: number, factor: number): number {
+    let delta = target - current;
+
+    // Normalize delta to the range [-PI, PI]
+    delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+    // Apply smoothing
+    return delta * factor;
   }
 }
