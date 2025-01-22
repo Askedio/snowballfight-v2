@@ -68,6 +68,8 @@ export class OnCreateCommand extends Command<
         if (player.isDead) {
           console.log(`${client.sessionId} is respawning to room ${roomName}.`);
           player.health = 100; // Restore health
+          player.ammo = player.defaultAmmo;
+          
           if (skin) {
             player.skin = skin;
           }
@@ -200,8 +202,10 @@ export class OnCreateCommand extends Command<
     this.assignRandomPosition(player);
 
     // Respawn player with full health
+    player.ammo = player.defaultAmmo;
     player.health = 100;
     player.isDead = false;
+
     if (!skin) {
       player.skin = this.assignRandomSkin();
     } else {

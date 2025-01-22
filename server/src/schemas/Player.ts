@@ -25,6 +25,11 @@ export class Player extends Schema {
   @type("number") bulletFireDelay = 100; // Time between bullet fires.
   @type("number") bulletDamage = 20; // Bullet lifetime in ms
 
+  @type("number") ammo = 10;
+  @type("number") defaultAmmo = 10;
+  @type("boolean") ammoUnlimited = false;
+  @type("number") lastReloadTime = 0;
+  
   // Used for applyTemporaryChange
   @type("number") defaultSpeed = 4;
   @type("number") defaultBulletSpeed = 10;

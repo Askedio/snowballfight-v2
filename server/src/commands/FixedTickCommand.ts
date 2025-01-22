@@ -35,29 +35,41 @@ export class FixedTickCommand extends Command<
         let newX = player.x;
         let newY = player.y;
 
+        const isReloading = input.r || input.pointer.reload
+
+        if (
+          isReloading &&
+          (!player.lastReloadTime || Date.now() - player.lastReloadTime >= 500)
+        ) {
+          player.ammo += 1; // Add ammo
+          player.lastReloadTime = Date.now(); // Update last reload time
+        }
+
         // Check for movement input
-        if (input.up) {
-          newX += Math.cos(angle) * velocity;
-          newY += Math.sin(angle) * velocity;
-          isCurrentlyMoving = true;
-        }
+        if (!isReloading) {
+          if (input.up) {
+            newX += Math.cos(angle) * velocity;
+            newY += Math.sin(angle) * velocity;
+            isCurrentlyMoving = true;
+          }
 
-        if (input.down) {
-          newX -= Math.cos(angle) * velocity * 0.5;
-          newY -= Math.sin(angle) * velocity * 0.5;
-          isCurrentlyMoving = true;
-        }
+          if (input.down) {
+            newX -= Math.cos(angle) * velocity * 0.5;
+            newY -= Math.sin(angle) * velocity * 0.5;
+            isCurrentlyMoving = true;
+          }
 
-        if (input.left) {
-          // Move perpendicular to the rotation angle (left direction)
-          newX += Math.sin(player.rotation) * velocity * 0.3;
-          newY -= Math.cos(player.rotation) * velocity * 0.3;
-          isCurrentlyMoving = true;
-        } else if (input.right) {
-          // Move perpendicular to the rotation angle (right direction)
-          newX -= Math.sin(player.rotation) * velocity * 0.3;
-          newY += Math.cos(player.rotation) * velocity * 0.3;
-          isCurrentlyMoving = true;
+          if (input.left) {
+            // Move perpendicular to the rotation angle (left direction)
+            newX += Math.sin(player.rotation) * velocity * 0.3;
+            newY -= Math.cos(player.rotation) * velocity * 0.3;
+            isCurrentlyMoving = true;
+          } else if (input.right) {
+            // Move perpendicular to the rotation angle (right direction)
+            newX -= Math.sin(player.rotation) * velocity * 0.3;
+            newY += Math.cos(player.rotation) * velocity * 0.3;
+            isCurrentlyMoving = true;
+          }
         }
 
         if (input.pointer) {
@@ -67,7 +79,7 @@ export class FixedTickCommand extends Command<
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           // Check if the pointer is outside the player's radius
-          if (distance > player.playerSize) {
+          if (distance > player.playerSize * 1.5) {
             const smoothingFactor = 0.1; // Adjust for slower or faster smoothing (0.1 is smooth, closer to 1 is faster)
 
             const targetAngle = Math.atan2(dy, dx);
@@ -81,7 +93,7 @@ export class FixedTickCommand extends Command<
           }
         }
         // Handle shooting
-        if (input.shoot || input.pointer.shoot) {
+        if (!isReloading && (input.shoot || input.pointer.shoot)) {
           this.fireBullet(player);
         }
 
@@ -182,7 +194,7 @@ export class FixedTickCommand extends Command<
     const now = Date.now();
     const cooldown = player.bulletCooldown || 100; // Default cooldown to 100ms if undefined
 
-    if (now - player.lastBulletTime < cooldown) {
+    if (now - player.lastBulletTime < cooldown || player.ammo <= 0) {
       return; // Skip firing if cooldown hasn't elapsed
     }
 
@@ -214,6 +226,7 @@ export class FixedTickCommand extends Command<
           return; // Do not create the bullet if we can't find the client
         }
 
+        player.ammo -= 1;
         this.room.state.bullets.push(bullet);
       }, i * bulletFireDelay); // Delay each bullet by bulletFireDelay * i
     }

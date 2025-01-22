@@ -32,12 +32,17 @@ export class FreeForAllScene extends Phaser.Scene {
     D: Phaser.Input.Keyboard.Key;
   };
 
+  rKey: Phaser.Input.Keyboard.Key;
+  eKey: Phaser.Input.Keyboard.Key;
+
   inputPayload = {
     left: false,
     right: false,
     up: false,
     down: false,
     shoot: false,
+    e: false,
+    r: false,
     pointer: undefined,
     tick: undefined,
   };
@@ -261,8 +266,18 @@ export class FreeForAllScene extends Phaser.Scene {
       S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
       D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
     };
+
     const spaceBar = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE,
+      false
+    );
+
+    this.rKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.R,
+      false
+    );
+    this.eKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.E,
       false
     );
 
@@ -454,14 +469,23 @@ export class FreeForAllScene extends Phaser.Scene {
         { color: "#ffffff", font: "12px Helvetica Neue" }
       );
 
+      const playerAmmoText = this.add.text(
+        0, // X relative to the container
+        -30, // Y above the sprite
+        `B: ${player.ammo || 100}`,
+        { color: "#ffffff", font: "10px Helvetica Neue" }
+      );
+
       playerNameText.setOrigin(0.5, 0.5); // Centered
       playerSprite.setOrigin(0.5, 0.5); // Centered
-      playerHealthText.setOrigin(0.5, 0.5); // Centered
+      playerHealthText.setOrigin(-0.5, 0.5); // Centered
+      playerAmmoText.setOrigin(2, 0.5); // Centered
 
       const containerItems: any = [
         playerSprite,
         playerHealthText,
         playerNameText,
+        playerAmmoText,
       ];
 
       let debugBorder: Phaser.GameObjects.Graphics | null = null;
@@ -506,6 +530,7 @@ export class FreeForAllScene extends Phaser.Scene {
         ) as Phaser.GameObjects.Text;
 
         const nameText = container.list[2] as Phaser.GameObjects.Text;
+        const ammoText = container.list[3] as Phaser.GameObjects.Text;
 
         if (container) {
           container.setPosition(player.x, player.y);
@@ -543,6 +568,7 @@ export class FreeForAllScene extends Phaser.Scene {
             }
 
             healthText.setText(`HP: ${player.health}`);
+            ammoText.setText(`B: ${player.ammo}`);
             nameText.setText(`${player.name}`);
           }
         }
@@ -678,12 +704,16 @@ export class FreeForAllScene extends Phaser.Scene {
     this.inputPayload.up = this.cursorKeys.up.isDown || this.wasdKeys.W.isDown;
     this.inputPayload.down =
       this.cursorKeys.down.isDown || this.wasdKeys.S.isDown;
+    this.inputPayload.r = this.rKey.isDown;
+    this.inputPayload.e = this.eKey.isDown;
 
     const pointer = this.input.activePointer;
+    
     this.inputPayload.pointer = {
       x: pointer.worldX,
       y: pointer.worldY,
-      shoot: pointer.leftButtonDown()
+      shoot: pointer.leftButtonDown(),
+      reload: pointer.rightButtonDown(),
     };
 
     try {
