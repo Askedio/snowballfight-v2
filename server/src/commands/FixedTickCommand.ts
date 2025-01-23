@@ -6,7 +6,8 @@ import { Bullet } from "../schemas/Bullet";
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
 import type { Collision } from "../classes/Collision";
-import { assignRandomPosition, resetPlayer } from "../lib/player.lib";
+import { resetPlayer } from "../lib/player.lib";
+import { nanoid } from "nanoid";
 
 export class FixedTickCommand extends Command<
   FreeForAllRoom,
@@ -94,18 +95,88 @@ export class FixedTickCommand extends Command<
 
         player.rotation += this.smoothAngle(player.rotation, targetAngle, 0.1);
 
-        if (distance <= player.playerSize) {
+        if (distance <= player.playerSize * .9) {
           newX = player.x;
           newY = player.y;
           isCurrentlyMoving = false;
         }
       }
 
+      // Handle shooting
       if (!isReloading && (input.shoot || input.pointer?.shoot)) {
         this.fireBullet(player);
       }
 
-      // Check collisions (same as your existing logic)
+      // Check for collisions with pickups
+      let isBlockedByPickup = false;
+      this.room.state.pickups.forEach((pickupSource) => {
+        const pickup = PickupFactory.createPickup(
+          pickupSource.type,
+          pickupSource.x,
+          pickupSource.y
+        );
+
+        if (!pickup) {
+          return;
+        }
+
+        const isColliding = this.collisionSystem.detectCollision(
+          {
+            type: pickupSource.colissionShape || "circle",
+            x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
+            y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
+            width: pickupSource.colissionWidth,
+            height: pickupSource.colissionHeight,
+            radius: pickupSource.radius,
+            rotation: pickupSource.rotation,
+          },
+          {
+            type: "circle", // Shape type
+            x: newX,
+            y: newY,
+            radius: player.playerRadius,
+          }
+        );
+
+        if (isColliding) {
+          pickup.onPlayerCollision(player); // Trigger collision effect
+
+          if (pickup.blocking) {
+            isBlockedByPickup = true; // Prevent movement if pickup blocks
+          }
+
+          if (pickup.playAudioOnPickup && pickup.audioKey) {
+            this.room.broadcast("play-sound", {
+              item: pickup,
+              key: pickup.audioKey,
+            });
+          }
+
+          // Handle pickup destruction and redeployment
+          if (pickup.destroyOnCollision) {
+            const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
+            this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+
+            if (pickup.isRedeployable) {
+              setTimeout(() => {
+                const redeployedPickup = PickupFactory.createPickup(
+                  pickup.type,
+                  pickup.x,
+                  pickup.y
+                );
+                if (redeployedPickup) {
+                  redeployedPickup.id = nanoid();
+                  redeployedPickup.isRedeployable = pickup.isRedeployable;
+                  redeployedPickup.redeployTimeout = pickup.redeployTimeout;
+
+                  this.room.state.pickups.push(redeployedPickup); // Add it back
+                }
+              }, pickup.redeployTimeout);
+            }
+          }
+        }
+      });
+
       const isColliding = this.tilemapManager.isColliding(
         newX,
         newY,
@@ -113,11 +184,12 @@ export class FixedTickCommand extends Command<
         player.playerSize
       );
 
-      if (!isColliding) {
+      if (isBlockedByPickup || isColliding) {
+        isCurrentlyMoving = false;
+      } else {
         player.x = newX;
         player.y = newY;
       }
-
       player.tick = input.tick;
       player.isMoving = isCurrentlyMoving;
     });
@@ -267,7 +339,7 @@ export class FixedTickCommand extends Command<
 
       // Check collisions with players
       for (const [sessionId, player] of this.room.state.players.entries()) {
-        if (player.isDead) {
+        if (player.isDead || player.isProtected) {
           continue; // Skip dead players
         }
 
@@ -309,8 +381,8 @@ export class FixedTickCommand extends Command<
               });
 
               if (player.type === "bot") {
-                setTimeout(() => {
-                  resetPlayer(player, this.tilemapManager);
+                setTimeout(async () => {
+                 await resetPlayer(player, this.tilemapManager);
                 }, 5000);
               }
             }
@@ -358,6 +430,13 @@ export class FixedTickCommand extends Command<
     let nearestPlayer: Player | null = null;
     let minDistance = 999999;
 
+    if(bot.targetPlayer) {
+      const targetPlayer = Array.from(this.state.players.values()).find(_ => _.sessionId === bot.targetPlayer)
+      if(!targetPlayer.isDead && !targetPlayer.isProtected) {
+        return targetPlayer;
+      }
+    }
+
     this.room.state.players.forEach((player) => {
       if (
         player.sessionId !== bot.sessionId &&
@@ -372,6 +451,7 @@ export class FixedTickCommand extends Command<
       }
     });
 
+    bot.targetPlayer = nearestPlayer?.sessionId || null;
     return nearestPlayer;
   }
 
@@ -430,9 +510,9 @@ export class FixedTickCommand extends Command<
     const distance = Math.hypot(dx, dy);
 
     // Random chance to reload instead of shooting
-    const shouldReload = Math.random() < 0.2 && bot.ammo < bot.maxAmmo; // 20% chance to reload if ammo isn't full
+    const shouldReload = Math.random() < 0.2 && bot.ammo <= 4; // 20% chance to reload if ammo isn't full
 
-    const canShoot = Math.random() < 0.2;
+    const canShoot = Math.random() < 0.2 && bot.ammo > 4;
 
     // @ts-ignore
     return {
@@ -440,10 +520,9 @@ export class FixedTickCommand extends Command<
       down: distance < 250, // Back off if too close
       left: distance > 0 ? Math.random() > 0.5 : false, // Random strafing
       right: distance > 0 ? Math.random() > 0.5 : false,
-      shoot: canShoot && distance < 300 && !shouldReload, // Shoot only if within range and not reloading
       pointer: {
-        x: target?.x,
-        y: target?.y,
+        x: target?.x + (Math.random() - 0.5) * 20, // Random offset between -10 and +10
+        y: target?.y + (Math.random() - 0.5) * 20, // Random offset between -10 and +10
         shoot: canShoot && distance < 300 && !shouldReload, // Aim at the target if shooting
         reload: shouldReload, // Reload if shouldReload is true
       },

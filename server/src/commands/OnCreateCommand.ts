@@ -18,13 +18,13 @@ export class OnCreateCommand extends Command<
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
 
-  execute(payload: this["payload"]) {
+  async execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
 
     this.spawnPickups();
 
     for (let i = 0; i < payload.maxBots; i++) {
-      this.createPlayer(null, null, "bot");
+      await this.createPlayer(null, null, "bot");
     }
 
     /*
@@ -71,7 +71,7 @@ export class OnCreateCommand extends Command<
     });
 
     // Rejoin message handler
-    this.room.onMessage("rejoin", (client, { playerName, roomName, skin }) => {
+    this.room.onMessage("rejoin", async (client, { playerName, roomName, skin }) => {
       // Check if the player exists in the room state
       let player = this.room.state.players.get(client.sessionId);
 
@@ -84,7 +84,7 @@ export class OnCreateCommand extends Command<
             skin || "random"
           }.`
         );
-        this.createPlayer(client, skin);
+        await this.createPlayer(client, skin);
         player = this.room.state.players.get(client.sessionId); // Re-fetch the player
       }
 
@@ -102,7 +102,7 @@ export class OnCreateCommand extends Command<
           player.skin = skin;
         }
 
-        resetPlayer(player, this.tilemapManager);
+       await resetPlayer(player, this.tilemapManager);
       } else {
         console.warn(
           `Failed to create or fetch player for ${client.sessionId}`
@@ -216,11 +216,11 @@ export class OnCreateCommand extends Command<
     });
   }
 
-  createPlayer(client: Client, skin: string, type: "human" | "bot" = "human") {
+  async createPlayer(client: Client, skin: string, type: "human" | "bot" = "human") {
     const player = new Player();
 
     // Assign a new random position
-    assignRandomPosition(player, this.tilemapManager);
+    await assignRandomPosition(player, this.tilemapManager);
 
     player.type = type;
     player.ammo = player.defaultAmmo;

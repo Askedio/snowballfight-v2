@@ -75,6 +75,7 @@ export class Player extends Schema {
   @type("number") randomMoveCooldown = 300;
   @type("number") randomPointerX = 0;
   @type("number") randomPointerY = 0;
+  @type("string") targetPlayer = "";
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];

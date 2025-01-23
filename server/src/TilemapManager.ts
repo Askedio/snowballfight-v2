@@ -22,12 +22,16 @@ export class TilemapManager {
   private tileWidth: number;
   private tileHeight: number;
   private mapJson: any;
+  private players: any;
 
   constructor(
     mapFilePath: string,
     collisionLayerName: string,
-    spawnLayerName: string
+    spawnLayerName: string,
+    players: any
   ) {
+
+    this.players = players;
     this.collisionIndex = new RBush<CollisionTile>();
 
     // Load and parse the map JSON
@@ -97,17 +101,58 @@ export class TilemapManager {
    * Returns a random spawn location from the spawn layer.
    * @returns An object containing x and y coordinates.
    */
-  getRandomSpawn(): { x: number; y: number } {
+  async getRandomSpawn(): Promise<{ x: number; y: number }> {
     if (this.spawnTiles.length === 0) {
       throw new Error("No spawn tiles found!");
     }
-    const randomTile =
-      this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
-    return {
-      x: randomTile.x + this.tileWidth / 2, // Center the spawn
-      y: randomTile.y + this.tileHeight / 2,
-    };
+  
+    // If there are no players, pick any random spawn tile
+    if (this.players.size === 0) {
+      const randomTile =
+        this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+      return {
+        x: randomTile.x + this.tileWidth / 2,
+        y: randomTile.y + this.tileHeight / 2,
+      };
+    }
+  
+    const minDistance = this.tileWidth * 2; // Minimum distance from other players (adjust as needed)
+    const maxIterations = 50; // Fallback after 50 iterations
+    let iterations = 0;
+  
+    while (true) {
+      const randomTile =
+        this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+  
+      const spawnX = randomTile.x + this.tileWidth / 2; // Center the spawn
+      const spawnY = randomTile.y + this.tileHeight / 2;
+  
+      // Check distance from all players
+      const isFarEnough = Array.from(this.players.values()).every((player: any) => {
+        const distance = ((spawnX - player.x) ** 2 + (spawnY - player.y) ** 2) ** 0.5;
+        return distance >= minDistance;
+      });
+  
+      if (isFarEnough) {
+        return { x: spawnX, y: spawnY };
+      }
+  
+      iterations++;
+      if (iterations >= maxIterations) {
+        console.warn("Fallback spawn: Could not find a valid spawn after max iterations.");
+        const fallbackTile =
+          this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+        return {
+          x: fallbackTile.x + this.tileWidth / 2,
+          y: fallbackTile.y + this.tileHeight / 2,
+        };
+      }
+  
+      // Delay for 10ms to prevent blocking
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
   }
+  
 
   /**
    * Checks if a given rectangle collides with any collision tiles.

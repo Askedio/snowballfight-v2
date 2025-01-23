@@ -39,11 +39,13 @@ export class CtfRoom extends Room<FreeForAllRoomState> {
     this.tilemapManager = new TilemapManager(
       this.map,
       this.layers.colissions,
-      this.layers.spawnLayer
+      this.layers.spawnLayer,
+      this.state.players
     );
 
     this.dispatcher.dispatch(new OnCreateCommand(), {
       tilemapManager: this.tilemapManager,
+      maxBots: 0
     });
   }
 

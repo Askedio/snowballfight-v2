@@ -1,8 +1,9 @@
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
 
-export function resetPlayer(player: Player, tilemapManager: TilemapManager) {
-  assignRandomPosition(player, tilemapManager); // Respawn at a new position
+export async function resetPlayer(player: Player, tilemapManager: TilemapManager) {
+  await assignRandomPosition(player, tilemapManager); // Respawn at a new position
+
   player.health = player.defaultHealth; // Restore health
   player.ammo = player.defaultAmmo; // Restore ammo
   player.isDead = false; // Mark as alive
@@ -14,12 +15,13 @@ export function resetPlayer(player: Player, tilemapManager: TilemapManager) {
   }, player.protectionTime);
 }
 
-export function assignRandomPosition(
+export  async function assignRandomPosition(
   player: Player,
   tilemapManager: TilemapManager
 ) {
   try {
-    const spawn = tilemapManager.getRandomSpawn();
+    const spawn = await tilemapManager.getRandomSpawn();
+
     player.x = spawn.x;
     player.y = spawn.y;
   } catch (error) {
