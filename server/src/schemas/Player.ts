@@ -32,6 +32,7 @@ export class Player extends Schema {
   @type("number") ammo = 10;
   @type("number") previousAmmo = 10;
   @type("number") defaultAmmo = 10;
+  @type("number") maxAmmo = 50;
   @type("boolean") ammoUnlimited = false;
   @type("boolean") defaultAmmoUnlimited = false;
 

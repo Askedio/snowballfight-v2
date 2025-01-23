@@ -41,6 +41,7 @@ export class FixedTickCommand extends Command<
 
         if (
           isReloading &&
+          player.ammo < player.maxAmmo &&
           (!player.lastReloadTime ||
             Date.now() - player.lastReloadTime >= player.reloadDelay)
         ) {
