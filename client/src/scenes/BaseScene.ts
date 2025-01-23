@@ -61,11 +61,6 @@ export class BaseScene extends Phaser.Scene {
 
   eventListeners: any[] = [];
 
-  destroy() {
-    console.log(this.eventListeners);
-    this.eventListeners.map((_) => _.removeEventListener());
-  }
-
   preload() {
     this.load.image("snowball", "assets/images/weapons/snowball.png");
 
@@ -193,7 +188,80 @@ export class BaseScene extends Phaser.Scene {
 
   initMap() {}
 
+  onSkinChange(e: any) {
+    console.log("skin", e.target.nodeName);
+    if (e.target && e.target.nodeName === "IMG") {
+      const active = document.getElementsByClassName("active");
+      if (active.length) active[0].className = "";
+      const newid = document.getElementById(e.target.id).parentElement;
+
+      console.log({ newid });
+      newid.className = "active";
+
+      this.skin = e.target.id;
+    }
+  }
+
+  async onPlayerRejoin(e: any) {
+    const playerName = (<HTMLInputElement>(
+      document.getElementById("player-name")
+    )).value.trim();
+
+    const roomName =
+      (<HTMLInputElement>document.getElementById("room-name")).value.trim() ||
+      window.location.hash.substring(1);
+
+    if (roomName) {
+      if (roomName !== this.roomName) {
+        this.roomName = roomName;
+        console.log(
+          "leaving room, removeAllListeners, remove all users",
+          this.room.id
+        );
+        this.room.removeAllListeners();
+        await this.room.leave(true);
+
+        for (const sessionId in this.playerEntities) {
+          const container = this.playerEntities[sessionId];
+          if (container) {
+            container.destroy();
+            delete this.playerEntities[sessionId];
+          }
+        }
+
+        this.room = await this.client.joinOrCreate("user_room", {
+          customRoomName: roomName,
+        });
+        this.setRoomListeners();
+      }
+      this.room.send("rejoin", { playerName, roomName, skin: this.skin });
+      window.location.hash = roomName;
+    } else {
+      this.room.send("rejoin", { playerName, roomName, skin: this.skin });
+    }
+
+    window.dispatchEvent(new Event("joined"));
+  }
+
+  onChatSendMessage(message: string) {
+    this.room.send("chat", { message });
+  }
+
   async create() {
+    this.events.once("shutdown", () => {
+      console.log("Scene is shutting down!");
+
+      this.game.events.off("onSkinChange", this.onSkinChange);
+      this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
+      this.game.events.off("onChatSendMessage", this.onChatSendMessage);
+    });
+
+    this.game.events.on("onSkinChange", this.onSkinChange, this);
+    this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
+    this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
+
+    console.log("Starting scene", this.mode);
+
     document.getElementById("error").innerHTML = "";
 
     await this.connect();
@@ -253,132 +321,14 @@ export class BaseScene extends Phaser.Scene {
     spaceBar.on("up", () => {
       this.inputPayload.shoot = false;
     });
-
-    const switchListener = document
-      .getElementById("switch")
-      .addEventListener("click", (e: any) => {
-        if (e.target.id !== "switch") {
-          this.destroy();
-          console.log(e.target.id);
-
-          this.changeScene("ctf");
-          const active = document.getElementsByClassName("activeMode");
-          if (active.length) active[0].className = "";
-
-          const newid = document.getElementById(e.target.id);
-          newid.className = "activeMode";
-        }
-      });
-    this.eventListeners.push(switchListener);
-
-    const skinListener = document
-      .getElementById("skinlist")
-      .addEventListener("click", (e: any) => {
-        if (e.target && e.target.nodeName === "IMG") {
-          const active = document.getElementsByClassName("active");
-          if (active.length) active[0].className = "";
-          const newid = document.getElementById(e.target.id).parentElement;
-          newid.className = "active";
-
-          this.skin = e.target.id;
-        }
-      });
-    this.eventListeners.push(skinListener);
-
-    const rejoinListener = window.addEventListener(
-      "player-rejoin",
-      async () => {
-        const playerName = (<HTMLInputElement>(
-          document.getElementById("player-name")
-        )).value.trim();
-
-        const roomName =
-          (<HTMLInputElement>(
-            document.getElementById("room-name")
-          )).value.trim() || window.location.hash.substring(1);
-
-        if (roomName) {
-          if (roomName !== this.roomName) {
-            this.roomName = roomName;
-            console.log(
-              "leaving room, removeAllListeners, remove all users",
-              this.room.id
-            );
-            this.room.removeAllListeners();
-            await this.room.leave(true);
-
-            for (const sessionId in this.playerEntities) {
-              const container = this.playerEntities[sessionId];
-              if (container) {
-                container.destroy();
-                delete this.playerEntities[sessionId];
-              }
-            }
-
-            this.room = await this.client.joinOrCreate("user_room", {
-              customRoomName: roomName,
-            });
-            this.setRoomListeners();
-          }
-          this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-          window.location.hash = roomName;
-        } else {
-          this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-        }
-
-        window.dispatchEvent(new Event("joined"));
-      }
-    );
-    this.eventListeners.push(rejoinListener);
   }
 
   init() {
     this.disableChat = false;
-
-    // Get the chat input element
-    const chatInput = document.getElementById("chatSend") as HTMLInputElement;
-
-    // Add a mouseleave event listener to the chat input
-    if (chatInput) {
-      const chatListener = chatInput.addEventListener("mouseleave", () => {
-        if (document.activeElement === chatInput) {
-          chatInput.blur(); // Remove focus when the mouse leaves the input
-        }
-      });
-      this.eventListeners.push(chatListener);
-    }
-
-    const keydownListener = document
-      .getElementById("chatSend")
-      .addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          if (this.disableChat) {
-            return;
-          }
-
-          this.disableChat = true;
-
-          const chatInput = document.getElementById(
-            "chatSend"
-          ) as HTMLInputElement;
-          const message = chatInput.value.trim();
-          if (message) {
-            this.room.send("chat", { message });
-            chatInput.value = "";
-          }
-
-          // Re-enable chat after 1 second
-          setTimeout(() => {
-            this.disableChat = false;
-          }, 1000);
-
-          e.preventDefault();
-        }
-      });
-    this.eventListeners.push(keydownListener);
   }
 
   async connect() {
+    console.log("Connecting to servers...")
     document.getElementById("connectionStatusText").innerHTML =
       "Connecting to servers...";
 
@@ -401,6 +351,8 @@ export class BaseScene extends Phaser.Scene {
       } else {
         this.room = await client.joinOrCreate(this.roomName, {});
       }
+
+      console.log("Scene is ready!")
 
       window.dispatchEvent(new Event("ready"));
     } catch (e) {
@@ -625,7 +577,7 @@ export class BaseScene extends Phaser.Scene {
 
       if (sessionId === this.room.sessionId) {
         this.currentPlayer = playerContainer;
-        this.cameras.main.startFollow(this.currentPlayer, true);
+        this.cameras?.main?.startFollow(this.currentPlayer, true);
       }
 
       // React to player state changes, playeronchange
@@ -668,13 +620,14 @@ export class BaseScene extends Phaser.Scene {
               );*/
 
               if (
-                playerSprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
-                !playerSprite.anims.isPlaying
+                playerSprite?.anims?.currentAnim?.key !==
+                  `${player.skin}_walk` ||
+                !playerSprite?.anims?.isPlaying
               ) {
                 playerSprite.play(`${player.skin}_walk`, true);
               }
             } else {
-              if (playerSprite.anims.isPlaying) {
+              if (playerSprite?.anims?.isPlaying) {
                 playerSprite.stop();
                 playerSprite.setTexture("players", `${player.skin}_01.png`);
               }
@@ -866,6 +819,10 @@ export class BaseScene extends Phaser.Scene {
   }
 
   createAnimations() {
+    if (this.anims.exists("explosiongrey")) {
+      return;
+    }
+
     this.anims.create({
       key: "explosiongrey",
       frames: this.anims.generateFrameNames("explosiongrey", {
@@ -930,6 +887,10 @@ export class BaseScene extends Phaser.Scene {
 
   withinScreenView(x: number, y: number, offset = 0): boolean {
     const camera = this.cameras.main;
+
+    if (!camera) {
+      return false;
+    }
 
     // Calculate the screen bounds with offset
     const left = camera.scrollX - offset;

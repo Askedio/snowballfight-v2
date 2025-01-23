@@ -2,6 +2,8 @@ import Phaser from "phaser";
 
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { CtfScene } from "./scenes/CtfScene";
+import { TdmScene } from "./scenes/TdmScene";
+import { TsScene } from "./scenes/TsScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -21,17 +23,79 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
   },
-  scene: [FreeForAllScene, CtfScene],
+  scene: [FreeForAllScene, CtfScene, TdmScene, TsScene],
 };
 
 const game = new Phaser.Game(config);
+
+let activeScene = "ffa";
+
+const chatInput = document.getElementById("chatSend") as HTMLInputElement;
+
+let disableChat = false;
+
+// Add a mouseleave event listener to the chat input
+chatInput.addEventListener("mouseleave", () => {
+  if (document.activeElement === chatInput) {
+    chatInput.blur(); // Remove focus when the mouse leaves the input
+  }
+});
+
+document.getElementById("chatSend").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (disableChat) {
+      return;
+    }
+
+    disableChat = true;
+
+    const chatInput = document.getElementById("chatSend") as HTMLInputElement;
+    const message = chatInput.value.trim();
+    if (message) {
+      game.events.emit("onChatSendMessage", message);
+
+      chatInput.value = "";
+    }
+
+    // Re-enable chat after 1 second
+    setTimeout(() => {
+      disableChat = false;
+    }, 1000);
+
+    e.preventDefault();
+  }
+});
+
+document.getElementById("skinlist").addEventListener("click", (e: any) => {
+  game.events.emit("onSkinChange", e);
+});
+
+window.addEventListener("player-rejoin", async (e: any) => {
+  game.events.emit("onPlayerRejoin", e);
+});
+
+document.getElementById("switch").addEventListener("click", (e: any) => {
+  if (["ffa", "ctf", "tdm", "ts"].includes(e.target.id)) {
+    if (activeScene === e.target.id) {
+      return;
+    }
+    
+    game.scene.stop(activeScene);
+    activeScene = e.target.id;
+    game.scene.start(activeScene);
+    const active = document.getElementsByClassName("activeMode");
+    if (active.length) active[0].className = "";
+
+    const newid = document.getElementById(e.target.id);
+    newid.className = "activeMode";
+  }
+});
 
 window.addEventListener("resize", (event) => {
   game.scale.setGameSize(window.innerWidth, window.innerHeight);
   game.scale.refresh();
 });
 
-// JavaScript to handle modal
 const joinModal = document.getElementById("join-modal");
 const rejoinButton = document.getElementById("join-button");
 

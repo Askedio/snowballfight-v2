@@ -1,16 +1,16 @@
 import { BaseScene } from "./BaseScene";
 
-export class CtfScene extends BaseScene {
-  roomName = "ctf_room";
-  userRoomName = "user_ctf_room";
+export class TsScene extends BaseScene {
+  roomName = "ts_room";
+  userRoomName = "user_ts_room";
 
   // Game configuration
-  mode = "ctf";
+  mode = "ts";
   scoring = "kills";
   teams = false;
 
   constructor() {
-    super({ key: "ctf" });
+    super({ key: "ts" });
 
     this.init();
   }
