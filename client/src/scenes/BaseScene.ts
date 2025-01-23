@@ -618,7 +618,7 @@ export class BaseScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.currentPlayer, true);
       }
 
-      // React to player state changes
+      // React to player state changes, playeronchange
       player.onChange(() => {
         const container = this.playerEntities[
           sessionId
@@ -631,6 +631,7 @@ export class BaseScene extends Phaser.Scene {
           (item) => item instanceof Phaser.GameObjects.Text
         ) as Phaser.GameObjects.Text;
 
+        const playerSprite = container.list[0] as Phaser.GameObjects.Sprite;
         const nameText = container.list[2] as Phaser.GameObjects.Text;
         const ammoText = container.list[3] as Phaser.GameObjects.Text;
 
@@ -641,6 +642,12 @@ export class BaseScene extends Phaser.Scene {
             container.setVisible(false);
           } else {
             container.setVisible(true);
+
+            if (player.isProtected) {
+              playerSprite.setAlpha(0.08);
+            } else {
+              playerSprite.setAlpha(1);
+            }
 
             this.tweens.add({
               targets: container,

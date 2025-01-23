@@ -58,30 +58,38 @@ export class OnCreateCommand extends Command<
       if (!player) {
         // If the player does not exist, create one
         console.log(
-          `${client.sessionId} creating player state in room ${roomName}, skin ${skin}.`
+          `${client.sessionId} creating player state in room ${roomName}, skin ${skin || "random"}.`
         );
         this.createPlayer(client, skin);
         player = this.room.state.players.get(client.sessionId); // Re-fetch the player
       }
 
-      if (player) {
-        if (player.isDead) {
-          console.log(`${client.sessionId} is respawning to room ${roomName}.`);
-          player.health = 100; // Restore health
-          player.ammo = player.defaultAmmo;
-          
-          if (skin) {
-            player.skin = skin;
-          }
-          player.isDead = false; // Mark as alive
-          this.assignRandomPosition(player); // Respawn at a new position
-        }
+      console.log(player.isDead)
 
+      if (player) {
         // Assign player name
         const generator = new RandomNameGenerator();
 
         player.name =
           player.name || playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
+
+        
+          console.log(`${client.sessionId} is respawning to room ${roomName}.`);
+          if (skin) {
+            player.skin = skin;
+          }
+
+          this.assignRandomPosition(player); // Respawn at a new position
+          player.health = player.defaultHealth; // Restore health
+          player.ammo = player.defaultAmmo; // Restore ammo
+          player.isDead = false; // Mark as alive
+
+          // Respawn protection.
+          player.isProtected = true;
+          setTimeout(() => {
+            player.isProtected = false;
+          }, player.protectionTime);
+        
       } else {
         console.warn(
           `Failed to create or fetch player for ${client.sessionId}`

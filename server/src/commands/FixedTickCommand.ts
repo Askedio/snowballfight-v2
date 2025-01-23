@@ -194,6 +194,10 @@ export class FixedTickCommand extends Command<
   }
 
   fireBullet(player: Player) {
+    if (player.isProtected) {
+      player.isProtected = false;
+    }
+
     const now = Date.now();
     const cooldown = player.bulletCooldown || 100; // Default cooldown to 100ms if undefined
 
@@ -229,7 +233,7 @@ export class FixedTickCommand extends Command<
           console.warn(
             `No client found for player at position (${player.x}, ${player.y})`
           );
-          return; // Do not create the bullet if we can't find the client
+          return;
         }
 
         if (!player.ammoUnlimited) {
@@ -366,7 +370,9 @@ export class FixedTickCommand extends Command<
               killer: shooter,
             });
 
-            player.health -= shooter.bulletDamage;
+            if (!player.isProtected) {
+              player.health -= shooter.bulletDamage;
+            }
 
             // Handle player death
             if (player.health <= 0) {

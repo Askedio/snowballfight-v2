@@ -11,22 +11,27 @@ export class Player extends Schema {
   @type("number") playerSize = 32; // Player size for colissions
 
   // Stats
+  @type("number") defaultHealth = 100;
   @type("number") health = 100;
   @type("number") kills = 0;
   @type("number") deaths = 0;
   @type("number") tick: number;
-  @type("boolean") isDead = false; // Track if the player is dead
+  @type("boolean") isDead = true; // Track if the player is dead
   @type("string") name = "";
   @type("string") skin = ""; // Default skin
+  @type("number") speed = 4; // The speed the player moves at
   @type("boolean") isMoving = false; // Track if the player is moving
 
+  // Spawn Protection
+  @type("boolean") isProtected = false; // Player wont take damage
+  @type("number") protectionTime = 3000; // How long they are protected for
+
   // Firing rate/damage
-  @type("number") speed = 4; // The speed the player moves at
-  @type("number") bulletSpeed = 10;
-  @type("number") bulletCooldown = 400;
-  @type("number") bulletFireRate = 1; // Bullet lifetime in ms
+  @type("number") bulletSpeed = 10; // How fast the bullet moves
+  @type("number") bulletCooldown = 400; // Time between actually firing
+  @type("number") bulletFireRate = 1; // Number of bullets to fire
   @type("number") bulletFireDelay = 100; // Time between bullet fires.
-  @type("number") bulletDamage = 20; // Bullet lifetime in ms
+  @type("number") bulletDamage = 20; // The damage caused by the bullet
 
   // Ammo
   @type("number") ammo = 10;
@@ -46,8 +51,8 @@ export class Player extends Schema {
   @type("string") onKilledSound = "smash1";
   @type("string") walkingSound = "footstep1";
   @type("string") runningSound = "footstep1";
-  @type("string") rKeySound = "";
-  @type("string") eKeySound = "";
+ // @type("string") rKeySound = "";
+//  @type("string") eKeySound = "";
 
   // Animations
   @type("string") onKilledAnimation = "explosiongrey";
