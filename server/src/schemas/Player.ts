@@ -34,6 +34,11 @@ export class Player extends Schema {
   @type("number") defaultAmmo = 10;
   @type("boolean") ammoUnlimited = false;
   @type("boolean") defaultAmmoUnlimited = false;
+
+  // Reloading
+  @type("number") reloadAmount = 0;
+  @type("number") reloadDelay = 500;
+  @type("number") reloadPlayerSpeed = 2;
   @type("number") lastReloadTime = 0;
 
   // Sounds
