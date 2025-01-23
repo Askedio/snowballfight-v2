@@ -188,18 +188,8 @@ export class BaseScene extends Phaser.Scene {
 
   initMap() {}
 
-  onSkinChange(e: any) {
-    console.log("skin", e.target.nodeName);
-    if (e.target && e.target.nodeName === "IMG") {
-      const active = document.getElementsByClassName("active");
-      if (active.length) active[0].className = "";
-      const newid = document.getElementById(e.target.id).parentElement;
-
-      console.log({ newid });
-      newid.className = "active";
-
-      this.skin = e.target.id;
-    }
+  onSkinChange(skin: string) {
+    this.skin = skin;
   }
 
   async onPlayerRejoin(e: any) {
@@ -229,7 +219,7 @@ export class BaseScene extends Phaser.Scene {
           }
         }
 
-        this.room = await this.client.joinOrCreate("user_room", {
+        this.room = await this.client.joinOrCreate("ctf_room", {
           customRoomName: roomName,
         });
         this.setRoomListeners();

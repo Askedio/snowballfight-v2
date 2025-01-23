@@ -1,6 +1,6 @@
 import { Command } from "@colyseus/command";
 import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
-import type { Client } from "colyseus";
+import { matchMaker, type Client } from "colyseus";
 import type { TilemapManager } from "../TilemapManager";
 import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
@@ -21,6 +21,21 @@ export class OnCreateCommand extends Command<
     this.tilemapManager = payload.tilemapManager;
 
     this.spawnPickups();
+
+    /*
+    setInterval(async () => {
+      const stats = await matchMaker.query({ name: "ffa_room" });
+      console.log(stats);
+
+      const globalCCU = await matchMaker.stats.getGlobalCCU();
+      console.log(globalCCU);
+
+      const roomCount = matchMaker.stats.local.roomCount;
+      console.log(roomCount);
+
+      const rooms = await matchMaker.query({ name: "battle" });
+      console.log(rooms);
+    }, 1000);*/
 
     this.room.onMessage("chat", (client, { message }) => {
       const player = this.room.state.players.get(client.sessionId);
@@ -58,13 +73,17 @@ export class OnCreateCommand extends Command<
       if (!player) {
         // If the player does not exist, create one
         console.log(
-          `${client.sessionId} creating player state in room ${roomName}, skin ${skin || "random"}.`
+          `${
+            client.sessionId
+          } creating player state in room ${roomName}, skin ${
+            skin || "random"
+          }.`
         );
         this.createPlayer(client, skin);
         player = this.room.state.players.get(client.sessionId); // Re-fetch the player
       }
 
-      console.log(player.isDead)
+      console.log(player.isDead);
 
       if (player) {
         // Assign player name
@@ -73,23 +92,21 @@ export class OnCreateCommand extends Command<
         player.name =
           player.name || playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
 
-        
-          console.log(`${client.sessionId} is respawning to room ${roomName}.`);
-          if (skin) {
-            player.skin = skin;
-          }
+        console.log(`${client.sessionId} is respawning to room ${roomName}.`);
+        if (skin) {
+          player.skin = skin;
+        }
 
-          this.assignRandomPosition(player); // Respawn at a new position
-          player.health = player.defaultHealth; // Restore health
-          player.ammo = player.defaultAmmo; // Restore ammo
-          player.isDead = false; // Mark as alive
+        this.assignRandomPosition(player); // Respawn at a new position
+        player.health = player.defaultHealth; // Restore health
+        player.ammo = player.defaultAmmo; // Restore ammo
+        player.isDead = false; // Mark as alive
 
-          // Respawn protection.
-          player.isProtected = true;
-          setTimeout(() => {
-            player.isProtected = false;
-          }, player.protectionTime);
-        
+        // Respawn protection.
+        player.isProtected = true;
+        setTimeout(() => {
+          player.isProtected = false;
+        }, player.protectionTime);
       } else {
         console.warn(
           `Failed to create or fetch player for ${client.sessionId}`

@@ -2,7 +2,7 @@ import { BaseScene } from "./BaseScene";
 
 export class FreeForAllScene extends BaseScene {
   roomName = "default_room";
-  userRoomName = "user_room";
+  userRoomName = "ffa_room";
 
   // Game configuration
   mode = "ffa";

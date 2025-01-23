@@ -67,7 +67,16 @@ document.getElementById("chatSend").addEventListener("keydown", (e) => {
 });
 
 document.getElementById("skinlist").addEventListener("click", (e: any) => {
-  game.events.emit("onSkinChange", e);
+  if (e.target && e.target.nodeName === "IMG") {
+    const active = document.getElementsByClassName("active");
+    if (active.length) active[0].className = "";
+    const newid = document.getElementById(e.target.id).parentElement;
+
+    newid.className = "active";
+
+    const skin = e.target.id;
+    game.events.emit("onSkinChange", skin);
+  }
 });
 
 window.addEventListener("player-rejoin", async (e: any) => {
@@ -79,10 +88,16 @@ document.getElementById("switch").addEventListener("click", (e: any) => {
     if (activeScene === e.target.id) {
       return;
     }
-    
+
     game.scene.stop(activeScene);
     activeScene = e.target.id;
     game.scene.start(activeScene);
+
+    const activeSkin = document.getElementsByClassName("active");
+    if (activeSkin.length) {
+      game.events.emit("onSkinChange", activeSkin[0].id);
+    }
+
     const active = document.getElementsByClassName("activeMode");
     if (active.length) active[0].className = "";
 
