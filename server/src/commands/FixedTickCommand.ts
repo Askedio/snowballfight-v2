@@ -46,6 +46,9 @@ export class FixedTickCommand extends Command<
             Date.now() - player.lastReloadTime >= player.reloadDelay)
         ) {
           player.ammo += player.reloadAmount; // Add ammo
+          if (player.ammo > player.maxAmmo) {
+            player.ammo = player.maxAmmo; // Fix over limit
+          }
           player.lastReloadTime = Date.now(); // Update last reload time
         }
 

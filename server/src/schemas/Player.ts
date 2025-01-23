@@ -12,6 +12,7 @@ export class Player extends Schema {
 
   // Stats
   @type("number") defaultHealth = 100;
+  @type("number") maxHealth = 100;
   @type("number") health = 100;
   @type("number") kills = 0;
   @type("number") deaths = 0;
@@ -42,7 +43,7 @@ export class Player extends Schema {
   @type("boolean") defaultAmmoUnlimited = false;
 
   // Reloading
-  @type("number") reloadAmount = 0;
+  @type("number") reloadAmount = 2;
   @type("number") reloadDelay = 500;
   @type("number") reloadPlayerSpeed = 2;
   @type("number") lastReloadTime = 0;

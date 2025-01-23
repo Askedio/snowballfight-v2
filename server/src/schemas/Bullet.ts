@@ -14,7 +14,7 @@ export class Bullet extends Schema {
   @type("number") dy: number;
 
   // Stats
-  @type("number") lifetime = 500; // Bullet lifetime in ms
+  @type("number") lifetime = 700; // Bullet lifetime in ms
   @type("number") damage = 20; // Bullet lifetime in ms
 
   // Animations

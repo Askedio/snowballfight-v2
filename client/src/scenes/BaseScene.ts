@@ -554,41 +554,51 @@ export class BaseScene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
-      console.log("add player", player.name);
       const playerSprite = this.add.sprite(
         0,
         0,
         "players",
         `${player.skin}_01.png`
       );
+      playerSprite.setOrigin(0.5, 0.5);
 
-      const playerHealthText = this.add.text(
-        0,
-        -30,
-        `HP: ${player.health || 100}`,
-        { color: "#ffffff", font: "10px Helvetica Neue" }
-      );
-
-      const playerNameText = this.add.text(0, -42, `${player.name}`, {
+      const playerNameText = this.add.text(0, -44, `${player.name}`, {
         color: "#ffffff",
         font: "12px Helvetica Neue",
       });
-
-      const playerAmmoText = this.add.text(0, -30, `B: ${player.ammo || 100}`, {
-        color: "#ffffff",
-        font: "10px Helvetica Neue",
-      });
-
       playerNameText.setOrigin(0.5, 0.5);
-      playerSprite.setOrigin(0.5, 0.5);
-      playerHealthText.setOrigin(-0.5, 0.5);
-      playerAmmoText.setOrigin(2, 0.5);
+      playerNameText.setShadow(1, 1, "#000000", 2, true, true); // Offset (1, 1), black shadow, blur radius 2
+
+      // Add a stroke (outline) around the text
+      playerNameText.setStroke("#999999", 0.5); // Black stroke with thickness 2
+
+      // Health bar background
+      const healthBarBg = this.add.graphics();
+      healthBarBg.fillStyle(0x8b0000, 1); // Light grey background
+      healthBarBg.fillRect(-25, -33, 50, 2); // 50px wide, 2px tall, centered above
+
+      // Health bar foreground
+      const healthBar = this.add.graphics();
+      healthBar.fillStyle(0x4caf50, 1); // Green bar
+      healthBar.fillRect(-25, -33, (player.health / 100) * 50, 2);
+
+      // Ammo bar background
+      const ammoBarBg = this.add.graphics();
+      ammoBarBg.fillStyle(0xaaaaaa, 1); // Light grey background
+      ammoBarBg.fillRect(-25, -29, 50, 2); // 50px wide, 2px tall, positioned slightly below the health bar
+
+      // Ammo bar foreground
+      const ammoBar = this.add.graphics();
+      ammoBar.fillStyle(0x0000ff, 1); // Blue bar
+      ammoBar.fillRect(-25, -29, (player.ammo / 100) * 50, 2);
 
       const containerItems: any = [
         playerSprite,
-        playerHealthText,
         playerNameText,
-        playerAmmoText,
+        healthBarBg,
+        healthBar,
+        ammoBarBg,
+        ammoBar,
       ];
 
       let debugBorder: Phaser.GameObjects.Graphics | null = null;
@@ -623,17 +633,6 @@ export class BaseScene extends Phaser.Scene {
         const container = this.playerEntities[
           sessionId
         ] as Phaser.GameObjects.Container;
-        const sprite = container.list.find(
-          (item) => item instanceof Phaser.GameObjects.Sprite
-        ) as Phaser.GameObjects.Sprite;
-
-        const healthText = container.list.find(
-          (item) => item instanceof Phaser.GameObjects.Text
-        ) as Phaser.GameObjects.Text;
-
-        const playerSprite = container.list[0] as Phaser.GameObjects.Sprite;
-        const nameText = container.list[2] as Phaser.GameObjects.Text;
-        const ammoText = container.list[3] as Phaser.GameObjects.Text;
 
         if (container) {
           container.setPosition(player.x, player.y);
@@ -657,7 +656,7 @@ export class BaseScene extends Phaser.Scene {
               ease: "Linear",
             });
 
-            sprite.setRotation(player.rotation);
+            playerSprite.setRotation(player.rotation);
 
             if (player.isMoving) {
               // to-do: add foot steps sound for current and remote players, diff sounds
@@ -669,21 +668,32 @@ export class BaseScene extends Phaser.Scene {
               );*/
 
               if (
-                sprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
-                !sprite.anims.isPlaying
+                playerSprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
+                !playerSprite.anims.isPlaying
               ) {
-                sprite.play(`${player.skin}_walk`, true);
+                playerSprite.play(`${player.skin}_walk`, true);
               }
             } else {
-              if (sprite.anims.isPlaying) {
-                sprite.stop();
-                sprite.setTexture("players", `${player.skin}_01.png`);
+              if (playerSprite.anims.isPlaying) {
+                playerSprite.stop();
+                playerSprite.setTexture("players", `${player.skin}_01.png`);
               }
             }
 
-            healthText.setText(`HP: ${player.health}`);
-            ammoText.setText(`B: ${player.ammo}`);
-            nameText.setText(`${player.name}`);
+            healthBar.clear();
+            healthBar.fillStyle(0x4caf50, 1); // Green
+            healthBar.fillRect(
+              -25,
+              -33,
+              (player.health / player.maxHealth) * 50,
+              2
+            );
+
+            ammoBar.clear();
+            ammoBar.fillStyle(0x0000ff, 1); // Blue
+            ammoBar.fillRect(-25, -29, (player.ammo / player.maxAmmo) * 50, 2);
+
+            playerNameText.setText(`${player.name}`);
           }
         }
       });
