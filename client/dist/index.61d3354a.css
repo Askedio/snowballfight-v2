@@ -581,6 +581,33 @@ input {
   background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
 }
 
+#switch {
+  background-color: #ffffff1a;
+  border-width: 1px;
+  border-color: #ffffff80;
+  border-radius: .5rem;
+  width: fit-content;
+  margin: .25rem auto 1rem;
+  padding: .375rem;
+  font-size: .75rem;
+  line-height: 1rem;
+  list-style-type: none;
+  display: block;
+
+  & li {
+    cursor: pointer;
+    border-radius: .375rem;
+    padding: .5rem .75rem;
+    display: inline-block;
+  }
+
+  & li {
+    &:hover, &.activeMode {
+      background-color: #ffffff80;
+    }
+  }
+}
+
 #skins {
   margin-bottom: 1rem;
 

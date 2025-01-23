@@ -109,6 +109,21 @@ input {
   @apply bg-gray-800;
 }
 
+#switch {
+  @apply block w-fit mx-auto mt-1 p-1.5 list-none border border-white/50 rounded-lg bg-white/10 text-xs mb-4;
+
+  li {
+    @apply inline-block rounded-md p-2 px-3 cursor-pointer;
+
+    &:hover,
+      &.activeMode {
+        @apply bg-white/50;
+
+      }
+  }
+
+}
+
 #skins {
   @apply mb-4;
 

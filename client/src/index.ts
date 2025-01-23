@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
+import { CtfScene } from "./scenes/CtfScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -20,7 +21,7 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
   },
-  scene: [FreeForAllScene],
+  scene: [FreeForAllScene, CtfScene],
 };
 
 const game = new Phaser.Game(config);

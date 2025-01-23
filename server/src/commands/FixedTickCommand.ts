@@ -32,7 +32,7 @@ export class FixedTickCommand extends Command<
       while ((input = player.inputQueue.shift())) {
         const isReloading = input.r || input.pointer.reload;
 
-        const velocity = isReloading ? 1 : (player.speed || 2);
+        const velocity = isReloading ? 1 : player.speed || 2;
         const angle = player.rotation;
         let newX = player.x;
         let newY = player.y;
@@ -254,6 +254,8 @@ export class FixedTickCommand extends Command<
       // Check if the bullet has expired
       if (bullet.lifetime <= 0) {
         bullet.colissionType = "timeout";
+        this.room.broadcast("bullet-destroyed", { bullet });
+
         bulletsToRemove.push(bullet);
         return;
       }
@@ -352,6 +354,14 @@ export class FixedTickCommand extends Command<
               return;
             }
 
+            bullet.colissionType = "player";
+
+            this.room.broadcast("bullet-destroyed", {
+              bullet,
+              player,
+              killer: shooter,
+            });
+
             player.health -= shooter.bulletDamage;
 
             // Handle player death
@@ -360,23 +370,10 @@ export class FixedTickCommand extends Command<
               player.deaths += 1;
 
               // Increment killer's kills count
-
               shooter.kills += 1;
-              console.log(
-                `Player ${bullet.ownerId} now has ${shooter.kills} kills.`
-              );
-
-              console.log(`Player ${sessionId} was killed.`);
 
               this.room.broadcast("player-death", {
                 sessionId,
-                player,
-                killer: shooter,
-              });
-
-              bullet.colissionType = "player";
-              this.room.broadcast("bullet-destroyed", {
-                bullet,
                 player,
                 killer: shooter,
               });
@@ -396,6 +393,8 @@ export class FixedTickCommand extends Command<
         bullet.y > mapBounds.height
       ) {
         bullet.colissionType = "outofbounds";
+        this.room.broadcast("bullet-destroyed", { bullet });
+
         bulletsToRemove.push(bullet);
       }
     });

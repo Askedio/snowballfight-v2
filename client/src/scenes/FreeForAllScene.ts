@@ -4,6 +4,11 @@ export class FreeForAllScene extends BaseScene {
   roomName = "default_room";
   userRoomName = "user_room";
 
+  // Game configuration
+  mode = "ffa";
+  scoring = "kills";
+  teams = false;
+
   constructor() {
     super({ key: "ffa" });
 

@@ -2,28 +2,32 @@ import { Schema, type } from "@colyseus/schema";
 
 export class Pickup extends Schema {
   @type("string") id: string; // Unique identifier
-
   @type("string") type: string; // e.g., 'devil', 'skull', etc.
+
+  // Display
   @type("boolean") isSprite = false;
   @type("string") spriteFrame: string;
   @type("string") asset: string;
   @type("string") spawnTile: string;
 
+  // Position
   @type("number") x: number; // Spawn position X
   @type("number") y: number; // Spawn position Y
+  @type("number") scale = 0.08; // Time in ms before redeploying
+  @type("number") width: number;
+  @type("number") height: number;
   @type("number") rotation: number;
-
-  @type("number") health = 100; // How much health this item has
-  @type("number") damange = 20; // How much damage a bullet does to this item
-
   @type("number") radius = 12; // The size of the pickup collision zone
-
   @type("string") colissionShape: string;
   @type("number") colissionOffsetX: number;
   @type("number") colissionOffsetY: number;
-
   @type("number") colissionWidth: number;
   @type("number") colissionHeight: number;
+  @type("boolean") bringToTop = false;
+
+  // Stats
+  @type("number") health = 100; // How much health this item has
+  @type("number") damange = 20; // How much damage a bullet does to this item
 
   @type("boolean") destroyable = true; // Can this pickup be destroyed?
   @type("boolean") blocking = false; // Does it block player movement?
@@ -32,19 +36,15 @@ export class Pickup extends Schema {
   @type("boolean") destroyBulletOnCollision = true; // Bullet is destroyed on collision
 
   @type("string") explosionType = "default"; // Optional: explosion effect
-  @type("boolean") disablePlayBulletKillSound = false;
 
   @type("boolean") alwaysPlay = false; // Optional: always active
 
   @type("boolean") isRedeployable = true; // Can this pickup redeploy?
   @type("number") redeployTimeout = 500; // Time in ms before redeploying
 
-  @type("number") scale = 0.08; // Time in ms before redeploying
-  @type("number") width: number;
-  @type("number") height: number;
-
-  @type("boolean") bringToTop = false;
-
+  // Sounds
+  @type("string") impactSound: "";
+  @type("boolean") disablePlayBulletImpactSound = false;
   @type("boolean") playAudioOnPickup = false;
   @type("string") audioKey: string;
 

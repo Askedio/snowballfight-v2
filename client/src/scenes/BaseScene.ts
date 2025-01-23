@@ -7,6 +7,10 @@ export class BaseScene extends Phaser.Scene {
   roomName: string;
   userRoomName: string;
 
+  mode: string;
+  scoring: string;
+  teams: boolean;
+
   room: Room;
   client: Client;
   skin: string;
@@ -54,6 +58,13 @@ export class BaseScene extends Phaser.Scene {
   shootCooldown = 400;
 
   disableChat = false;
+
+  eventListeners: any[] = [];
+
+  destroy() {
+    console.log(this.eventListeners);
+    this.eventListeners.map((_) => _.removeEventListener());
+  }
 
   preload() {
     this.load.image("snowball", "assets/images/weapons/snowball.png");
@@ -243,57 +254,82 @@ export class BaseScene extends Phaser.Scene {
       this.inputPayload.shoot = false;
     });
 
-    document.getElementById("skinlist").addEventListener("click", (e: any) => {
-      if (e.target && e.target.nodeName === "IMG") {
-        const active = document.getElementsByClassName("active");
-        if (active.length) active[0].className = "";
-        const newid = document.getElementById(e.target.id).parentElement;
-        newid.className = "active";
+    const switchListener = document
+      .getElementById("switch")
+      .addEventListener("click", (e: any) => {
+        if (e.target.id !== "switch") {
+          this.destroy();
+          console.log(e.target.id);
 
-        this.skin = e.target.id;
-      }
-    });
+          this.changeScene("ctf");
+          const active = document.getElementsByClassName("activeMode");
+          if (active.length) active[0].className = "";
 
-    window.addEventListener("player-rejoin", async () => {
-      const playerName = (<HTMLInputElement>(
-        document.getElementById("player-name")
-      )).value.trim();
-
-      const roomName =
-        (<HTMLInputElement>document.getElementById("room-name")).value.trim() ||
-        window.location.hash.substring(1);
-
-      if (roomName) {
-        if (roomName !== this.roomName) {
-          this.roomName = roomName;
-          console.log(
-            "leaving room, removeAllListeners, remove all users",
-            this.room.id
-          );
-          this.room.removeAllListeners();
-          await this.room.leave(true);
-
-          for (const sessionId in this.playerEntities) {
-            const container = this.playerEntities[sessionId];
-            if (container) {
-              container.destroy();
-              delete this.playerEntities[sessionId];
-            }
-          }
-
-          this.room = await this.client.joinOrCreate("user_room", {
-            customRoomName: roomName,
-          });
-          this.setRoomListeners();
+          const newid = document.getElementById(e.target.id);
+          newid.className = "activeMode";
         }
-        this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-        window.location.hash = roomName;
-      } else {
-        this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-      }
+      });
+    this.eventListeners.push(switchListener);
 
-      window.dispatchEvent(new Event("joined"));
-    });
+    const skinListener = document
+      .getElementById("skinlist")
+      .addEventListener("click", (e: any) => {
+        if (e.target && e.target.nodeName === "IMG") {
+          const active = document.getElementsByClassName("active");
+          if (active.length) active[0].className = "";
+          const newid = document.getElementById(e.target.id).parentElement;
+          newid.className = "active";
+
+          this.skin = e.target.id;
+        }
+      });
+    this.eventListeners.push(skinListener);
+
+    const rejoinListener = window.addEventListener(
+      "player-rejoin",
+      async () => {
+        const playerName = (<HTMLInputElement>(
+          document.getElementById("player-name")
+        )).value.trim();
+
+        const roomName =
+          (<HTMLInputElement>(
+            document.getElementById("room-name")
+          )).value.trim() || window.location.hash.substring(1);
+
+        if (roomName) {
+          if (roomName !== this.roomName) {
+            this.roomName = roomName;
+            console.log(
+              "leaving room, removeAllListeners, remove all users",
+              this.room.id
+            );
+            this.room.removeAllListeners();
+            await this.room.leave(true);
+
+            for (const sessionId in this.playerEntities) {
+              const container = this.playerEntities[sessionId];
+              if (container) {
+                container.destroy();
+                delete this.playerEntities[sessionId];
+              }
+            }
+
+            this.room = await this.client.joinOrCreate("user_room", {
+              customRoomName: roomName,
+            });
+            this.setRoomListeners();
+          }
+          this.room.send("rejoin", { playerName, roomName, skin: this.skin });
+          window.location.hash = roomName;
+        } else {
+          this.room.send("rejoin", { playerName, roomName, skin: this.skin });
+        }
+
+        window.dispatchEvent(new Event("joined"));
+      }
+    );
+    this.eventListeners.push(rejoinListener);
   }
 
   init() {
@@ -304,40 +340,42 @@ export class BaseScene extends Phaser.Scene {
 
     // Add a mouseleave event listener to the chat input
     if (chatInput) {
-      chatInput.addEventListener("mouseleave", () => {
+      const chatListener = chatInput.addEventListener("mouseleave", () => {
         if (document.activeElement === chatInput) {
           chatInput.blur(); // Remove focus when the mouse leaves the input
         }
       });
+      this.eventListeners.push(chatListener);
     }
 
-    document.getElementById("chatSend").addEventListener("keydown", (e) => {
-      // Check if the pressed key is Enter (key code 13)
-      if (e.key === "Enter") {
-        if (this.disableChat) {
-          return; // Prevent further action if chat is disabled
+    const keydownListener = document
+      .getElementById("chatSend")
+      .addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (this.disableChat) {
+            return;
+          }
+
+          this.disableChat = true;
+
+          const chatInput = document.getElementById(
+            "chatSend"
+          ) as HTMLInputElement;
+          const message = chatInput.value.trim();
+          if (message) {
+            this.room.send("chat", { message });
+            chatInput.value = "";
+          }
+
+          // Re-enable chat after 1 second
+          setTimeout(() => {
+            this.disableChat = false;
+          }, 1000);
+
+          e.preventDefault();
         }
-
-        this.disableChat = true; // Disable chat temporarily
-
-        const chatInput = document.getElementById(
-          "chatSend"
-        ) as HTMLInputElement;
-        const message = chatInput.value.trim(); // Trim leading/trailing spaces
-
-        if (message) {
-          this.room.send("chat", { message });
-          chatInput.value = ""; // Clear the input field
-        }
-
-        // Re-enable chat after 1 second
-        setTimeout(() => {
-          this.disableChat = false;
-        }, 1000);
-
-        e.preventDefault(); // Prevent default behavior (e.g., line break in input)
-      }
-    });
+      });
+    this.eventListeners.push(keydownListener);
   }
 
   async connect() {
@@ -374,6 +412,10 @@ export class BaseScene extends Phaser.Scene {
     }
 
     document.getElementById("connectionStatusText").innerHTML = "";
+  }
+
+  changeScene(scene: string) {
+    this.time.delayedCall(500, this.scene.switch, [scene], this.scene);
   }
 
   handlePlayerDeath(killer: any) {
@@ -454,12 +496,12 @@ export class BaseScene extends Phaser.Scene {
       pickupContainer.add(pickupEntity);
 
       // Create a debugging border based on the collision shape
-      let debugBorder: Phaser.GameObjects.Graphics | null = null;
-
-      const offsetX = pickup.colissionOffsetX || 0;
-      const offsetY = pickup.colissionOffsetY || 0;
-
       if (this.debugging) {
+        const offsetX = pickup.colissionOffsetX || 0;
+        const offsetY = pickup.colissionOffsetY || 0;
+
+        let debugBorder: Phaser.GameObjects.Graphics | null = null;
+
         if (!pickup.colissionShape || pickup.colissionShape === "circle") {
           debugBorder = this.add.graphics();
           debugBorder.lineStyle(2, 0xff0000);
@@ -483,10 +525,7 @@ export class BaseScene extends Phaser.Scene {
             insetHeight
           );
         }
-      }
 
-      // Add the debug border to the container
-      if (debugBorder) {
         pickupContainer.add(debugBorder);
       }
 
@@ -524,30 +563,26 @@ export class BaseScene extends Phaser.Scene {
       );
 
       const playerHealthText = this.add.text(
-        0, // X relative to the container
-        -30, // Y above the sprite
+        0,
+        -30,
         `HP: ${player.health || 100}`,
         { color: "#ffffff", font: "10px Helvetica Neue" }
       );
 
-      const playerNameText = this.add.text(
-        0, // X relative to the container
-        -42, // Y above the sprite
-        `${player.name}`,
-        { color: "#ffffff", font: "12px Helvetica Neue" }
-      );
+      const playerNameText = this.add.text(0, -42, `${player.name}`, {
+        color: "#ffffff",
+        font: "12px Helvetica Neue",
+      });
 
-      const playerAmmoText = this.add.text(
-        0, // X relative to the container
-        -30, // Y above the sprite
-        `B: ${player.ammo || 100}`,
-        { color: "#ffffff", font: "10px Helvetica Neue" }
-      );
+      const playerAmmoText = this.add.text(0, -30, `B: ${player.ammo || 100}`, {
+        color: "#ffffff",
+        font: "10px Helvetica Neue",
+      });
 
-      playerNameText.setOrigin(0.5, 0.5); // Centered
-      playerSprite.setOrigin(0.5, 0.5); // Centered
-      playerHealthText.setOrigin(-0.5, 0.5); // Centered
-      playerAmmoText.setOrigin(2, 0.5); // Centered
+      playerNameText.setOrigin(0.5, 0.5);
+      playerSprite.setOrigin(0.5, 0.5);
+      playerHealthText.setOrigin(-0.5, 0.5);
+      playerAmmoText.setOrigin(2, 0.5);
 
       const containerItems: any = [
         playerSprite,
@@ -572,7 +607,6 @@ export class BaseScene extends Phaser.Scene {
         containerItems
       );
 
-      // Optionally set size (useful for debugging)
       playerContainer.setSize(playerSprite.width, playerSprite.height);
 
       playerContainer.setDepth(3);
@@ -620,7 +654,12 @@ export class BaseScene extends Phaser.Scene {
 
             if (player.isMoving) {
               // to-do: add foot steps sound for current and remote players, diff sounds
-              //this.playSpatialSound(player, "footstep1")
+              /*this.playSpatialSound(
+                player,
+                player.speed > player.defaultSpeed
+                  ? player.runningSound
+                  : player.walkingSound
+              );*/
 
               if (
                 sprite.anims.currentAnim?.key !== `${player.skin}_walk` ||
@@ -650,10 +689,17 @@ export class BaseScene extends Phaser.Scene {
       const container = this.playerEntities[sessionId];
 
       if (container) {
-        this.playExplosionGrey(container.x, container.y, 0.6);
+        if (player.onKilledAnimation) {
+          this.playAnimation(
+            player.onKilledAnimation,
+            container.x,
+            container.y,
+            0.6
+          );
+        }
       }
 
-      this.playSpatialSound(player, "smash1");
+      this.playSpatialSound(player, player.onKilledSound);
 
       if (sessionId === this.room.sessionId) {
         this.handlePlayerDeath(killer);
@@ -665,7 +711,14 @@ export class BaseScene extends Phaser.Scene {
       console.log("remove player", player.name);
       const container = this.playerEntities[sessionId];
       if (container) {
-        this.playExplosionGrey(container.x, container.y, 0.6);
+        if (player.onLeftMapAnimation) {
+          this.playAnimation(
+            player.onLeftMapAnimation,
+            container.x,
+            container.y,
+            0.6
+          );
+        }
 
         container.destroy();
         delete this.playerEntities[sessionId];
@@ -674,7 +727,7 @@ export class BaseScene extends Phaser.Scene {
 
     // Handle bullet addition
     this.room.state.bullets.onAdd((bullet, bulletId) => {
-      const bulletEntity = this.add.image(bullet.x, bullet.y, "snowball");
+      const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
       bulletEntity.setOrigin(0.5, 0.5);
       bulletEntity.setDepth(3);
       this.bulletEntities[bulletId] = bulletEntity;
@@ -686,11 +739,70 @@ export class BaseScene extends Phaser.Scene {
       });
     });
 
-    this.room.onMessage("bullet-destroyed", ({ bullet }) => {
-      this.playExplosionGrey(bullet.x, bullet.y);
+    this.room.onMessage(
+      "bullet-destroyed",
+      ({ bullet, pickup, killer, player }) => {
+        switch (bullet.colissionType) {
+          case "pickup":
+            if (!pickup.disablePlayBulletImpactSound) {
+              this.playSpatialSound(
+                bullet,
+                pickup.impactSound || bullet.impactOnPickupSound
+              );
+            }
+            this.playAnimation(
+              bullet.impactOnPickupAnimation,
+              bullet.x,
+              bullet.y
+            );
+            break;
 
-      this.playSpatialSound(bullet, "bullet1");
-    });
+          case "player":
+            console.log(bullet);
+            this.playSpatialSound(bullet, bullet.impactOnPlayerSound);
+            this.playAnimation(
+              bullet.impactOnPlayerAnimation,
+              bullet.x,
+              bullet.y
+            );
+
+            break;
+          case "colissionLayer":
+            this.playSpatialSound(bullet, bullet.impactOnColissionSound);
+            this.playAnimation(
+              bullet.impactOnColissionAnimation,
+              bullet.x,
+              bullet.y
+            );
+
+            break;
+
+          case "timeout":
+            this.playSpatialSound(bullet, bullet.impactOnTimeoutSound);
+            this.playAnimation(
+              bullet.impactOnTimeoutAnimation,
+              bullet.x,
+              bullet.y
+            );
+
+            break;
+
+          case "outofbounds":
+            this.playSpatialSound(bullet, bullet.impactOnOutofboundsSound);
+            this.playAnimation(
+              bullet.impactOnOutofboundsAnimation,
+              bullet.x,
+              bullet.y
+            );
+
+            break;
+
+          default:
+            this.playSpatialSound(bullet, bullet.impactSound);
+            this.playAnimation(bullet.impactAnimation, bullet.x, bullet.y);
+        }
+      }
+    );
 
     this.room.state.bullets.onRemove((bullet, bulletId) => {
       const bulletEntity = this.bulletEntities[bulletId];
@@ -707,8 +819,6 @@ export class BaseScene extends Phaser.Scene {
     const chatBox = document.getElementById("chatBox") as HTMLUListElement;
 
     this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
-      const time = new Date(timestamp).toLocaleTimeString();
-
       // Add the chat message to the chat box
       const chatItem = document.createElement("li");
       chatItem.textContent = `${playerName}: ${message}`;
@@ -722,6 +832,96 @@ export class BaseScene extends Phaser.Scene {
         chatItem.remove();
       }, 10000);
     });
+  }
+
+  playAnimation(key: string, x: number, y: number, scale = 0.2) {
+    if (!key || !this.withinScreenView(x, y, 100)) {
+      return;
+    }
+
+    const animation = this.add.sprite(x, y, key);
+    animation.setScale(scale);
+    animation.setDepth(11);
+    animation.play(key);
+    animation.on("animationcomplete", () => {
+      animation.destroy();
+    });
+  }
+
+  createAnimations() {
+    this.anims.create({
+      key: "explosiongrey",
+      frames: this.anims.generateFrameNames("explosiongrey", {
+        start: 13,
+        end: 24,
+        prefix: "Effect-fx03_",
+        suffix: ".png",
+      }),
+      frameRate: 15,
+      repeat: 0,
+      hideOnComplete: true,
+    });
+
+    ["playersa", "playersb", "playersc", "playersd"].forEach((skin) => {
+      // Walking animation
+      this.anims.create({
+        key: `${skin}_walk`,
+        frames: [
+          { key: "players", frame: `${skin}_02.png` }, // Left foot forward
+          { key: "players", frame: `${skin}_04.png` }, // Right foot forward
+        ],
+        frameRate: 5,
+        repeat: -1,
+      });
+    });
+  }
+
+  playSpatialSound(target, sound: string, multiplier = 0.3) {
+    if (!sound) {
+      return;
+    }
+
+    const playerX = target.x;
+    const playerY = target.y;
+    const currentPlayerX = this.currentPlayer.x;
+    const currentPlayerY = this.currentPlayer.y;
+
+    // Calculate the distance between the target and the current player
+    const dx = playerX - currentPlayerX;
+    const dy = playerY - currentPlayerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Dynamically adjust max distance based on map size
+    const maxDistance =
+      Math.sqrt(
+        this.room.state.mapWidth ** 2 + this.room.state.mapHeight ** 2
+      ) / 2;
+
+    // Normalize the distance to determine volume (1 at close range, 0 at max distance)
+    const volume =
+      Phaser.Math.Clamp(1 - distance / maxDistance, 0, 1) * multiplier;
+
+    // Calculate the pan value (-1 for far left, 1 for far right)
+    const pan = Phaser.Math.Clamp(dx / maxDistance, -1, 1);
+
+    // Play the sound with the calculated volume and pan
+    this.sound.play(sound, {
+      volume, // Final volume scaled by the multiplier
+      pan, // Panning based on the horizontal offset
+    });
+  }
+
+  withinScreenView(x: number, y: number, offset = 0): boolean {
+    const camera = this.cameras.main;
+
+    // Calculate the screen bounds with offset
+    const left = camera.scrollX - offset;
+    const right = camera.scrollX + camera.width + offset;
+    const top = camera.scrollY - offset;
+    const bottom = camera.scrollY + camera.height + offset;
+
+    // Check if the coordinates are within the bounds
+    return x >= left && x <= right && y >= top && y <= bottom;
   }
 
   updatePlayerStats() {
@@ -781,93 +981,5 @@ export class BaseScene extends Phaser.Scene {
   hideLeaderboard() {
     const leaderboard = document.getElementById("leaderboard");
     leaderboard.style.display = "none";
-  }
-
-  playExplosionGrey(x: number, y: number, scale = 0.2) {
-    if (!this.withinScreenView(x, y, 100)) {
-      return;
-    }
-
-    const explosion = this.add.sprite(x, y, "explosiongrey");
-    explosion.setScale(scale); // Scale down to 50% of its original size
-    explosion.setDepth(11);
-    explosion.play("explosiongrey");
-    explosion.on("animationcomplete", () => {
-      explosion.destroy(); // Clean up after the animation finishes
-    });
-  }
-
-  withinScreenView(x: number, y: number, offset = 0): boolean {
-    const camera = this.cameras.main;
-
-    // Calculate the screen bounds with offset
-    const left = camera.scrollX - offset;
-    const right = camera.scrollX + camera.width + offset;
-    const top = camera.scrollY - offset;
-    const bottom = camera.scrollY + camera.height + offset;
-
-    // Check if the coordinates are within the bounds
-    return x >= left && x <= right && y >= top && y <= bottom;
-  }
-
-  createAnimations() {
-    this.anims.create({
-      key: "explosiongrey",
-      frames: this.anims.generateFrameNames("explosiongrey", {
-        start: 13, // Start frame (from Effect-fx03_13.png)
-        end: 24, // End frame (from Effect-fx03_24.png)
-        prefix: "Effect-fx03_", // Common prefix for filenames
-        suffix: ".png", // File extension
-      }),
-      frameRate: 15, // Adjust the frame rate as needed
-      repeat: 0, // Do not loop the animation
-      hideOnComplete: true, // Hide the sprite when the animation finishes
-    });
-
-    const skins = ["playersa", "playersb", "playersc", "playersd"];
-
-    skins.forEach((skin) => {
-      // Walking animation
-      this.anims.create({
-        key: `${skin}_walk`,
-        frames: [
-          { key: "players", frame: `${skin}_02.png` }, // Left foot forward
-          { key: "players", frame: `${skin}_04.png` }, // Right foot forward
-        ],
-        frameRate: 5,
-        repeat: -1,
-      });
-    });
-  }
-
-  playSpatialSound(target, sound: string, multiplier = 0.3) {
-    const playerX = target.x;
-    const playerY = target.y;
-    const currentPlayerX = this.currentPlayer.x;
-    const currentPlayerY = this.currentPlayer.y;
-
-    // Calculate the distance between the target and the current player
-    const dx = playerX - currentPlayerX;
-    const dy = playerY - currentPlayerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Dynamically adjust max distance based on map size
-    const maxDistance =
-      Math.sqrt(
-        this.room.state.mapWidth ** 2 + this.room.state.mapHeight ** 2
-      ) / 2;
-
-    // Normalize the distance to determine volume (1 at close range, 0 at max distance)
-    const volume =
-      Phaser.Math.Clamp(1 - distance / maxDistance, 0, 1) * multiplier;
-
-    // Calculate the pan value (-1 for far left, 1 for far right)
-    const pan = Phaser.Math.Clamp(dx / maxDistance, -1, 1);
-
-    // Play the sound with the calculated volume and pan
-    this.sound.play(sound, {
-      volume, // Final volume scaled by the multiplier
-      pan, // Panning based on the horizontal offset
-    });
   }
 }
