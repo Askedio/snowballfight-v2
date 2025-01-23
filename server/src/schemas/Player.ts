@@ -2,6 +2,9 @@ import { Schema, type } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
 
 export class Player extends Schema {
+  @type("string") sessionId = "";
+  @type("string") type = "human";
+
   // Position
   @type("number") x = 400;
   @type("number") y = 300;
@@ -65,6 +68,13 @@ export class Player extends Schema {
   @type("number") defaultBulletCooldown = 400;
   @type("number") defaultBulletFireRate = 1;
   @type("number") defaultBulletFireDelay = 100;
+
+
+  // Bots
+  @type("number") lastRandomMoveTime: number;
+  @type("number") randomMoveCooldown = 300;
+  @type("number") randomPointerX = 0;
+  @type("number") randomPointerY = 0;
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];

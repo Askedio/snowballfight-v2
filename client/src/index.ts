@@ -133,7 +133,7 @@ function onReady() {
 
   setTimeout(() => {
     showJoinModal();
-  }, 900);
+  }, 400);
 }
 
 function onJoined() {

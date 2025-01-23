@@ -12,6 +12,8 @@ import { Collision } from "../classes/Collision";
 export class FreeForAllRoom extends Room<FreeForAllRoomState> {
   // Game configuration
   maxClients = 20
+  maxBots = 0;
+
   mode = "ffa";
   scoring = "kills";
   teams = false;
@@ -44,6 +46,7 @@ export class FreeForAllRoom extends Room<FreeForAllRoomState> {
 
     this.dispatcher.dispatch(new OnCreateCommand(), {
       tilemapManager: this.tilemapManager,
+      maxBots: this.maxBots
     });
   }
 

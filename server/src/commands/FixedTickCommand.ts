@@ -1,12 +1,12 @@
 import { Command } from "@colyseus/command";
 import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
 import { PickupFactory } from "../pickups/PickupFactory";
-import { nanoid } from "nanoid";
 import type { InputData } from "../interfaces/InputData";
 import { Bullet } from "../schemas/Bullet";
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
 import type { Collision } from "../classes/Collision";
+import { assignRandomPosition, resetPlayer } from "../lib/player.lib";
 
 export class FixedTickCommand extends Command<
   FreeForAllRoom,
@@ -26,171 +26,100 @@ export class FixedTickCommand extends Command<
       }
 
       let input: InputData;
-
       let isCurrentlyMoving = false;
 
-      while ((input = player.inputQueue.shift())) {
-        const isReloading = input.r || input.pointer.reload;
-
-        const velocity = isReloading
-          ? player.reloadPlayerSpeed
-          : player.speed || player.defaultSpeed;
-        const angle = player.rotation;
-        let newX = player.x;
-        let newY = player.y;
-
-        if (
-          isReloading &&
-          player.ammo < player.maxAmmo &&
-          (!player.lastReloadTime ||
-            Date.now() - player.lastReloadTime >= player.reloadDelay)
-        ) {
-          player.ammo += player.reloadAmount; // Add ammo
-          if (player.ammo > player.maxAmmo) {
-            player.ammo = player.maxAmmo; // Fix over limit
-          }
-          player.lastReloadTime = Date.now(); // Update last reload time
-        }
-
-        // Check for movement input
-
-        if (input.up) {
-          newX += Math.cos(angle) * velocity;
-          newY += Math.sin(angle) * velocity;
-          isCurrentlyMoving = true;
-        }
-
-        if (input.down) {
-          newX -= Math.cos(angle) * velocity * 0.5;
-          newY -= Math.sin(angle) * velocity * 0.5;
-          isCurrentlyMoving = true;
-        }
-
-        if (input.left) {
-          // Move perpendicular to the rotation angle (left direction)
-          newX += Math.sin(player.rotation) * velocity * 0.3;
-          newY -= Math.cos(player.rotation) * velocity * 0.3;
-          isCurrentlyMoving = true;
-        } else if (input.right) {
-          // Move perpendicular to the rotation angle (right direction)
-          newX -= Math.sin(player.rotation) * velocity * 0.3;
-          newY += Math.cos(player.rotation) * velocity * 0.3;
-          isCurrentlyMoving = true;
-        }
-
-        if (input.pointer) {
-          // Calculate the distance between the pointer and the player
-          const dx = input.pointer.x - player.x;
-          const dy = input.pointer.y - player.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          // Check if the pointer is outside the player's radius
-          if (distance > player.playerSize * 1.5) {
-            const smoothingFactor = 0.1; // Adjust for slower or faster smoothing (0.1 is smooth, closer to 1 is faster)
-
-            const targetAngle = Math.atan2(dy, dx);
-
-            // Smoothly interpolate the player's rotation towards the target angle
-            player.rotation += this.smoothAngle(
-              player.rotation,
-              targetAngle,
-              smoothingFactor
-            );
-          }
-        }
-        // Handle shooting
-        if (!isReloading && (input.shoot || input.pointer.shoot)) {
-          this.fireBullet(player);
-        }
-
-        // Check for collisions with pickups
-        let isBlockedByPickup = false;
-        this.room.state.pickups.forEach((pickupSource) => {
-          const pickup = PickupFactory.createPickup(
-            pickupSource.type,
-            pickupSource.x,
-            pickupSource.y
-          );
-
-          if (!pickup) {
-            return;
-          }
-
-          const isColliding = this.collisionSystem.detectCollision(
-            {
-              type: pickupSource.colissionShape || "circle",
-              x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
-              y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
-              width: pickupSource.colissionWidth,
-              height: pickupSource.colissionHeight,
-              radius: pickupSource.radius,
-              rotation: pickupSource.rotation,
-            },
-            {
-              type: "circle", // Shape type
-              x: newX,
-              y: newY,
-              radius: player.playerRadius,
-            }
-          );
-
-          if (isColliding) {
-            pickup.onPlayerCollision(player); // Trigger collision effect
-
-            if (pickup.blocking) {
-              isBlockedByPickup = true; // Prevent movement if pickup blocks
-            }
-
-            if (pickup.playAudioOnPickup && pickup.audioKey) {
-              this.room.broadcast("play-sound", {
-                item: pickup,
-                key: pickup.audioKey,
-              });
-            }
-
-            // Handle pickup destruction and redeployment
-            if (pickup.destroyOnCollision) {
-              const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-              this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
-
-              if (pickup.isRedeployable) {
-                setTimeout(() => {
-                  const redeployedPickup = PickupFactory.createPickup(
-                    pickup.type,
-                    pickup.x,
-                    pickup.y
-                  );
-                  if (redeployedPickup) {
-                    redeployedPickup.id = nanoid();
-                    redeployedPickup.isRedeployable = pickup.isRedeployable;
-                    redeployedPickup.redeployTimeout = pickup.redeployTimeout;
-
-                    this.room.state.pickups.push(redeployedPickup); // Add it back
-                  }
-                }, pickup.redeployTimeout);
-              }
-            }
-          }
-        });
-
-        const isColliding = this.tilemapManager.isColliding(
-          newX,
-          newY,
-          player.playerSize,
-          player.playerSize
-        );
-
-        if (isBlockedByPickup || isColliding) {
-          isCurrentlyMoving = false;
-        } else {
-          player.x = newX;
-          player.y = newY;
-        }
-
-        // Update player state
-        player.tick = input.tick;
-        player.isMoving = isCurrentlyMoving;
+      if (player.type === "bot") {
+        // Generate bot input dynamically
+        const target = this.getNearestPlayer(player); // Get nearest player (function below)
+        input = this.generateBotInput(player, target); // Function to create bot input
+      } else {
+        // Human player input from the queue
+        input = player.inputQueue.shift();
       }
+
+      if (!input) return;
+
+      const isReloading = input.r || input.pointer?.reload;
+
+      const velocity = isReloading
+        ? player.reloadPlayerSpeed
+        : player.speed || player.defaultSpeed;
+      const angle = player.rotation;
+      let newX = player.x;
+      let newY = player.y;
+
+      // Reload logic
+      if (
+        isReloading &&
+        player.ammo < player.maxAmmo &&
+        (!player.lastReloadTime ||
+          Date.now() - player.lastReloadTime >= player.reloadDelay)
+      ) {
+        player.ammo += player.reloadAmount;
+        player.ammo = Math.min(player.ammo, player.maxAmmo);
+        player.lastReloadTime = Date.now();
+      }
+
+      // Movement logic (same as your existing logic)
+      if (input.up) {
+        newX += Math.cos(angle) * velocity;
+        newY += Math.sin(angle) * velocity;
+        isCurrentlyMoving = true;
+      }
+
+      if (input.down) {
+        newX -= Math.cos(angle) * velocity * 0.5;
+        newY -= Math.sin(angle) * velocity * 0.5;
+        isCurrentlyMoving = true;
+      }
+
+      if (input.left) {
+        newX += Math.sin(angle) * velocity * 0.5;
+        newY -= Math.cos(angle) * velocity * 0.5;
+        isCurrentlyMoving = true;
+      } else if (input.right) {
+        newX -= Math.sin(angle) * velocity * 0.5;
+        newY += Math.cos(angle) * velocity * 0.5;
+        isCurrentlyMoving = true;
+      }
+
+      if (input.pointer) {
+        const dx = input.pointer.x - player.x;
+        const dy = input.pointer.y - player.y;
+
+        // Calculate the distance between the pointer and the player
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const targetAngle = Math.atan2(dy, dx);
+
+        player.rotation += this.smoothAngle(player.rotation, targetAngle, 0.1);
+
+        if (distance <= player.playerSize) {
+          newX = player.x;
+          newY = player.y;
+          isCurrentlyMoving = false;
+        }
+      }
+
+      if (!isReloading && (input.shoot || input.pointer?.shoot)) {
+        this.fireBullet(player);
+      }
+
+      // Check collisions (same as your existing logic)
+      const isColliding = this.tilemapManager.isColliding(
+        newX,
+        newY,
+        player.playerSize,
+        player.playerSize
+      );
+
+      if (!isColliding) {
+        player.x = newX;
+        player.y = newY;
+      }
+
+      player.tick = input.tick;
+      player.isMoving = isCurrentlyMoving;
     });
 
     this.updateBullets();
@@ -225,19 +154,7 @@ export class FixedTickCommand extends Command<
         bullet.y = player.y + Math.sin(angle) * 15;
         bullet.dx = Math.cos(angle) * player.bulletSpeed;
         bullet.dy = Math.sin(angle) * player.bulletSpeed;
-
-        const client = this.room.clients.find(
-          (c) => this.room.state.players.get(c.sessionId) === player
-        );
-
-        if (client) {
-          bullet.ownerId = client.sessionId;
-        } else {
-          console.warn(
-            `No client found for player at position (${player.x}, ${player.y})`
-          );
-          return;
-        }
+        bullet.ownerId = player.sessionId;
 
         if (!player.ammoUnlimited) {
           player.ammo -= 1;
@@ -390,6 +307,12 @@ export class FixedTickCommand extends Command<
                 player,
                 killer: shooter,
               });
+
+              if (player.type === "bot") {
+                setTimeout(() => {
+                  resetPlayer(player, this.tilemapManager);
+                }, 5000);
+              }
             }
 
             bulletsToRemove.push(bullet);
@@ -429,5 +352,102 @@ export class FixedTickCommand extends Command<
 
     // Apply smoothing
     return delta * factor;
+  }
+
+  getNearestPlayer(bot: Player): Player | null {
+    let nearestPlayer: Player | null = null;
+    let minDistance = 999999;
+
+    this.room.state.players.forEach((player) => {
+      if (
+        player.sessionId !== bot.sessionId &&
+        !player.isDead &&
+        !player.isProtected
+      ) {
+        const distance = Math.hypot(bot.x - player.x, bot.y - player.y);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestPlayer = player;
+        }
+      }
+    });
+
+    return nearestPlayer;
+  }
+
+  generateBotInput(bot: Player, target: Player): InputData {
+    if (!target?.x) {
+      let randomMove: any = {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+      };
+
+      const distanceToPointer = Math.hypot(
+        bot.randomPointerX - bot.x,
+        bot.randomPointerY - bot.y
+      );
+
+      if (!bot.randomPointerX || distanceToPointer < 1000) {
+        // Adjust threshold as needed
+        const worldWidth = 2000; // Replace with your game's world width
+        const worldHeight = 1100; // Replace with your game's world height
+
+        bot.randomPointerX = Math.random() * worldWidth;
+        bot.randomPointerY = Math.random() * worldHeight;
+      }
+
+      // Random movement logic
+
+      // Randomize movement directions
+      randomMove = {
+        up: distanceToPointer > 0,
+        down: false,
+        left: false,
+        right: false,
+        pointer: {
+          x: bot.randomPointerX,
+          y: bot.randomPointerY,
+        },
+      };
+
+      return {
+        shoot: false, // No shooting without a target
+        pointer: {
+          x: bot?.x,
+          y: bot?.y,
+          shoot: false,
+          reload: false,
+        },
+        r: false, // No reloading without a target
+        ...randomMove,
+      };
+    }
+
+    const dx = target?.x - bot.x;
+    const dy = target?.y - bot.y;
+    const distance = Math.hypot(dx, dy);
+
+    // Random chance to reload instead of shooting
+    const shouldReload = Math.random() < 0.2 && bot.ammo < bot.maxAmmo; // 20% chance to reload if ammo isn't full
+
+    const canShoot = Math.random() < 0.2;
+
+    // @ts-ignore
+    return {
+      up: distance > 250, // Move closer if far
+      down: distance < 250, // Back off if too close
+      left: distance > 0 ? Math.random() > 0.5 : false, // Random strafing
+      right: distance > 0 ? Math.random() > 0.5 : false,
+      shoot: canShoot && distance < 300 && !shouldReload, // Shoot only if within range and not reloading
+      pointer: {
+        x: target?.x,
+        y: target?.y,
+        shoot: canShoot && distance < 300 && !shouldReload, // Aim at the target if shooting
+        reload: shouldReload, // Reload if shouldReload is true
+      },
+      r: shouldReload, // Reload if the bot is reloading
+    };
   }
 }

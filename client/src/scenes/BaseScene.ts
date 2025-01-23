@@ -496,6 +496,16 @@ export class BaseScene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
+      const isCurrentPlayer = sessionId === this.room.sessionId;
+
+      let currentPlayerIndicator: Phaser.GameObjects.Graphics | null = null;
+      if (isCurrentPlayer) {
+        currentPlayerIndicator = this.add.graphics();
+        currentPlayerIndicator.fillStyle(0xffffff, 0.2); // Green with 20% opacity
+        currentPlayerIndicator.fillCircle(0, 0, player.playerSize * 1.5);
+      }
+    
+
       const playerSprite = this.add.sprite(
         0,
         0,
@@ -535,6 +545,7 @@ export class BaseScene extends Phaser.Scene {
       ammoBar.fillRect(-25, -29, (player.ammo / 100) * 50, 2);
 
       const containerItems: any = [
+        currentPlayerIndicator,
         playerSprite,
         playerNameText,
         healthBarBg,
@@ -556,7 +567,7 @@ export class BaseScene extends Phaser.Scene {
       const playerContainer = this.add.container(
         player.x,
         player.y,
-        containerItems
+        containerItems.filter(_ => _)
       );
 
       playerContainer.setSize(playerSprite.width, playerSprite.height);
@@ -718,7 +729,6 @@ export class BaseScene extends Phaser.Scene {
             break;
 
           case "player":
-            console.log(bullet);
             this.playSpatialSound(bullet, bullet.impactOnPlayerSound);
             this.playAnimation(
               bullet.impactOnPlayerAnimation,
@@ -841,7 +851,7 @@ export class BaseScene extends Phaser.Scene {
   }
 
   playSpatialSound(target, sound: string, multiplier = 0.3) {
-    if (!sound) {
+    if (!sound || !this.currentPlayer || !target) {
       return;
     }
 

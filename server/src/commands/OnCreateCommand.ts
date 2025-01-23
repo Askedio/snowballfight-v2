@@ -9,10 +9,11 @@ import type { InputData } from "../interfaces/InputData";
 import { Player } from "../schemas/Player";
 import { RandomNameGenerator } from "../RandomNameGenerator";
 import { pickupItemTypes } from "../pickups";
+import { assignRandomPosition, resetPlayer } from "../lib/player.lib";
 
 export class OnCreateCommand extends Command<
   FreeForAllRoom,
-  { tilemapManager: TilemapManager }
+  { tilemapManager: TilemapManager; maxBots: number }
 > {
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
@@ -21,6 +22,10 @@ export class OnCreateCommand extends Command<
     this.tilemapManager = payload.tilemapManager;
 
     this.spawnPickups();
+
+    for (let i = 0; i < payload.maxBots; i++) {
+      this.createPlayer(null, null, "bot");
+    }
 
     /*
     setInterval(async () => {
@@ -97,16 +102,7 @@ export class OnCreateCommand extends Command<
           player.skin = skin;
         }
 
-        this.assignRandomPosition(player); // Respawn at a new position
-        player.health = player.defaultHealth; // Restore health
-        player.ammo = player.defaultAmmo; // Restore ammo
-        player.isDead = false; // Mark as alive
-
-        // Respawn protection.
-        player.isProtected = true;
-        setTimeout(() => {
-          player.isProtected = false;
-        }, player.protectionTime);
+        resetPlayer(player, this.tilemapManager);
       } else {
         console.warn(
           `Failed to create or fetch player for ${client.sessionId}`
@@ -220,13 +216,13 @@ export class OnCreateCommand extends Command<
     });
   }
 
-  createPlayer(client: Client, skin: string) {
+  createPlayer(client: Client, skin: string, type: "human" | "bot" = "human") {
     const player = new Player();
 
     // Assign a new random position
-    this.assignRandomPosition(player);
+    assignRandomPosition(player, this.tilemapManager);
 
-    // Respawn player with full health
+    player.type = type;
     player.ammo = player.defaultAmmo;
     player.health = 100;
     player.isDead = false;
@@ -237,19 +233,15 @@ export class OnCreateCommand extends Command<
       player.skin = skin;
     }
 
-    this.room.state.players.set(client.sessionId, player);
-  }
+    if (type === "bot") {
+      player.sessionId = `bot_${nanoid()}`; // Assign unique ID for bots
+      this.room.state.players.set(player.sessionId, player);
 
-  assignRandomPosition(player: Player) {
-    try {
-      const spawn = this.tilemapManager.getRandomSpawn();
-      player.x = spawn.x;
-      player.y = spawn.y;
-    } catch (error) {
-      console.error("Error assigning spawn position:", error);
-      // Fallback to a default position
-      player.x = 400;
-      player.y = 300;
+      const generator = new RandomNameGenerator();
+      player.name = generator.generateRandomName().name;
+    } else {
+      player.sessionId = client.sessionId;
+      this.room.state.players.set(client.sessionId, player);
     }
   }
 
