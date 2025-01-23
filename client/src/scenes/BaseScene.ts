@@ -562,7 +562,7 @@ export class BaseScene extends Phaser.Scene {
       );
       playerSprite.setOrigin(0.5, 0.5);
 
-      const playerNameText = this.add.text(0, -44, `${player.name}`, {
+      const playerNameText = this.add.text(0, -43, `${player.name}`, {
         color: "#ffffff",
         font: "12px Helvetica Neue",
       });
@@ -643,9 +643,9 @@ export class BaseScene extends Phaser.Scene {
             container.setVisible(true);
 
             if (player.isProtected) {
-              playerSprite.setAlpha(0.08);
+              playerContainer.setAlpha(0.08);
             } else {
-              playerSprite.setAlpha(1);
+              playerContainer.setAlpha(1);
             }
 
             this.tweens.add({
