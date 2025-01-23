@@ -32,16 +32,19 @@ export class FixedTickCommand extends Command<
       while ((input = player.inputQueue.shift())) {
         const isReloading = input.r || input.pointer.reload;
 
-        const velocity = isReloading ? 1 : player.speed || 2;
+        const velocity = isReloading
+          ? player.reloadPlayerSpeed
+          : player.speed || player.defaultSpeed;
         const angle = player.rotation;
         let newX = player.x;
         let newY = player.y;
 
         if (
           isReloading &&
-          (!player.lastReloadTime || Date.now() - player.lastReloadTime >= 500)
+          (!player.lastReloadTime ||
+            Date.now() - player.lastReloadTime >= player.reloadDelay)
         ) {
-          player.ammo += 2; // Add ammo
+          player.ammo += player.reloadAmount; // Add ammo
           player.lastReloadTime = Date.now(); // Update last reload time
         }
 
