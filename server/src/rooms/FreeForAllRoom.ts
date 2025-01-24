@@ -12,7 +12,7 @@ import { Collision } from "../classes/Collision";
 export class FreeForAllRoom extends Room<FreeForAllRoomState> {
   // Game configuration
   maxClients = 20
-  maxBots = 3;
+  maxBots = 1;
 
   mode = "ffa";
   scoring = "kills";

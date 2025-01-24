@@ -71,44 +71,47 @@ export class OnCreateCommand extends Command<
     });
 
     // Rejoin message handler
-    this.room.onMessage("rejoin", async (client, { playerName, roomName, skin }) => {
-      // Check if the player exists in the room state
-      let player = this.room.state.players.get(client.sessionId);
+    this.room.onMessage(
+      "rejoin",
+      async (client, { playerName, roomName, skin }) => {
+        // Check if the player exists in the room state
+        let player = this.room.state.players.get(client.sessionId);
 
-      if (!player) {
-        // If the player does not exist, create one
-        console.log(
-          `${
-            client.sessionId
-          } creating player state in room ${roomName}, skin ${
-            skin || "random"
-          }.`
-        );
-        await this.createPlayer(client, skin);
-        player = this.room.state.players.get(client.sessionId); // Re-fetch the player
-      }
-
-      console.log(player.isDead);
-
-      if (player) {
-        // Assign player name
-        const generator = new RandomNameGenerator();
-
-        player.name =
-          player.name || playerName || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
-
-        console.log(`${client.sessionId} is respawning to room ${roomName}.`);
-        if (skin) {
-          player.skin = skin;
+        if (!player) {
+          // If the player does not exist, create one
+          console.log(
+            `${
+              client.sessionId
+            } creating player state in room ${roomName}, skin ${
+              skin || "random"
+            }.`
+          );
+          await this.createPlayer(client, skin);
+          player = this.room.state.players.get(client.sessionId); // Re-fetch the player
         }
 
-       await resetPlayer(player, this.tilemapManager);
-      } else {
-        console.warn(
-          `Failed to create or fetch player for ${client.sessionId}`
-        );
+        if (player) {
+          // Assign player name
+          const generator = new RandomNameGenerator();
+
+          if (playerName !== "") {
+            player.name = playerName;
+          } else {
+            player.name = player.name || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
+          }
+          console.log(`${client.sessionId} is respawning to room ${roomName}.`);
+          if (skin) {
+            player.skin = skin;
+          }
+
+          await resetPlayer(player, this.tilemapManager);
+        } else {
+          console.warn(
+            `Failed to create or fetch player for ${client.sessionId}`
+          );
+        }
       }
-    });
+    );
 
     let elapsedTime = 0;
     this.room.setSimulationInterval((deltaTime) => {
@@ -216,7 +219,11 @@ export class OnCreateCommand extends Command<
     });
   }
 
-  async createPlayer(client: Client, skin: string, type: "human" | "bot" = "human") {
+  async createPlayer(
+    client: Client,
+    skin: string,
+    type: "human" | "bot" = "human"
+  ) {
     const player = new Player();
 
     // Assign a new random position

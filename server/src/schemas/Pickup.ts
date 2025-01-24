@@ -13,40 +13,42 @@ export class Pickup extends Schema {
   // Position
   @type("number") x: number; // Spawn position X
   @type("number") y: number; // Spawn position Y
-  @type("number") scale = 0.08; // Time in ms before redeploying
+  @type("number") scale = 0.08;
   @type("number") width: number;
   @type("number") height: number;
   @type("number") rotation: number;
   @type("number") radius = 12; // The size of the pickup collision zone
-  @type("string") colissionShape: string;
+  @type("string") colissionShape: string; // The following are used for colission detection
   @type("number") colissionOffsetX: number;
   @type("number") colissionOffsetY: number;
   @type("number") colissionWidth: number;
   @type("number") colissionHeight: number;
-  @type("boolean") bringToTop = false;
+  @type("boolean") bringToTop = false; // Place this above players
 
   // Stats
   @type("number") health = 100; // How much health this item has
   @type("number") damange = 20; // How much damage a bullet does to this item
 
+  // Settings
   @type("boolean") destroyable = true; // Can this pickup be destroyed?
   @type("boolean") blocking = false; // Does it block player movement?
   @type("boolean") bulletKills = false; // Can bullets destroy it?
   @type("boolean") destroyOnCollision = false; // Destroyed when a player collides
   @type("boolean") destroyBulletOnCollision = true; // Bullet is destroyed on collision
 
-  @type("string") explosionType = "default"; // Optional: explosion effect
-
-  @type("boolean") alwaysPlay = false; // Optional: always active
-
+  // Redeploy
   @type("boolean") isRedeployable = true; // Can this pickup redeploy?
   @type("number") redeployTimeout = 500; // Time in ms before redeploying
 
   // Sounds
-  @type("string") impactSound: "";
-  @type("boolean") disablePlayBulletImpactSound = false;
-  @type("boolean") playAudioOnPickup = false;
-  @type("string") audioKey: string;
+  @type("string") impactSound: ""; // The sound playing when impacted, not used here
+  @type("boolean") disablePlayBulletImpactSound = false; // Disable playing the sound
+  @type("boolean") playAudioOnPickup = false; // Play sound when picked up
+  @type("string") audioKey: string; // The audio key for the sound to play when picked up
+
+  // Carry pickup
+  @type("boolean") userCarry = false; // On colission the user will carry this pickup with them, ie: flag
+  @type("string") dropOffLocation: string; // The location where this item will be dropped off, ie: capture point
 
   constructor(type: string, x: number, y: number) {
     super();

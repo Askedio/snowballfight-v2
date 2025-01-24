@@ -1,6 +1,7 @@
 import { Schema, type } from "@colyseus/schema";
 
 export class Bullet extends Schema {
+  @type("string") id: string;
   @type("string") ownerId: string;
   @type("string") colissionType = "defult";
 

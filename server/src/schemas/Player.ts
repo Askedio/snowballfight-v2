@@ -55,8 +55,8 @@ export class Player extends Schema {
   @type("string") onKilledSound = "smash1";
   @type("string") walkingSound = "footstep1";
   @type("string") runningSound = "footstep1";
- // @type("string") rKeySound = "";
-//  @type("string") eKeySound = "";
+  @type("string") rKeySound: string;
+  @type("string") eKeySound: string;
 
   // Animations
   @type("string") onKilledAnimation = "explosiongrey";
@@ -69,13 +69,15 @@ export class Player extends Schema {
   @type("number") defaultBulletFireRate = 1;
   @type("number") defaultBulletFireDelay = 100;
 
-
   // Bots
   @type("number") lastRandomMoveTime: number;
   @type("number") randomMoveCooldown = 300;
   @type("number") randomPointerX = 0;
   @type("number") randomPointerY = 0;
-  @type("string") targetPlayer = "";
+  @type("string") targetPlayer: string;
+
+  // Carry pickup
+  @type("string") caryPickupId: string; // The id of the Pickup when the user is carrying one
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];

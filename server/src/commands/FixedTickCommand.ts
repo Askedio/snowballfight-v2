@@ -28,6 +28,7 @@ export class FixedTickCommand extends Command<
 
       let input: InputData;
       let isCurrentlyMoving = false;
+      let isColliding = false;
 
       if (player.type === "bot") {
         // Generate bot input dynamically
@@ -95,7 +96,7 @@ export class FixedTickCommand extends Command<
 
         player.rotation += this.smoothAngle(player.rotation, targetAngle, 0.1);
 
-        if (distance <= player.playerSize * .9) {
+        if (distance <= player.playerSize * 0.9) {
           newX = player.x;
           newY = player.y;
           isCurrentlyMoving = false;
@@ -104,7 +105,7 @@ export class FixedTickCommand extends Command<
 
       // Handle shooting
       if (!isReloading && (input.shoot || input.pointer?.shoot)) {
-        this.fireBullet(player);
+        this.fireBullet(player, input.pointer);
       }
 
       // Check for collisions with pickups
@@ -120,7 +121,7 @@ export class FixedTickCommand extends Command<
           return;
         }
 
-        const isColliding = this.collisionSystem.detectCollision(
+        const isCollidingWithPickup = this.collisionSystem.detectCollision(
           {
             type: pickupSource.colissionShape || "circle",
             x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
@@ -138,7 +139,8 @@ export class FixedTickCommand extends Command<
           }
         );
 
-        if (isColliding) {
+        if (isCollidingWithPickup) {
+          isColliding = true;
           pickup.onPlayerCollision(player); // Trigger collision effect
 
           if (pickup.blocking) {
@@ -177,12 +179,36 @@ export class FixedTickCommand extends Command<
         }
       });
 
-      const isColliding = this.tilemapManager.isColliding(
-        newX,
-        newY,
-        player.playerSize,
-        player.playerSize
-      );
+      if (!isColliding) {
+        const isCollidingInTilemap = this.tilemapManager.isColliding(
+          newX,
+          newY,
+          player.playerSize,
+          player.playerSize
+        );
+
+        if (isCollidingInTilemap) {
+          isColliding = true;
+        }
+      }
+
+      if (!isColliding) {
+        this.room.state.players.forEach((otherPlayer) => {
+          if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
+            return;
+          }
+
+          // Calculate the distance between the two players
+          const dx = player.x - otherPlayer.x;
+          const dy = player.y - otherPlayer.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Check for collision (distance < combined hit radius)
+          if (distance < player.hitRadius + otherPlayer.hitRadius) {
+            isColliding = true;
+          }
+        });
+      }
 
       if (isBlockedByPickup || isColliding) {
         isCurrentlyMoving = false;
@@ -197,7 +223,7 @@ export class FixedTickCommand extends Command<
     this.updateBullets();
   }
 
-  fireBullet(player: Player) {
+  fireBullet(player: Player, pointer: any) {
     if (player.isProtected) {
       player.isProtected = false;
     }
@@ -222,6 +248,7 @@ export class FixedTickCommand extends Command<
         const angle = player.rotation;
 
         const bullet = new Bullet();
+        bullet.id = nanoid();
         bullet.x = player.x + Math.cos(angle) * 15; // Offset from the player's position
         bullet.y = player.y + Math.sin(angle) * 15;
         bullet.dx = Math.cos(angle) * player.bulletSpeed;
@@ -244,6 +271,7 @@ export class FixedTickCommand extends Command<
     };
 
     const bulletsToRemove: Bullet[] = [];
+    const bulletsChecked: Set<string> = new Set(); // Track already checked bullet pairs
 
     this.room.state.bullets.forEach((bullet, index) => {
       // Update bullet position
@@ -337,6 +365,38 @@ export class FixedTickCommand extends Command<
         }
       });
 
+      // Bullet vs Bullet Collision Detection
+      this.room.state.bullets.forEach((otherBullet) => {
+        if (
+          bullet === otherBullet ||
+          bulletsChecked.has(`${bullet.id}-${otherBullet.id}`)
+        ) {
+          return;
+        }
+
+        const dx = bullet.x - otherBullet.x;
+        const dy = bullet.y - otherBullet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < bulletSize) {
+          bullet.colissionType = "bullet";
+          otherBullet.colissionType = "bullet";
+
+          this.room.broadcast("bullet-destroyed", {
+            bullet,
+            collidedWith: otherBullet,
+            colissionType: "bullet",
+          });
+
+          bulletsToRemove.push(bullet, otherBullet);
+
+          // Mark this pair as checked
+          bulletsChecked.add(`${bullet.id}-${otherBullet.id}`);
+          bulletsChecked.add(`${otherBullet.id}-${bullet.id}`);
+          return;
+        }
+      });
+
       // Check collisions with players
       for (const [sessionId, player] of this.room.state.players.entries()) {
         if (player.isDead || player.isProtected) {
@@ -382,7 +442,7 @@ export class FixedTickCommand extends Command<
 
               if (player.type === "bot") {
                 setTimeout(async () => {
-                 await resetPlayer(player, this.tilemapManager);
+                  await resetPlayer(player, this.tilemapManager);
                 }, 5000);
               }
             }
@@ -430,9 +490,11 @@ export class FixedTickCommand extends Command<
     let nearestPlayer: Player | null = null;
     let minDistance = 999999;
 
-    if(bot.targetPlayer) {
-      const targetPlayer = Array.from(this.state.players.values()).find(_ => _.sessionId === bot.targetPlayer)
-      if(!targetPlayer.isDead && !targetPlayer.isProtected) {
+    if (bot.targetPlayer) {
+      const targetPlayer = Array.from(this.state.players.values()).find(
+        (_) => _.sessionId === bot.targetPlayer
+      );
+      if (targetPlayer && !targetPlayer.isDead && !targetPlayer.isProtected) {
         return targetPlayer;
       }
     }
