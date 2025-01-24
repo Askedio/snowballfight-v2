@@ -1,17 +1,18 @@
-import type { Schema } from '@colyseus/schema';
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
 import { TilemapManager } from "../TilemapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
-import { OnCreateCommand } from "../commands/OnCreateCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
 
-export class BaseRoom<TState extends BaseRoomState> extends Room<TState, { tilemapManager: TilemapManager; collisionSystem: Collision }> {
+export class BaseRoom<TState extends BaseRoomState> extends Room<
+  TState,
+  { tilemapManager: TilemapManager; collisionSystem: Collision }
+> {
   // Game configuration
-  maxClients: number
+  maxClients: number;
   maxBots: number;
 
   mode: string;
@@ -19,7 +20,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<TState, { tilem
   teams: boolean;
 
   // Map configuration
-  map: string
+  map: string;
   layers = {
     base: "base",
     colissions: "Colissins",
@@ -34,7 +35,6 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<TState, { tilem
   collisionSystem: Collision;
 
   async onCreate() {
-   
     this.collisionSystem = new Collision();
 
     this.tilemapManager = new TilemapManager(
@@ -43,16 +43,9 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<TState, { tilem
       this.layers.spawnLayer,
       this.state.players
     );
-
-    this.dispatcher.dispatch(new OnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
-      maxBots: this.maxBots
-    });
   }
 
-  fixedTick() {
-    
-  }
+  fixedTick() {}
 
   async onJoin(client: Client, options: any) {
     this.dispatcher.dispatch(new OnJoinCommand(), {

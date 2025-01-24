@@ -1,20 +1,23 @@
 import { Command } from "@colyseus/command";
-import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
 import { matchMaker, type Client } from "colyseus";
-import type { TilemapManager } from "../TilemapManager";
-import { PickupFactory } from "../pickups/PickupFactory";
+import type { TilemapManager } from "../../TilemapManager";
+import { PickupFactory } from "../../pickups/PickupFactory";
 import { nanoid } from "nanoid";
-import { ChatMessage } from "../schemas/ChatMessage";
-import type { InputData } from "../interfaces/InputData";
-import { Player } from "../schemas/Player";
-import { RandomNameGenerator } from "../RandomNameGenerator";
-import { pickupItemTypes } from "../pickups";
-import { assignRandomPosition, resetPlayer } from "../lib/player.lib";
+import { ChatMessage } from "../../schemas/ChatMessage";
+import type { InputData } from "../../interfaces/InputData";
+import { Player } from "../../schemas/Player";
+import { RandomNameGenerator } from "../../RandomNameGenerator";
+import { pickupItemTypes } from "../../pickups";
+import { assignRandomPosition, resetPlayer } from "../../lib/player.lib";
+import type { BaseRoom } from "../../rooms/BaseRoom";
+import type { BaseRoomState } from "../../states/BaseRoomState";
 
-export class OnCreateCommand extends Command<
-  FreeForAllRoom,
-  { tilemapManager: TilemapManager; maxBots: number }
-> {
+// When a room is created.
+export class BaseOnCreateCommand<
+  TRoom extends BaseRoom<TState>, // Room type that extends BaseRoom with TState
+  TState extends BaseRoomState // The schema (state) type for the room
+  // The schema (state) type for the room
+> extends Command<TRoom, { tilemapManager: TilemapManager; maxBots: number }> {
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
 
@@ -234,9 +237,6 @@ export class OnCreateCommand extends Command<
     player.health = 100;
     player.isDead = false;
 
-    //
-    player.team = "red"
-
     if (!skin) {
       player.skin = this.assignRandomSkin();
     } else {
@@ -253,10 +253,13 @@ export class OnCreateCommand extends Command<
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);
     }
+
+    return player;
   }
 
   assignRandomSkin(): string {
     const availableSkins = ["playersa", "playersb", "playersc", "playersd"];
+
     return availableSkins[Math.floor(Math.random() * availableSkins.length)];
   }
 }

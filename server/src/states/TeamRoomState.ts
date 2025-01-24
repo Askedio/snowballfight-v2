@@ -8,5 +8,5 @@ export class TeamRoomState extends BaseRoomState {
   @type("number") redScore = 0;
   @type("number") blueScore = 0;
   @type("number") timeLimit = 1000 * 60 * 5; // 5m
-  @type("string") roundStartedAt: string;
+  @type("string") roundEndsAt: string;
 }

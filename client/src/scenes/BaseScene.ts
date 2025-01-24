@@ -909,8 +909,6 @@ export class BaseScene extends Phaser.Scene {
   updatePlayerStats() {
     if (!this.room?.state?.players) return;
 
-    console.log(this.room.state.mode);
-
     document.getElementById("team-red-stats").innerText = `${
       this.room.state.redScore || 0
     }`;

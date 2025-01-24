@@ -1,3 +1,4 @@
+import { CtfOnCreateCommand } from "../commands/create/CtfOnCreateCommand";
 import { CtfFixedTickCommand } from "../commands/tick/CtfFixedTickCommand";
 import { CtfRoomState } from "../states/CtfRoomState";
 import { BaseRoom } from "./BaseRoom";
@@ -21,6 +22,11 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
   async onCreate() {
     this.setState(new CtfRoomState());
     super.onCreate();
+
+    this.dispatcher.dispatch(new CtfOnCreateCommand(), {
+      tilemapManager: this.tilemapManager,
+      maxBots: this.maxBots
+    });
   }
 
   fixedTick() {
