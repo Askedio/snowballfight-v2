@@ -16,6 +16,8 @@ export class BaseScene extends Phaser.Scene {
   skin: string;
   debugging = false;
 
+  playerStatsInterval: any
+
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
   playerHealth: { [sessionId: string]: Phaser.GameObjects.Text } = {};
@@ -244,6 +246,8 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.off("onSkinChange", this.onSkinChange);
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
+
+      clearInterval(this.playerStatsInterval)
     });
 
     this.game.events.on("onSkinChange", this.onSkinChange, this);
@@ -291,8 +295,8 @@ export class BaseScene extends Phaser.Scene {
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
 
-    setInterval(() => {
-      this.updatePlayerStats();
+    this.playerStatsInterval = setInterval(() => {
+      this.updatePlayerStats()
     }, 1000);
 
     // Space bar for shooting
@@ -318,7 +322,7 @@ export class BaseScene extends Phaser.Scene {
   }
 
   async connect() {
-    console.log("Connecting to servers...")
+    console.log("Connecting to servers...");
     document.getElementById("connectionStatusText").innerHTML =
       "Connecting to servers...";
 
@@ -342,7 +346,7 @@ export class BaseScene extends Phaser.Scene {
         this.room = await client.joinOrCreate(this.roomName, {});
       }
 
-      console.log("Scene is ready!")
+      console.log("Scene is ready!");
 
       window.dispatchEvent(new Event("ready"));
     } catch (e) {
@@ -504,7 +508,6 @@ export class BaseScene extends Phaser.Scene {
         currentPlayerIndicator.fillStyle(0xffffff, 0.2); // Green with 20% opacity
         currentPlayerIndicator.fillCircle(0, 0, player.playerSize * 1.5);
       }
-    
 
       const playerSprite = this.add.sprite(
         0,
@@ -567,7 +570,7 @@ export class BaseScene extends Phaser.Scene {
       const playerContainer = this.add.container(
         player.x,
         player.y,
-        containerItems.filter(_ => _)
+        containerItems.filter((_) => _)
       );
 
       playerContainer.setSize(playerSprite.width, playerSprite.height);
@@ -621,11 +624,12 @@ export class BaseScene extends Phaser.Scene {
               );*/
 
               if (
-                playerSprite?.anims?.currentAnim?.key !==
+                playerSprite?.anims &&
+                (playerSprite?.anims?.currentAnim?.key !==
                   `${player.skin}_walk` ||
-                !playerSprite?.anims?.isPlaying
+                  !playerSprite?.anims?.isPlaying)
               ) {
-                playerSprite.play(`${player.skin}_walk`, true);
+                playerSprite?.play(`${player.skin}_walk`, true);
               }
             } else {
               if (playerSprite?.anims?.isPlaying) {
@@ -904,6 +908,16 @@ export class BaseScene extends Phaser.Scene {
 
   updatePlayerStats() {
     if (!this.room?.state?.players) return;
+
+    console.log(this.room.state.mode)
+
+    document.getElementById("team-red-stats").innerText = `${
+      this.room.state.redScore || 0
+    }`;
+
+    document.getElementById("team-blue-stats").innerText = `${
+      this.room.state.blueScore || 0
+    }`;
 
     const player = this.room.state.players.get(this.room.sessionId);
     if (player) {

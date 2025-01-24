@@ -5,6 +5,10 @@ export class Player extends Schema {
   @type("string") sessionId = "";
   @type("string") type = "human";
 
+  // Team based maps
+  @type("string") team = ""; // red or blue
+  @type("number") score = 0; // Used for team games, ie: ctf = how many flags they captured
+
   // Position
   @type("number") x = 400;
   @type("number") y = 300;
@@ -19,7 +23,6 @@ export class Player extends Schema {
   @type("number") health = 100;
   @type("number") kills = 0;
   @type("number") deaths = 0;
-  @type("number") score = 0; // Used for team games, ie: ctf = how many flags they captured
   @type("number") tick: number;
   @type("boolean") isDead = true; // Track if the player is dead
   @type("string") name = "";

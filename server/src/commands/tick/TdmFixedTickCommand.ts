@@ -5,13 +5,20 @@ import type { TdmRoom } from "../../rooms/TdmRoom";
 import type { Player } from "../../schemas/Player";
 import type { TdmRoomState } from "../../states/TdmRoomState";
 
-export class TdmFixedTickCommand extends BaseTickCommand<TdmRoom, TdmRoomState> {
+export class TdmFixedTickCommand extends BaseTickCommand<
+  TdmRoom,
+  TdmRoomState
+> {
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
 
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
     super.onPlayerDeath(sessionId, player, shooter);
 
-    this.room.state.redScore
+    if (shooter.team === "red") {
+      this.room.state.redScore += 1;
+    } else if (shooter.team === "blue") {
+      this.room.state.blueScore += 1;
+    }
   }
 }

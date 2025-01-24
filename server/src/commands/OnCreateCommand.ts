@@ -119,7 +119,7 @@ export class OnCreateCommand extends Command<
 
       while (elapsedTime >= this.fixedTimeStep) {
         elapsedTime -= this.fixedTimeStep;
-        this.room.fixedTick(this.fixedTimeStep);
+        this.room.fixedTick();
       }
     });
   }
@@ -233,6 +233,9 @@ export class OnCreateCommand extends Command<
     player.ammo = player.defaultAmmo;
     player.health = 100;
     player.isDead = false;
+
+    //
+    player.team = "red"
 
     if (!skin) {
       player.skin = this.assignRandomSkin();
