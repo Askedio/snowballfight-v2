@@ -16,7 +16,7 @@ export class BaseScene extends Phaser.Scene {
   skin: string;
   debugging = false;
 
-  playerStatsInterval: any
+  playerStatsInterval: any;
 
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -246,13 +246,17 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.off("onSkinChange", this.onSkinChange);
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
-
-      clearInterval(this.playerStatsInterval)
+      this.input.shutdown();
+      clearInterval(this.playerStatsInterval);
     });
 
     this.game.events.on("onSkinChange", this.onSkinChange, this);
     this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
     this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
+
+    this.playerStatsInterval = setInterval(() => {
+      this.updatePlayerStats();
+    }, 1000);
 
     console.log("Starting scene", this.mode);
 
@@ -294,10 +298,6 @@ export class BaseScene extends Phaser.Scene {
     );
     tabKey.on("down", this.showLeaderboard.bind(this));
     tabKey.on("up", this.hideLeaderboard.bind(this));
-
-    this.playerStatsInterval = setInterval(() => {
-      this.updatePlayerStats()
-    }, 1000);
 
     // Space bar for shooting
     spaceBar.on("down", () => {
@@ -909,7 +909,7 @@ export class BaseScene extends Phaser.Scene {
   updatePlayerStats() {
     if (!this.room?.state?.players) return;
 
-    console.log(this.room.state.mode)
+    console.log(this.room.state.mode);
 
     document.getElementById("team-red-stats").innerText = `${
       this.room.state.redScore || 0
