@@ -35,16 +35,38 @@ export async function assignRandomPosition(
   }
 }
 
+// Normalize the rotation to be within [-PI, PI]
+export function wrapAngle(angle: number): number {
+  return ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
+}
+
+// Smooth the angle to the target while handling full rotations correctly
 export function smoothAngle(
   current: number,
   target: number,
   factor: number
 ): number {
+  // Calculate the delta between the current and target angle
   let delta = target - current;
 
-  // Normalize delta to the range [-PI, PI]
+  // Normalize delta to the range [-PI, PI] (this is crucial)
   delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
 
-  // Apply smoothing
-  return delta * factor;
+  // If delta is positive, rotate clockwise, otherwise rotate counter-clockwise
+  if (Math.abs(delta) > Math.PI) {
+    if (delta > 0) {
+      delta -= 2 * Math.PI; // Make sure we rotate the shorter distance (counter-clockwise)
+    } else {
+      delta += 2 * Math.PI; // Rotate clockwise if we're going the long way
+    }
+  }
+
+  // Apply the smoothing factor
+  const smoothedDelta = delta * factor;
+
+  // Add the smoothed delta to the current rotation
+  const newRotation = current + smoothedDelta;
+
+  // Wrap the result to ensure it's within the range [-PI, PI]
+  return wrapAngle(newRotation);
 }

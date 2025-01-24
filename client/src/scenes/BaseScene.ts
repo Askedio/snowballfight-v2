@@ -61,7 +61,6 @@ export class BaseScene extends Phaser.Scene {
 
   disableChat = false;
 
-  eventListeners: any[] = [];
 
   preload() {
     this.load.image("snowball", "assets/images/weapons/snowball.png");
@@ -246,7 +245,10 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.off("onSkinChange", this.onSkinChange);
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
+
+      this.room.removeAllListeners()
       this.input.shutdown();
+      
       clearInterval(this.playerStatsInterval);
     });
 
@@ -612,6 +614,7 @@ export class BaseScene extends Phaser.Scene {
               ease: "Linear",
             });
 
+       
             playerSprite.setRotation(player.rotation);
 
             if (player.isMoving) {

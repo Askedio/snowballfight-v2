@@ -6,7 +6,7 @@ import { BaseRoom } from "./BaseRoom";
 export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
   // Game configuration
   maxClients = 20;
-  maxBots = 1;
+  maxBots = 0;
 
   mode = "ffa";
   scoring = "kills";
