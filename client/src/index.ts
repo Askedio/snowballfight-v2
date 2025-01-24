@@ -93,7 +93,7 @@ document.getElementById("switch").addEventListener("click", (e: any) => {
     game.scene.remove(activeScene);
     activeScene = e.target.id;
 
-    // Weird, when injected into the game itself the mouse and movement were broken.
+    // Weird, when injected into the game itself the mouse and movement were broken on scenes after #2 
     switch (activeScene) {
       case "ffa":
         game.scene.add("ffa", CtfScene);
