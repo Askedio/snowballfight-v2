@@ -27,6 +27,6 @@ export class CtfScene extends BaseScene {
 
     map.createLayer("base", tileset); // base
 
-    setTeamModeMenu(true,);
+    setTeamModeMenu(true, this.mode);
   }
 }

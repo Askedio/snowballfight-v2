@@ -61,7 +61,6 @@ export class BaseScene extends Phaser.Scene {
 
   disableChat = false;
 
-
   preload() {
     this.load.image("snowball", "assets/images/weapons/snowball.png");
 
@@ -205,12 +204,6 @@ export class BaseScene extends Phaser.Scene {
     if (roomName) {
       if (roomName !== this.roomName) {
         this.roomName = roomName;
-        console.log(
-          "leaving room, removeAllListeners, remove all users",
-          this.room.id
-        );
-        this.room.removeAllListeners();
-        await this.room.leave(true);
 
         for (const sessionId in this.playerEntities) {
           const container = this.playerEntities[sessionId];
@@ -239,17 +232,17 @@ export class BaseScene extends Phaser.Scene {
   }
 
   async create() {
-    this.events.once("shutdown", () => {
+    this.events.once("shutdown", async () => {
       console.log("Scene is shutting down!");
 
+      clearInterval(this.playerStatsInterval);
       this.game.events.off("onSkinChange", this.onSkinChange);
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
-
-      this.room.removeAllListeners()
       this.input.shutdown();
-      
-      clearInterval(this.playerStatsInterval);
+
+      this.room.removeAllListeners();
+      await this.room.leave(true);
     });
 
     this.game.events.on("onSkinChange", this.onSkinChange, this);
@@ -614,7 +607,6 @@ export class BaseScene extends Phaser.Scene {
               ease: "Linear",
             });
 
-       
             playerSprite.setRotation(player.rotation);
 
             if (player.isMoving) {
