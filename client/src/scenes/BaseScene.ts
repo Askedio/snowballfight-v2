@@ -240,7 +240,7 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
       this.input.shutdown();
-
+    
       this.room.removeAllListeners();
       await this.room.leave(true);
     });
@@ -312,9 +312,6 @@ export class BaseScene extends Phaser.Scene {
     });
   }
 
-  init() {
-    this.disableChat = false;
-  }
 
   async connect() {
     console.log("Connecting to servers...");
@@ -331,17 +328,15 @@ export class BaseScene extends Phaser.Scene {
         roomName = window.location.hash.substring(1);
       }
 
-      if (roomName) {
-        this.room = await client.joinOrCreate(this.userRoomName, {
-          customRoomName: roomName,
-        });
+      this.room = await client.joinOrCreate(this.userRoomName, {
+        customRoomName: roomName,
+      });
 
-        this.roomName = roomName;
-      } else {
-        this.room = await client.joinOrCreate(this.roomName, {});
-      }
+      this.roomName = roomName;
 
       console.log("Scene is ready!");
+
+      this.disableChat = false;
 
       window.dispatchEvent(new Event("ready"));
     } catch (e) {
@@ -353,10 +348,6 @@ export class BaseScene extends Phaser.Scene {
     }
 
     document.getElementById("connectionStatusText").innerHTML = "";
-  }
-
-  changeScene(scene: string) {
-    this.time.delayedCall(500, this.scene.switch, [scene], this.scene);
   }
 
   handlePlayerDeath(killer: any) {
@@ -413,6 +404,7 @@ export class BaseScene extends Phaser.Scene {
   }
 
   setRoomListeners() {
+    // Add pickups
     this.room.state.pickups.onAdd((pickup) => {
       // Create a container to hold the pickup sprite and the debugging border
       const pickupContainer = this.add.container(pickup.x, pickup.y);
@@ -485,6 +477,7 @@ export class BaseScene extends Phaser.Scene {
       this.pickupEntities[pickup.id] = pickupContainer;
     });
 
+    // Remove pickups
     this.room.state.pickups.onRemove((pickup) => {
       const sprite = this.pickupEntities[pickup.id]; // Find the sprite associated with the pickup
       if (sprite) {
@@ -709,6 +702,7 @@ export class BaseScene extends Phaser.Scene {
       });
     });
 
+    // When a bullet is destroyed
     this.room.onMessage(
       "bullet-destroyed",
       ({ bullet, pickup, killer, player }) => {
@@ -773,6 +767,7 @@ export class BaseScene extends Phaser.Scene {
       }
     );
 
+    // Remove bullets
     this.room.state.bullets.onRemove((bullet, bulletId) => {
       const bulletEntity = this.bulletEntities[bulletId];
       if (bulletEntity) {
@@ -781,13 +776,15 @@ export class BaseScene extends Phaser.Scene {
       }
     });
 
+    // When a sound needs to be played
     this.room.onMessage("play-sound", ({ item, key }) => {
       this.playSpatialSound(item, key);
     });
 
-    const chatBox = document.getElementById("chatBox") as HTMLUListElement;
-
+    // When a chat message is received
     this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
+      const chatBox = document.getElementById("chatBox") as HTMLUListElement;
+
       // Add the chat message to the chat box
       const chatItem = document.createElement("li");
       chatItem.textContent = `${playerName}: ${message}`;
@@ -902,7 +899,9 @@ export class BaseScene extends Phaser.Scene {
   }
 
   updatePlayerStats() {
-    if (!this.room?.state?.players) return;
+    if (!this.room?.state?.players) {
+      return;
+    }
 
     document.getElementById("team-red-stats").innerText = `${
       this.room.state.redScore || 0

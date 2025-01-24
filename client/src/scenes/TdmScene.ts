@@ -12,8 +12,6 @@ export class TdmScene extends BaseScene {
 
   constructor() {
     super({ key: "tdm" });
-
-    this.init();
   }
 
   initMap() {

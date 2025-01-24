@@ -23,7 +23,7 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
   },
-  scene: [FreeForAllScene, CtfScene, TdmScene, TsScene],
+  scene: [FreeForAllScene],
 };
 
 const game = new Phaser.Game(config);
@@ -90,7 +90,25 @@ document.getElementById("switch").addEventListener("click", (e: any) => {
     }
 
     game.scene.stop(activeScene);
+    game.scene.remove(activeScene);
     activeScene = e.target.id;
+
+    // Weird, when injected into the game itself the mouse and movement were broken.
+    switch (activeScene) {
+      case "ffa":
+        game.scene.add("ffa", CtfScene);
+        break;
+      case "ctf":
+        game.scene.add("ctf", CtfScene);
+        break;
+      case "tdm":
+        game.scene.add("tdm", TdmScene);
+        break;
+      case "ts":
+        game.scene.add("ts", TsScene);
+        break;
+    }
+
     game.scene.start(activeScene);
 
     const activeSkin = document.getElementsByClassName("active");

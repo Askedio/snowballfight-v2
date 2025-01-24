@@ -12,8 +12,6 @@ export class TsScene extends BaseScene {
 
   constructor() {
     super({ key: "ts" });
-
-    this.init();
   }
 
   initMap() {

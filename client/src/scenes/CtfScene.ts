@@ -12,8 +12,6 @@ export class CtfScene extends BaseScene {
 
   constructor() {
     super({ key: "ctf" });
-
-    this.init();
   }
 
   initMap() {

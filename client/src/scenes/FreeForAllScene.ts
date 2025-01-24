@@ -12,8 +12,6 @@ export class FreeForAllScene extends BaseScene {
 
   constructor() {
     super({ key: "ffa" });
-
-    this.init();
   }
 
   initMap() {

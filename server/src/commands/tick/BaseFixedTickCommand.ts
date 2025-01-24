@@ -5,7 +5,7 @@ import { Bullet } from "../../schemas/Bullet";
 import type { Player } from "../../schemas/Player";
 import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
-import { resetPlayer, smoothAngle, wrapAngle } from "../../lib/player.lib";
+import { resetPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
 import { generateBotInput, getNearestPlayer } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
@@ -103,7 +103,7 @@ export class BaseTickCommand<
 
         player.rotation = smoothAngle(player.rotation, targetAngle, 0.1);
 
-        if (distance <= player.playerSize * 0.9) {
+        if (distance <= player.playerRadius) {
           newX = player.x;
           newY = player.y;
           isCurrentlyMoving = false;
