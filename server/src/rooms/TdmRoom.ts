@@ -2,7 +2,7 @@ import { TdmFixedTickCommand } from "../commands/tick/TdmFixedTickCommand";
 import { TdmRoomState } from "../states/TdmRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class TdmRoom extends BaseRoom {
+export class TdmRoom extends BaseRoom<TdmRoomState> {
   // Game configuration
   maxClients = 20;
   mode = "tdm";

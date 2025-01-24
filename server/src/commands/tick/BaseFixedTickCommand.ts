@@ -9,8 +9,13 @@ import { resetPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
 import { generateBotInput, getNearestPlayer } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
+import type { BaseRoomState } from "../../states/BaseRoomState";
 
-export class BaseTickCommand<TRoom extends BaseRoom> extends Command<
+export class BaseTickCommand<
+  TRoom extends BaseRoom<TState>, // Room type that extends BaseRoom with TState
+  TState extends BaseRoomState // The schema (state) type for the room
+  // The schema (state) type for the room
+> extends Command<
   TRoom,
   { tilemapManager: TilemapManager; collisionSystem: Collision }
 > {

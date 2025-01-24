@@ -2,7 +2,7 @@ import { FreeForAllFixedTickCommand } from "../commands/tick/FreeForAllFixedTick
 import { FreeForAllRoomState } from "../states/FreeForAllRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class FreeForAllRoom extends BaseRoom {
+export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
   // Game configuration
   maxClients = 20;
   maxBots = 1;

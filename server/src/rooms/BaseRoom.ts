@@ -1,3 +1,4 @@
+import type { Schema } from '@colyseus/schema';
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
 import { TilemapManager } from "../TilemapManager";
@@ -8,7 +9,7 @@ import { OnCreateCommand } from "../commands/OnCreateCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
 
-export class BaseRoom extends Room<BaseRoomState, { tilemapManager: TilemapManager; collisionSystem: Collision }> {
+export class BaseRoom<TState extends BaseRoomState> extends Room<TState, { tilemapManager: TilemapManager; collisionSystem: Collision }> {
   // Game configuration
   maxClients: number
   maxBots: number;

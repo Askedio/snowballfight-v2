@@ -2,7 +2,7 @@ import { CtfFixedTickCommand } from "../commands/tick/CtfFixedTickCommand";
 import { CtfRoomState } from "../states/CtfRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class CtfRoom extends BaseRoom {
+export class CtfRoom extends BaseRoom<CtfRoomState> {
   // Game configuration
   maxClients = 20;
   mode = "ctf";

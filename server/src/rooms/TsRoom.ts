@@ -2,7 +2,7 @@ import { TsFixedTickCommand } from "../commands/tick/TsFixedTickCommand";
 import { TsRoomState } from "../states/TsRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class TsRoom extends BaseRoom {
+export class TsRoom extends BaseRoom<TsRoomState> {
   // Game configuration
   maxClients = 20;
   mode = "ts";
