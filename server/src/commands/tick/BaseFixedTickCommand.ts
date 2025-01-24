@@ -437,23 +437,7 @@ export class BaseTickCommand<TRoom extends BaseRoom> extends Command<
 
             // Handle player death
             if (player.health <= 0) {
-              player.isDead = true;
-              player.deaths += 1;
-
-              // Increment killer's kills count
-              shooter.kills += 1;
-
-              this.room.broadcast("player-death", {
-                sessionId,
-                player,
-                killer: shooter,
-              });
-
-              if (player.type === "bot") {
-                setTimeout(async () => {
-                  await resetPlayer(player, this.tilemapManager);
-                }, 5000);
-              }
+              this.onPlayerDeath(sessionId, player, shooter);
             }
 
             bulletsToRemove.push(bullet);
@@ -483,5 +467,25 @@ export class BaseTickCommand<TRoom extends BaseRoom> extends Command<
         this.room.state.bullets.splice(index, 1);
       }
     });
+  }
+
+  onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
+    player.isDead = true;
+    player.deaths += 1;
+
+    // Increment killer's kills count
+    shooter.kills += 1;
+
+    this.room.broadcast("player-death", {
+      sessionId,
+      player,
+      killer: shooter,
+    });
+
+    if (player.type === "bot") {
+      setTimeout(async () => {
+        await resetPlayer(player, this.tilemapManager);
+      }, 5000);
+    }
   }
 }

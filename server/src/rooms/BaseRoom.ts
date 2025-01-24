@@ -8,12 +8,9 @@ import { OnCreateCommand } from "../commands/OnCreateCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
 
-export class BaseRoom extends Room<
-  BaseRoomState,
-  { tilemapManager: TilemapManager; collisionSystem: Collision }
-> {
+export class BaseRoom extends Room<BaseRoomState, { tilemapManager: TilemapManager; collisionSystem: Collision }> {
   // Game configuration
-  maxClients: number;
+  maxClients: number
   maxBots: number;
 
   mode: string;
@@ -21,7 +18,7 @@ export class BaseRoom extends Room<
   teams: boolean;
 
   // Map configuration
-  map: string;
+  map: string
   layers = {
     base: "base",
     colissions: "Colissins",
@@ -36,6 +33,7 @@ export class BaseRoom extends Room<
   collisionSystem: Collision;
 
   async onCreate() {
+   
     this.collisionSystem = new Collision();
 
     this.tilemapManager = new TilemapManager(
@@ -47,11 +45,13 @@ export class BaseRoom extends Room<
 
     this.dispatcher.dispatch(new OnCreateCommand(), {
       tilemapManager: this.tilemapManager,
-      maxBots: this.maxBots,
+      maxBots: this.maxBots
     });
   }
 
-  fixedTick() {}
+  fixedTick() {
+    
+  }
 
   async onJoin(client: Client, options: any) {
     this.dispatcher.dispatch(new OnJoinCommand(), {
