@@ -10,7 +10,7 @@ export class Player extends Schema {
   @type("number") y = 300;
   @type("number") rotation = 0; // Rotation in radians
   @type("number") hitRadius = 15;
-  @type("number") playerRadius = 16; // Player radius for their hitbox
+  @type("number") playerRadius = 26; // Player radius for their hitbox
   @type("number") playerSize = 32; // Player size for colissions
 
   // Stats
@@ -19,6 +19,7 @@ export class Player extends Schema {
   @type("number") health = 100;
   @type("number") kills = 0;
   @type("number") deaths = 0;
+  @type("number") score = 0; // Used for team games, ie: ctf = how many flags they captured
   @type("number") tick: number;
   @type("boolean") isDead = true; // Track if the player is dead
   @type("string") name = "";

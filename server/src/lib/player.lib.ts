@@ -1,7 +1,10 @@
 import type { Player } from "../schemas/Player";
 import type { TilemapManager } from "../TilemapManager";
 
-export async function resetPlayer(player: Player, tilemapManager: TilemapManager) {
+export async function resetPlayer(
+  player: Player,
+  tilemapManager: TilemapManager
+) {
   await assignRandomPosition(player, tilemapManager); // Respawn at a new position
 
   player.health = player.defaultHealth; // Restore health
@@ -15,7 +18,7 @@ export async function resetPlayer(player: Player, tilemapManager: TilemapManager
   }, player.protectionTime);
 }
 
-export  async function assignRandomPosition(
+export async function assignRandomPosition(
   player: Player,
   tilemapManager: TilemapManager
 ) {
@@ -30,4 +33,18 @@ export  async function assignRandomPosition(
     player.x = 400;
     player.y = 300;
   }
+}
+
+export function smoothAngle(
+  current: number,
+  target: number,
+  factor: number
+): number {
+  let delta = target - current;
+
+  // Normalize delta to the range [-PI, PI]
+  delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+  // Apply smoothing
+  return delta * factor;
 }

@@ -1,0 +1,73 @@
+import type { Client } from "colyseus";
+import { Room } from "colyseus";
+import { TilemapManager } from "../TilemapManager";
+import { Dispatcher } from "@colyseus/command";
+import { OnJoinCommand } from "../commands/OnJoinCommand";
+import { OnLeaveCommand } from "../commands/OnLeaveCommand";
+import { OnCreateCommand } from "../commands/OnCreateCommand";
+import { Collision } from "../classes/Collision";
+import type { BaseRoomState } from "../states/BaseRoomState";
+
+export class BaseRoom extends Room<
+  BaseRoomState,
+  { tilemapManager: TilemapManager; collisionSystem: Collision }
+> {
+  // Game configuration
+  maxClients: number;
+  maxBots: number;
+
+  mode: string;
+  scoring: string;
+  teams: boolean;
+
+  // Map configuration
+  map: string;
+  layers = {
+    base: "base",
+    colissions: "Colissins",
+    land: "Tile Layer 1",
+    spawnLayer: "spawns",
+  };
+
+  tilemapManager: TilemapManager;
+  dispatcher = new Dispatcher(this);
+  customRoomName: string;
+  fixedTimeStep = 1000 / 60;
+  collisionSystem: Collision;
+
+  async onCreate() {
+    this.collisionSystem = new Collision();
+
+    this.tilemapManager = new TilemapManager(
+      this.map,
+      this.layers.colissions,
+      this.layers.spawnLayer,
+      this.state.players
+    );
+
+    this.dispatcher.dispatch(new OnCreateCommand(), {
+      tilemapManager: this.tilemapManager,
+      maxBots: this.maxBots,
+    });
+  }
+
+  fixedTick() {}
+
+  async onJoin(client: Client, options: any) {
+    this.dispatcher.dispatch(new OnJoinCommand(), {
+      client,
+      options,
+    });
+  }
+
+  async onLeave(client: Client) {
+    this.dispatcher.dispatch(new OnLeaveCommand(), {
+      client,
+    });
+  }
+
+  onDispose() {
+    console.log("room", this.roomId, "disposing...");
+    this.dispatcher.stop();
+  }
+}

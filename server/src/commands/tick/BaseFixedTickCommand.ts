@@ -1,20 +1,21 @@
 import { Command } from "@colyseus/command";
-import type { FreeForAllRoom } from "../rooms/FreeForAllRoom";
-import { PickupFactory } from "../pickups/PickupFactory";
-import type { InputData } from "../interfaces/InputData";
-import { Bullet } from "../schemas/Bullet";
-import type { Player } from "../schemas/Player";
-import type { TilemapManager } from "../TilemapManager";
-import type { Collision } from "../classes/Collision";
-import { resetPlayer } from "../lib/player.lib";
+import { PickupFactory } from "../../pickups/PickupFactory";
+import type { InputData } from "../../interfaces/InputData";
+import { Bullet } from "../../schemas/Bullet";
+import type { Player } from "../../schemas/Player";
+import type { TilemapManager } from "../../TilemapManager";
+import type { Collision } from "../../classes/Collision";
+import { resetPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
+import { generateBotInput, getNearestPlayer } from "../../lib/bots.lib";
+import type { BaseRoom } from "../../rooms/BaseRoom";
 
-export class FixedTickCommand extends Command<
-  FreeForAllRoom,
+export class BaseTickCommand<TRoom extends BaseRoom> extends Command<
+  TRoom,
   { tilemapManager: TilemapManager; collisionSystem: Collision }
 > {
-  private tilemapManager: TilemapManager;
-  private collisionSystem: Collision;
+  tilemapManager: TilemapManager;
+  collisionSystem: Collision;
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
@@ -32,8 +33,8 @@ export class FixedTickCommand extends Command<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-        const target = this.getNearestPlayer(player); // Get nearest player (function below)
-        input = this.generateBotInput(player, target); // Function to create bot input
+        const target = getNearestPlayer(player, this.room.state.players); // Get nearest player (function below)
+        input = generateBotInput(player, target); // Function to create bot input
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -94,7 +95,7 @@ export class FixedTickCommand extends Command<
 
         const targetAngle = Math.atan2(dy, dx);
 
-        player.rotation += this.smoothAngle(player.rotation, targetAngle, 0.1);
+        player.rotation += smoothAngle(player.rotation, targetAngle, 0.1);
 
         if (distance <= player.playerSize * 0.9) {
           newX = player.x;
@@ -245,14 +246,22 @@ export class FixedTickCommand extends Command<
 
     for (let i = 0; i < bulletFireRate; i++) {
       setTimeout(() => {
-        const angle = player.rotation;
+        // Calculate the direction vector to the pointer
+        const dx = pointer.x - player.x;
+        const dy = pointer.y - player.y;
+        const magnitude = Math.sqrt(dx * dx + dy * dy);
 
+        // Normalize the direction vector
+        const directionX = dx / magnitude;
+        const directionY = dy / magnitude;
+
+        // Create a new bullet
         const bullet = new Bullet();
         bullet.id = nanoid();
-        bullet.x = player.x + Math.cos(angle) * 15; // Offset from the player's position
-        bullet.y = player.y + Math.sin(angle) * 15;
-        bullet.dx = Math.cos(angle) * player.bulletSpeed;
-        bullet.dy = Math.sin(angle) * player.bulletSpeed;
+        bullet.x = player.x + directionX * 15; // Offset from the player's position
+        bullet.y = player.y + directionY * 15;
+        bullet.dx = directionX * player.bulletSpeed;
+        bullet.dy = directionY * player.bulletSpeed;
         bullet.ownerId = player.sessionId;
 
         if (!player.ammoUnlimited) {
@@ -399,7 +408,7 @@ export class FixedTickCommand extends Command<
 
       // Check collisions with players
       for (const [sessionId, player] of this.room.state.players.entries()) {
-        if (player.isDead || player.isProtected) {
+        if (player.isDead) {
           continue; // Skip dead players
         }
 
@@ -474,121 +483,5 @@ export class FixedTickCommand extends Command<
         this.room.state.bullets.splice(index, 1);
       }
     });
-  }
-
-  private smoothAngle(current: number, target: number, factor: number): number {
-    let delta = target - current;
-
-    // Normalize delta to the range [-PI, PI]
-    delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
-
-    // Apply smoothing
-    return delta * factor;
-  }
-
-  getNearestPlayer(bot: Player): Player | null {
-    let nearestPlayer: Player | null = null;
-    let minDistance = 999999;
-
-    if (bot.targetPlayer) {
-      const targetPlayer = Array.from(this.state.players.values()).find(
-        (_) => _.sessionId === bot.targetPlayer
-      );
-      if (targetPlayer && !targetPlayer.isDead && !targetPlayer.isProtected) {
-        return targetPlayer;
-      }
-    }
-
-    this.room.state.players.forEach((player) => {
-      if (
-        player.sessionId !== bot.sessionId &&
-        !player.isDead &&
-        !player.isProtected
-      ) {
-        const distance = Math.hypot(bot.x - player.x, bot.y - player.y);
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearestPlayer = player;
-        }
-      }
-    });
-
-    bot.targetPlayer = nearestPlayer?.sessionId || null;
-    return nearestPlayer;
-  }
-
-  generateBotInput(bot: Player, target: Player): InputData {
-    if (!target?.x) {
-      let randomMove: any = {
-        up: false,
-        down: false,
-        left: false,
-        right: false,
-      };
-
-      const distanceToPointer = Math.hypot(
-        bot.randomPointerX - bot.x,
-        bot.randomPointerY - bot.y
-      );
-
-      if (!bot.randomPointerX || distanceToPointer < 1000) {
-        // Adjust threshold as needed
-        const worldWidth = 2000; // Replace with your game's world width
-        const worldHeight = 1100; // Replace with your game's world height
-
-        bot.randomPointerX = Math.random() * worldWidth;
-        bot.randomPointerY = Math.random() * worldHeight;
-      }
-
-      // Random movement logic
-
-      // Randomize movement directions
-      randomMove = {
-        up: distanceToPointer > 0,
-        down: false,
-        left: false,
-        right: false,
-        pointer: {
-          x: bot.randomPointerX,
-          y: bot.randomPointerY,
-        },
-      };
-
-      return {
-        shoot: false, // No shooting without a target
-        pointer: {
-          x: bot?.x,
-          y: bot?.y,
-          shoot: false,
-          reload: false,
-        },
-        r: false, // No reloading without a target
-        ...randomMove,
-      };
-    }
-
-    const dx = target?.x - bot.x;
-    const dy = target?.y - bot.y;
-    const distance = Math.hypot(dx, dy);
-
-    // Random chance to reload instead of shooting
-    const shouldReload = Math.random() < 0.2 && bot.ammo <= 4; // 20% chance to reload if ammo isn't full
-
-    const canShoot = Math.random() < 0.2 && bot.ammo > 4;
-
-    // @ts-ignore
-    return {
-      up: distance > 250, // Move closer if far
-      down: distance < 250, // Back off if too close
-      left: distance > 0 ? Math.random() > 0.5 : false, // Random strafing
-      right: distance > 0 ? Math.random() > 0.5 : false,
-      pointer: {
-        x: target?.x + (Math.random() - 0.5) * 20, // Random offset between -10 and +10
-        y: target?.y + (Math.random() - 0.5) * 20, // Random offset between -10 and +10
-        shoot: canShoot && distance < 300 && !shouldReload, // Aim at the target if shooting
-        reload: shouldReload, // Reload if shouldReload is true
-      },
-      r: shouldReload, // Reload if the bot is reloading
-    };
   }
 }

@@ -37,8 +37,16 @@
   <body oncontextmenu="return false;">
     <div id="menu" class="menu onReady">
       <div id="player-stats">
-        <p>Kills: <span id="active-player-kills">0</span></p>
-        <p>Deaths: <span id="active-player-deaths">0</span></p>
+        <div id="team-player-stats">
+          score <span id="active-player-score">0</span>
+        </div>
+        <div>kills <span id="active-player-kills">0</span></div>
+        <div>deaths <span id="active-player-deaths">0</span></div>
+      </div>
+
+      <div id="team-stats">
+        <div id="team-red"><span id="team-red-stats">0</span></div>
+        <div id="team-blue"><span id="team-blue-stats">0</span></div>
       </div>
     </div>
 
@@ -116,6 +124,10 @@
 
       <button id="join-button" class="btn-primary">Join Game</button>
       <p class="instructions">
+        <span class="text-white"
+          >Tip: Use your respawn protection to reload your snowballs!</span
+        >
+        <br /><br />
         Move: WASD/Arrow keys in the direction of your mouse
         <br />
         Shoot: Space or Left Click
