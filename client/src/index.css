@@ -25,9 +25,25 @@ input {
   @apply w-full h-full;
 }
 
+#player-ready {
+  @apply absolute left-1/2 bottom-3 transform -translate-x-1/2
+}
+
+#player-ready-button {
+  @apply bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-fit;
+}
+
 /* Menu Styles */
 .menu {
   @apply text-sm absolute top-0 md:w-fit left-1/2 transform -translate-x-1/2 text-white text-lg;
+
+  #round-time {
+    @apply text-center text-white text-xs mt-1 bg-gray-900 bg-opacity-75 w-fit mx-auto py-1.5 px-3 rounded-lg border-2 border-white/20;
+
+    &:empty {
+      @apply hidden;
+    }
+  }
 
   #player-stats {
     @apply flex flex-row items-center md:space-x-0 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0;
@@ -43,16 +59,16 @@ input {
 
   #team-stats {
     @apply flex px-3 flex-row items-center md:space-x-3 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0 w-fit mx-auto;
-    
+
     div {
       @apply m-0  flex items-center gap-3;
 
       #team-red-stats {
-        @apply bg-red-500
+        @apply bg-red-500;
       }
 
       #team-blue-stats {
-        @apply bg-blue-500
+        @apply bg-blue-500;
       }
 
       span {
@@ -136,12 +152,10 @@ input {
     @apply inline-block rounded-md p-2 px-3 cursor-pointer;
 
     &:hover,
-      &.activeMode {
-        @apply bg-white/50;
-
-      }
+    &.activeMode {
+      @apply bg-white/50;
+    }
   }
-
 }
 
 #skins {
@@ -276,7 +290,7 @@ input {
 }
 
 #connectionStatusText {
-  @apply absolute left-3 bottom-3 text-black text-xs
+  @apply absolute left-3 bottom-3 text-black text-xs;
 }
 
 .text-white {

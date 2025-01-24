@@ -53,12 +53,15 @@ export class BaseTickCommand<
       const velocity = isReloading
         ? player.reloadPlayerSpeed
         : player.speed || player.defaultSpeed;
+
       const angle = player.rotation;
+
       let newX = player.x;
       let newY = player.y;
 
       // Reload logic
       if (
+        player.enabled && 
         isReloading &&
         player.ammo < player.maxAmmo &&
         (!player.lastReloadTime ||
@@ -69,7 +72,7 @@ export class BaseTickCommand<
         player.lastReloadTime = Date.now();
       }
 
-      // Movement logic (same as your existing logic)
+      // Movement logic
       if (input.up) {
         newX += Math.cos(angle) * velocity;
         newY += Math.sin(angle) * velocity;
@@ -217,12 +220,13 @@ export class BaseTickCommand<
         });
       }
 
-      if (isBlockedByPickup || isColliding) {
+      if (isBlockedByPickup || isColliding || !player.enabled) {
         isCurrentlyMoving = false;
       } else {
         player.x = newX;
         player.y = newY;
       }
+
       player.tick = input.tick;
       player.isMoving = isCurrentlyMoving;
     });
@@ -233,6 +237,10 @@ export class BaseTickCommand<
   fireBullet(player: Player, pointer: any) {
     if (player.isProtected) {
       player.isProtected = false;
+    }
+
+    if (!player.enabled) {
+      return;
     }
 
     const now = Date.now();

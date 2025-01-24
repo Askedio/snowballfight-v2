@@ -83,6 +83,11 @@ window.addEventListener("player-rejoin", async (e: any) => {
   game.events.emit("onPlayerRejoin", e);
 });
 
+document.getElementById("player-ready").addEventListener("click", (e: any) => {
+  e.preventDefault()
+  game.events.emit("onPlayerReady", e);
+});
+
 document.getElementById("switch").addEventListener("click", (e: any) => {
   if (["ffa", "ctf", "tdm", "ts"].includes(e.target.id)) {
     if (activeScene === e.target.id) {

@@ -231,6 +231,10 @@ export class BaseScene extends Phaser.Scene {
     this.room.send("chat", { message });
   }
 
+  onPlayerReady(ready: boolean) {
+    this.room.send("player-ready", { ready });
+  }
+
   async create() {
     this.events.once("shutdown", async () => {
       console.log("Scene is shutting down!");
@@ -239,8 +243,9 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.off("onSkinChange", this.onSkinChange);
       this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
       this.game.events.off("onChatSendMessage", this.onChatSendMessage);
+      this.game.events.off("onPlayerReady", this.onPlayerReady);
       this.input.shutdown();
-    
+
       this.room.removeAllListeners();
       await this.room.leave(true);
     });
@@ -248,6 +253,7 @@ export class BaseScene extends Phaser.Scene {
     this.game.events.on("onSkinChange", this.onSkinChange, this);
     this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
     this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
+    this.game.events.on("onPlayerReady", this.onPlayerReady, this);
 
     this.playerStatsInterval = setInterval(() => {
       this.updatePlayerStats();
@@ -312,7 +318,6 @@ export class BaseScene extends Phaser.Scene {
     });
   }
 
-
   async connect() {
     console.log("Connecting to servers...");
     document.getElementById("connectionStatusText").innerHTML =
@@ -367,6 +372,49 @@ export class BaseScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     if (!this.currentPlayer) return;
+
+    if (this.room.state.waitingForPlayers) {
+      document.getElementById("round-time").innerHTML =
+        "Waiting for players...";
+    } else if (this.room.state.roundStartsAt) {
+      const endTime = new Date(this.room.state.roundStartsAt).getTime();
+      const now = Date.now(); // Get the current time
+      const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
+
+      if (timeLeft <= 0) {
+        document.getElementById("round-time").innerHTML = "Now!";
+      } else {
+        const minutes = Math.floor(timeLeft / 1000 / 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+
+        // Format the time as MM:SS
+        const formattedTime = `Starts in: ${String(minutes)}:${String(seconds).padStart(
+          2,
+          "0"
+        )}`;
+
+        document.getElementById("round-time").innerHTML = formattedTime;
+      }
+    } else if (this.room.state.roundEndsAt) {
+      const endTime = new Date(this.room.state.roundEndsAt).getTime();
+      const now = Date.now(); // Get the current time
+      const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
+
+      if (timeLeft <= 0) {
+        document.getElementById("round-time").innerHTML = "00:00";
+      } else {
+        const minutes = Math.floor(timeLeft / 1000 / 60);
+        const seconds = Math.floor((timeLeft / 1000) % 60);
+
+        // Format the time as MM:SS
+        const formattedTime = `${String(minutes)}:${String(seconds).padStart(
+          2,
+          "0"
+        )}`;
+
+        document.getElementById("round-time").innerHTML = formattedTime;
+      }
+    }
 
     document.getElementById(
       "fps"

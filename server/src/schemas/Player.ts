@@ -8,6 +8,7 @@ export class Player extends Schema {
   // Team based maps
   @type("string") team = ""; // red or blue
   @type("number") score = 0; // Used for team games, ie: ctf = how many flags they captured
+  @type("boolean") isReady = false; // Track if the player is dead
 
   // Position
   @type("number") x = 400;
@@ -28,6 +29,8 @@ export class Player extends Schema {
   @type("string") name = "";
   @type("string") skin = ""; // Default skin
   @type("number") speed = 4; // The speed the player moves at
+
+  @type("boolean") enabled = true;
   @type("boolean") isMoving = false; // Track if the player is moving
 
   // Spawn Protection
@@ -85,6 +88,14 @@ export class Player extends Schema {
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
+
+  reset() {
+    this.ammo = this.defaultAmmo;
+    this.speed = this.defaultSpeed;
+    this.health = this.defaultHealth;
+    this.deaths = 0;
+    this.kills = 0;
+  }
 
   resetTimeouts: Map<string, NodeJS.Timeout> = new Map<
     string,
