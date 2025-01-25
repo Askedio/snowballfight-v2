@@ -77,7 +77,7 @@ export class BaseOnCreateCommand<
     this.room.onMessage(
       "rejoin",
       async (client, { playerName, roomName, skin }) => {
-        console.log("Player attempting to rejoin...");
+        console.log("Player attempting to rejoin...")
         // Check if the player exists in the room state
         let player = this.room.state.players.get(client.sessionId);
 
@@ -108,6 +108,7 @@ export class BaseOnCreateCommand<
           }
 
           if (player.canRespawn()) {
+            
             await resetPlayer(player, this.tilemapManager);
 
             this.room.broadcast("client-respawned", {

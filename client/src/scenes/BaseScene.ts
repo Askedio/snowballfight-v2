@@ -277,18 +277,12 @@ export class BaseScene extends Phaser.Scene {
 
       await this.connect();
 
-      if (!this.room?.state) {
-        console.error("Unable to join, no state!");
-        this.setError("Sorry, there was a problem while loading the game.");
-
-        return;
-      }
-
+      
       this.initMap();
 
-      this.createAnimations();
+      ///this.createAnimations();
 
-      this.setRoomListeners();
+     // this.setRoomListeners();
 
       this.cursorKeys = this.input.keyboard.createCursorKeys();
       this.keyboardKeys = {
@@ -340,11 +334,7 @@ export class BaseScene extends Phaser.Scene {
         roomName = window.location.hash.substring(1);
       }
 
-      this.room = await client.joinOrCreate(this.userRoomName, {
-        customRoomName: roomName,
-      });
-
-      this.roomName = roomName;
+      
 
       console.log("Scene is ready!");
 

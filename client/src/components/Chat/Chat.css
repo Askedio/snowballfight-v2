@@ -1,43 +1,46 @@
-#chat {
+/* Chat container */
+.chat-container {
   @apply absolute bottom-1.5 left-1.5 z-40 hidden sm:block w-[250px] bg-gray-700/70 opacity-50 hover:opacity-100 overflow-hidden rounded text-xs;
+}
 
-  #chatBox {
-    @apply w-full p-1.5 max-h-[95px] overflow-auto border border-white/10 list-none leading-3 text-white/90;
+/* Chat box */
+.chat-box {
+  @apply w-full p-1.5 max-h-[95px] overflow-auto border border-white/10 list-none leading-3 text-white/90;
 
-    scrollbar-width: thin; /* For Firefox */
-    scrollbar-color: gray transparent; /* For Firefox */
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: gray transparent; /* For Firefox */
 
-    &::-webkit-scrollbar {
-      @apply w-1; /* Thin scrollbar width */
-    }
-
-    &::-webkit-scrollbar-thumb {
-      @apply bg-gray-500 rounded; /* Gray scrollbar thumb with rounded edges */
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-400; /* Slightly lighter gray on hover */
-    }
-
-    &::-webkit-scrollbar-track {
-      @apply bg-transparent; /* Transparent track for contrast */
-    }
-
-    &:empty {
-      @apply hidden;
-    }
-
-    i {
-      @apply font-bold;
-    }
+  &::-webkit-scrollbar {
+    @apply w-1; /* Thin scrollbar width */
   }
 
-  #chatSend {
-    @apply w-full p-1.5 bg-gray-700/70 border border-white/10 text-white;
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-500 rounded; /* Gray scrollbar thumb with rounded edges */
+  }
 
-    &:active,
-    &:hover {
-      @apply bg-white/20;
-    }
+  &::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400; /* Slightly lighter gray on hover */
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply bg-transparent; /* Transparent track for contrast */
+  }
+
+  &:empty {
+    @apply hidden;
+  }
+
+  i {
+    @apply font-bold;
+  }
+}
+
+/* Chat input field */
+.chat-send {
+  @apply w-full p-1.5 bg-gray-700/70 border border-white/10 text-white;
+
+  &:active,
+  &:hover {
+    @apply bg-white/20;
   }
 }

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { EventBus } from "../../lib/EventBus";
 import "./SpawnScreen.css";
+import { useColyseusRoom } from "../../lib/colyseus";
 
 export function SpawnScreen() {
   const [loading, setLoading] = useState(true);
+  const [selectedGameMode, setSelectedGameMode] = useState<string>("ffa");
+  const [selectedSkin, setSelectedSkin] = useState<string>("playersa_01");
+  const room = useColyseusRoom();
 
   useEffect(() => {
     EventBus.on("scene-ready", () => {
@@ -15,92 +19,124 @@ export function SpawnScreen() {
     };
   }, []);
 
+  const handleGameModeClick = (mode: string) => {
+    setSelectedGameMode(mode);
+  };
+
+  const handleSkinClick = (skin: string) => {
+    setSelectedSkin(skin);
+  };
+
   if (loading) {
-    return;
+    return null;
   }
 
   return (
-    <div id="join-modal" className="modal">
-      <div id="killedBy" />
+    <div className="modal">
+      <div className="killedBy" />
 
-      <h2 id="modal-title" className="text-2xl font-bold mb-4">
-        Welcome to Snowball Fight!
-      </h2>
-      <p id="modal-message" className="mb-4">
-        Click Join Game to play!
-      </p>
+      <h2 className="text-2xl font-bold mb-4">Welcome to Snowball Fight!</h2>
+      <p className="mb-4">Click Join Game to play!</p>
 
       <input
-        id="player-name"
         type="text"
         placeholder="Player name (optional)"
         className="input-field"
       />
       <input
-        id="room-name"
         type="text"
         placeholder="Room name (optional)"
         className="input-field"
       />
 
-      <ul id="switch">
-        <li id="ffa" className="activeMode gameMode">
+      {/* Game Mode Switch */}
+      <div className="switch">
+        <button
+          type="button"
+          className={`gameMode ${
+            selectedGameMode === "ffa" ? "activeMode" : ""
+          }`}
+          onClick={() => handleGameModeClick("ffa")}
+        >
           FFA
-        </li>
-        <li id="ctf" className="gameMode">
+        </button>
+        <button
+          type="button"
+          className={`gameMode ${
+            selectedGameMode === "ctf" ? "activeMode" : ""
+          }`}
+          onClick={() => handleGameModeClick("ctf")}
+        >
           CTF
-        </li>
-        <li id="tdm" className="gameMode">
+        </button>
+        <button
+          type="button"
+          className={`gameMode ${
+            selectedGameMode === "tdm" ? "activeMode" : ""
+          }`}
+          onClick={() => handleGameModeClick("tdm")}
+        >
           TDM
-        </li>
-        <li id="ts" className="gameMode">
+        </button>
+        <button
+          type="button"
+          className={`gameMode ${
+            selectedGameMode === "ts" ? "activeMode" : ""
+          }`}
+          onClick={() => handleGameModeClick("ts")}
+        >
           TS
-        </li>
-      </ul>
+        </button>
+      </div>
 
-      <div id="skins">
-        <ul id="skinlist">
-          <li>
-            <img
-              alt=""
-              id="playersa"
-              src="/assets/images/skins/player/playersa_01.png"
-            />
-          </li>
-          <li>
-            <img
-              alt=""
-              id="playersb"
-              src="/assets/images/skins/player/playersb_01.png"
-            />
-          </li>
-          <li>
-            <img
-              alt=""
-              id="playersc"
-              src="/assets/images/skins/player/playersc_01.png"
-            />
-          </li>
-          <li>
-            <img
-              alt=""
-              id="playersd"
-              src="/assets/images/skins/player/playersd_01.png"
-            />
-          </li>
-        </ul>
+      {/* Skin Selection */}
+      <div className="skins">
+        <div className="skinlist">
+          <button
+            type="button"
+            className={selectedSkin === "playersa_01" ? "active" : ""}
+            onClick={() => handleSkinClick("playersa_01")}
+          >
+            <img alt="" src="/assets/images/skins/player/playersa_01.png" />
+          </button>
+          <button
+            type="button"
+            className={selectedSkin === "playersb_01" ? "active" : ""}
+            onClick={() => handleSkinClick("playersb_01")}
+          >
+            <img alt="" src="/assets/images/skins/player/playersb_01.png" />
+          </button>
+          <button
+            type="button"
+            className={selectedSkin === "playersc_01" ? "active" : ""}
+            onClick={() => handleSkinClick("playersc_01")}
+          >
+            <img alt="" src="/assets/images/skins/player/playersc_01.png" />
+          </button>
+          <button
+            type="button"
+            className={selectedSkin === "playersd_01" ? "active" : ""}
+            onClick={() => handleSkinClick("playersd_01")}
+          >
+            <img alt="" src="/assets/images/skins/player/playersd_01.png" />
+          </button>
+        </div>
       </div>
 
       <button
         type="button"
-        id="join-button"
         className="btn-primary"
         onClick={() => {
-          EventBus.emit("onPlayerRejoin", { playerName: "", roomName: "" });
+          room.send("rejoin", {
+            playerName: "",
+            roomName: "",
+            skin: selectedSkin,
+          });
         }}
       >
         Join Game
       </button>
+
       <p className="instructions">
         <span className="text-white">
           Tip: Use your respawn protection to reload your snowballs!
