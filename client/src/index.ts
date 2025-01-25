@@ -84,7 +84,7 @@ window.addEventListener("player-rejoin", async (e: any) => {
 });
 
 document.getElementById("player-ready").addEventListener("click", (e: any) => {
-  e.preventDefault()
+  e.preventDefault();
   game.events.emit("onPlayerReady", e);
 });
 
@@ -95,22 +95,26 @@ document.getElementById("switch").addEventListener("click", (e: any) => {
     }
 
     game.scene.stop(activeScene);
-    game.scene.remove(activeScene);
+    if (activeScene !== "ffa") {
+      game.scene.remove(activeScene);
+    }
     activeScene = e.target.id;
 
-    // Weird, when injected into the game itself the mouse and movement were broken on scenes after #2 
+    const keys = game.scene.keys;
+
+    // Weird, when injected into the game itself the mouse and movement were broken on scenes after #2
     switch (activeScene) {
       case "ffa":
-        game.scene.add("ffa", CtfScene);
+        !keys.ffa && game.scene.add("ffa", CtfScene);
         break;
       case "ctf":
-        game.scene.add("ctf", CtfScene);
+        !keys.ctf && game.scene.add("ctf", CtfScene);
         break;
       case "tdm":
-        game.scene.add("tdm", TdmScene);
+        !keys.ctf && game.scene.add("tdm", TdmScene);
         break;
       case "ts":
-        game.scene.add("ts", TsScene);
+        !keys.ts && game.scene.add("ts", TsScene);
         break;
     }
 

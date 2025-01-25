@@ -54,6 +54,8 @@ export class CtfFixedTickCommand extends BaseTickCommand<
         const now = Date.now();
         const timeLeft = endTime - now;
 
+       
+
         if (timeLeft <= 0) {
           this.state.redScore = 0;
           this.state.blueScore = 0;

@@ -1,5 +1,6 @@
-import { Schema, type } from "@colyseus/schema";
+import { Schema, ArraySchema, type } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
+import { Pickup } from "./Pickup";
 
 export class Player extends Schema {
   @type("string") sessionId = "";
@@ -84,11 +85,16 @@ export class Player extends Schema {
   @type("string") targetPlayer: string;
 
   // Carry pickup
-  @type("string") caryPickupId: string; // The id of the Pickup when the user is carrying one
+  @type(Pickup) carriedPickup: Pickup; // ahh..
+  @type([ Pickup ]) pickups = new ArraySchema<Pickup>();
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 
+
+  /**
+   * Reset the player to default settings.
+   */
   reset() {
     this.ammo = this.defaultAmmo;
     this.speed = this.defaultSpeed;

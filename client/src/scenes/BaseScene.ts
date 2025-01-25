@@ -233,89 +233,96 @@ export class BaseScene extends Phaser.Scene {
 
   onPlayerReady(ready: boolean) {
     this.room.send("player-ready", { ready });
+    document.getElementById("round-ended").style.display = "none";
   }
 
   async create() {
-    this.events.once("shutdown", async () => {
-      console.log("Scene is shutting down!");
+    try {
+      this.events.once("shutdown", async () => {
+        console.log("Scene is shutting down!");
 
-      clearInterval(this.playerStatsInterval);
-      this.game.events.off("onSkinChange", this.onSkinChange);
-      this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
-      this.game.events.off("onChatSendMessage", this.onChatSendMessage);
-      this.game.events.off("onPlayerReady", this.onPlayerReady);
-      this.input.shutdown();
+        clearInterval(this.playerStatsInterval);
+        this.game.events.off("onSkinChange", this.onSkinChange);
+        this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
+        this.game.events.off("onChatSendMessage", this.onChatSendMessage);
+        this.game.events.off("onPlayerReady", this.onPlayerReady);
+        this.input.shutdown();
 
-      this.room.removeAllListeners();
-      await this.room.leave(true);
-    });
+        this.room?.removeAllListeners();
+        await this.room?.leave(true);
+      });
 
-    this.game.events.on("onSkinChange", this.onSkinChange, this);
-    this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
-    this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
-    this.game.events.on("onPlayerReady", this.onPlayerReady, this);
+      this.game.events.on("onSkinChange", this.onSkinChange, this);
+      this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
+      this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
+      this.game.events.on("onPlayerReady", this.onPlayerReady, this);
 
-    this.playerStatsInterval = setInterval(() => {
-      this.updatePlayerStats();
-    }, 1000);
+      this.playerStatsInterval = setInterval(() => {
+        this.updatePlayerStats();
+      }, 1000);
 
-    console.log("Starting scene", this.mode);
+      console.log("Starting scene", this.mode);
 
-    document.getElementById("error").innerHTML = "";
+      document.getElementById("error").innerHTML = "";
 
-    await this.connect();
+      await this.connect();
 
-    if (!this.room?.state) {
-      console.error("Unable to join, no state!");
-      document.getElementById("error").innerHTML =
-        "Sorry, there was a problem while loading the game.";
+      if (!this.room?.state) {
+        console.error("Unable to join, no state!");
+        document.getElementById("error").innerHTML =
+          "Sorry, there was a problem while loading the game.";
 
-      return;
+        return;
+      }
+
+      this.initMap();
+
+      this.createAnimations();
+
+      this.setRoomListeners();
+
+      this.cursorKeys = this.input.keyboard.createCursorKeys();
+      this.keyboardKeys = {
+        W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+        A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+        S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+        D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+        R: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
+        E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+      };
+
+      const spaceBar = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.SPACE,
+        false
+      );
+
+      const tabKey = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.TAB
+      );
+      tabKey.on("down", this.showLeaderboard.bind(this));
+      tabKey.on("up", this.hideLeaderboard.bind(this));
+
+      // Space bar for shooting
+      spaceBar.on("down", () => {
+        const chatInput = document.getElementById(
+          "chatSend"
+        ) as HTMLInputElement;
+        if (chatInput && document.activeElement === chatInput) {
+          return true; // Ignore space bar if the chat input is focused
+        }
+
+        if (this.canShoot) {
+          this.inputPayload.shoot = true;
+        }
+      });
+
+      // Reset shooting on space bar release
+      spaceBar.on("up", () => {
+        this.inputPayload.shoot = false;
+      });
+    } catch (e: any) {
+      console.log("Failed to initalize create");
     }
-
-    this.initMap();
-
-    this.createAnimations();
-
-    this.setRoomListeners();
-
-    this.cursorKeys = this.input.keyboard.createCursorKeys();
-    this.keyboardKeys = {
-      W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
-      A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
-      S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
-      D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
-      R: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
-      E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
-    };
-
-    const spaceBar = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE,
-      false
-    );
-
-    const tabKey = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.TAB
-    );
-    tabKey.on("down", this.showLeaderboard.bind(this));
-    tabKey.on("up", this.hideLeaderboard.bind(this));
-
-    // Space bar for shooting
-    spaceBar.on("down", () => {
-      const chatInput = document.getElementById("chatSend") as HTMLInputElement;
-      if (chatInput && document.activeElement === chatInput) {
-        return true; // Ignore space bar if the chat input is focused
-      }
-
-      if (this.canShoot) {
-        this.inputPayload.shoot = true;
-      }
-    });
-
-    // Reset shooting on space bar release
-    spaceBar.on("up", () => {
-      this.inputPayload.shoot = false;
-    });
   }
 
   async connect() {
@@ -375,7 +382,7 @@ export class BaseScene extends Phaser.Scene {
 
     if (this.room.state.waitingForPlayers) {
       document.getElementById("round-time").innerHTML =
-        "Waiting for players...";
+        "Waiting for players to be ready...";
     } else if (this.room.state.roundStartsAt) {
       const endTime = new Date(this.room.state.roundStartsAt).getTime();
       const now = Date.now(); // Get the current time
@@ -388,10 +395,7 @@ export class BaseScene extends Phaser.Scene {
         const seconds = Math.floor((timeLeft / 1000) % 60);
 
         // Format the time as MM:SS
-        const formattedTime = `Starts in: ${String(minutes)}:${String(seconds).padStart(
-          2,
-          "0"
-        )}`;
+        const formattedTime = `Starts in ${String(seconds)}...`;
 
         document.getElementById("round-time").innerHTML = formattedTime;
       }
@@ -452,77 +456,89 @@ export class BaseScene extends Phaser.Scene {
   }
 
   setRoomListeners() {
+    // Team round ended
+    this.room.onMessage("round-over", ({ redScore, blueScore }) => {
+      document.getElementById("round-ended-red").innerHTML = redScore;
+      document.getElementById("round-ended-blue").innerHTML = blueScore;
+
+      document.getElementById("round-ended").style.display = "block";
+    });
+
     // Add pickups
     this.room.state.pickups.onAdd((pickup) => {
-      // Create a container to hold the pickup sprite and the debugging border
-      const pickupContainer = this.add.container(pickup.x, pickup.y);
+      try {
+        // Create a container to hold the pickup sprite and the debugging border
+        const pickupContainer = this.add.container(pickup.x, pickup.y);
 
-      // Create the pickup sprite
-      let pickupEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
-      if (pickup.isSprite) {
-        pickupEntity = this.add.sprite(
-          0, // Position relative to the container
-          0,
-          pickup.asset,
-          pickup.spriteFrame
-        );
-      } else {
-        pickupEntity = this.add.image(0, 0, pickup.asset);
-      }
-
-      // Scale and rotate the sprite if needed
-      pickupEntity.setScale(pickup.scale);
-
-      // Add the sprite to the container
-      pickupContainer.add(pickupEntity);
-
-      // Create a debugging border based on the collision shape
-      if (this.debugging) {
-        const offsetX = pickup.colissionOffsetX || 0;
-        const offsetY = pickup.colissionOffsetY || 0;
-
-        let debugBorder: Phaser.GameObjects.Graphics | null = null;
-
-        if (!pickup.colissionShape || pickup.colissionShape === "circle") {
-          debugBorder = this.add.graphics();
-          debugBorder.lineStyle(2, 0xff0000);
-          debugBorder.strokeCircle(offsetX, offsetY, pickup.radius);
-        } else if (pickup.colissionShape === "box") {
-          debugBorder = this.add.graphics();
-          debugBorder.lineStyle(2, 0xff0000); // Red border with transparency
-
-          // Define the inset amount (how much the border should shrink inward)
-          const insetAmount = 8; // Adjust this value as needed
-
-          // Calculate the inset dimensions
-          const insetWidth = pickup.colissionWidth - insetAmount * 2;
-          const insetHeight = pickup.colissionHeight - insetAmount * 2;
-
-          // Draw the inset border
-          debugBorder.strokeRect(
-            offsetX - insetWidth / 2,
-            offsetY - insetHeight / 2,
-            insetWidth,
-            insetHeight
+        // Create the pickup sprite
+        let pickupEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+        if (pickup.isSprite) {
+          pickupEntity = this.add.sprite(
+            0, // Position relative to the container
+            0,
+            pickup.asset,
+            pickup.spriteFrame
           );
+        } else {
+          pickupEntity = this.add.image(0, 0, pickup.asset);
         }
 
-        pickupContainer.add(debugBorder);
-      }
+        // Scale and rotate the sprite if needed
+        pickupEntity.setScale(pickup.scale);
 
-      if (pickup.rotation) {
-        pickupContainer.setRotation(pickup.rotation);
-      }
+        // Add the sprite to the container
+        pickupContainer.add(pickupEntity);
 
-      // Set the depth if the pickup should appear above other elements
-      if (pickup.bringToTop) {
-        pickupContainer.setDepth(10);
-      } else {
-        pickupContainer.setDepth(2);
-      }
+        // Create a debugging border based on the collision shape
+        if (this.debugging) {
+          const offsetX = pickup.colissionOffsetX || 0;
+          const offsetY = pickup.colissionOffsetY || 0;
 
-      // Add the container to the pickup entities
-      this.pickupEntities[pickup.id] = pickupContainer;
+          let debugBorder: Phaser.GameObjects.Graphics | null = null;
+
+          if (!pickup.colissionShape || pickup.colissionShape === "circle") {
+            debugBorder = this.add.graphics();
+            debugBorder.lineStyle(2, 0xff0000);
+            debugBorder.strokeCircle(offsetX, offsetY, pickup.radius);
+          } else if (pickup.colissionShape === "box") {
+            debugBorder = this.add.graphics();
+            debugBorder.lineStyle(2, 0xff0000); // Red border with transparency
+
+            // Define the inset amount (how much the border should shrink inward)
+            const insetAmount = 8; // Adjust this value as needed
+
+            // Calculate the inset dimensions
+            const insetWidth = pickup.colissionWidth - insetAmount * 2;
+            const insetHeight = pickup.colissionHeight - insetAmount * 2;
+
+            // Draw the inset border
+            debugBorder.strokeRect(
+              offsetX - insetWidth / 2,
+              offsetY - insetHeight / 2,
+              insetWidth,
+              insetHeight
+            );
+          }
+
+          pickupContainer.add(debugBorder);
+        }
+
+        if (pickup.rotation) {
+          pickupContainer.setRotation(pickup.rotation);
+        }
+
+        // Set the depth if the pickup should appear above other elements
+        if (pickup.bringToTop) {
+          pickupContainer.setDepth(10);
+        } else {
+          pickupContainer.setDepth(2);
+        }
+
+        // Add the container to the pickup entities
+        this.pickupEntities[pickup.id] = pickupContainer;
+      } catch (e: any) {
+        console.log("Failed to create pickups.");
+      }
     });
 
     // Remove pickups
@@ -536,161 +552,170 @@ export class BaseScene extends Phaser.Scene {
 
     // Handle player addition
     this.room.state.players.onAdd((player, sessionId) => {
-      const isCurrentPlayer = sessionId === this.room.sessionId;
+      try {
+        const isCurrentPlayer = sessionId === this.room.sessionId;
 
-      let currentPlayerIndicator: Phaser.GameObjects.Graphics | null = null;
-      if (isCurrentPlayer) {
-        currentPlayerIndicator = this.add.graphics();
-        currentPlayerIndicator.fillStyle(0xffffff, 0.2); // Green with 20% opacity
-        currentPlayerIndicator.fillCircle(0, 0, player.playerSize * 1.5);
-      }
+        let currentPlayerIndicator: Phaser.GameObjects.Graphics | null = null;
+        if (isCurrentPlayer) {
+          currentPlayerIndicator = this.add.graphics();
+          currentPlayerIndicator.fillStyle(0xffffff, 0.2); // Green with 20% opacity
+          currentPlayerIndicator.fillCircle(0, 0, player.playerSize * 1.5);
+        }
 
-      const playerSprite = this.add.sprite(
-        0,
-        0,
-        "players",
-        `${player.skin}_01.png`
-      );
-      playerSprite.setOrigin(0.5, 0.5);
+        const playerSprite = this.add.sprite(
+          0,
+          0,
+          "players",
+          `${player.skin}_01.png`
+        );
+        playerSprite.setOrigin(0.5, 0.5);
 
-      const playerNameText = this.add.text(0, -43, `${player.name}`, {
-        color: "#ffffff",
-        font: "12px Helvetica Neue",
-      });
-      playerNameText.setOrigin(0.5, 0.5);
-      playerNameText.setShadow(1, 1, "#000000", 2, true, true); // Offset (1, 1), black shadow, blur radius 2
+        const playerNameText = this.add.text(0, -43, `${player.name}`, {
+          color: "#ffffff",
+          font: "12px Helvetica Neue",
+        });
+        playerNameText.setOrigin(0.5, 0.5);
+        playerNameText.setShadow(1, 1, "#000000", 2, true, true); // Offset (1, 1), black shadow, blur radius 2
 
-      // Add a stroke (outline) around the text
-      playerNameText.setStroke("#999999", 0.5); // Black stroke with thickness 2
+        // Add a stroke (outline) around the text
+        playerNameText.setStroke("#999999", 0.5); // Black stroke with thickness 2
 
-      // Health bar background
-      const healthBarBg = this.add.graphics();
-      healthBarBg.fillStyle(0x8b0000, 1); // Light grey background
-      healthBarBg.fillRect(-25, -33, 50, 2); // 50px wide, 2px tall, centered above
+        // Health bar background
+        const healthBarBg = this.add.graphics();
+        healthBarBg.fillStyle(0x8b0000, 1); // Light grey background
+        healthBarBg.fillRect(-25, -33, 50, 2); // 50px wide, 2px tall, centered above
 
-      // Health bar foreground
-      const healthBar = this.add.graphics();
-      healthBar.fillStyle(0x4caf50, 1); // Green bar
-      healthBar.fillRect(-25, -33, (player.health / 100) * 50, 2);
+        // Health bar foreground
+        const healthBar = this.add.graphics();
+        healthBar.fillStyle(0x4caf50, 1); // Green bar
+        healthBar.fillRect(-25, -33, (player.health / 100) * 50, 2);
 
-      // Ammo bar background
-      const ammoBarBg = this.add.graphics();
-      ammoBarBg.fillStyle(0xaaaaaa, 1); // Light grey background
-      ammoBarBg.fillRect(-25, -29, 50, 2); // 50px wide, 2px tall, positioned slightly below the health bar
+        // Ammo bar background
+        const ammoBarBg = this.add.graphics();
+        ammoBarBg.fillStyle(0xaaaaaa, 1); // Light grey background
+        ammoBarBg.fillRect(-25, -29, 50, 2); // 50px wide, 2px tall, positioned slightly below the health bar
 
-      // Ammo bar foreground
-      const ammoBar = this.add.graphics();
-      ammoBar.fillStyle(0x0000ff, 1); // Blue bar
-      ammoBar.fillRect(-25, -29, (player.ammo / 100) * 50, 2);
+        // Ammo bar foreground
+        const ammoBar = this.add.graphics();
+        ammoBar.fillStyle(0x0000ff, 1); // Blue bar
+        ammoBar.fillRect(-25, -29, (player.ammo / 100) * 50, 2);
 
-      const containerItems: any = [
-        currentPlayerIndicator,
-        playerSprite,
-        playerNameText,
-        healthBarBg,
-        healthBar,
-        ammoBarBg,
-        ammoBar,
-      ];
+        const containerItems: any = [
+          currentPlayerIndicator,
+          playerSprite,
+          playerNameText,
+          healthBarBg,
+          healthBar,
+          ammoBarBg,
+          ammoBar,
+        ];
 
-      let debugBorder: Phaser.GameObjects.Graphics | null = null;
+        let debugBorder: Phaser.GameObjects.Graphics | null = null;
 
-      if (this.debugging) {
-        debugBorder = this.add.graphics();
-        debugBorder.lineStyle(2, 0xff0000);
-        debugBorder.strokeCircle(0, 0, player.playerRadius);
-        containerItems.push(debugBorder);
-      }
+        if (this.debugging) {
+          debugBorder = this.add.graphics();
+          debugBorder.lineStyle(2, 0xff0000);
+          debugBorder.strokeCircle(0, 0, player.playerRadius);
+          containerItems.push(debugBorder);
+        }
 
-      // Add both to a container
-      const playerContainer = this.add.container(
-        player.x,
-        player.y,
-        containerItems.filter((_) => _)
-      );
+        // Add both to a container
+        const playerContainer = this.add.container(
+          player.x,
+          player.y,
+          containerItems.filter((_) => _)
+        );
 
-      playerContainer.setSize(playerSprite.width, playerSprite.height);
+        playerContainer.setSize(playerSprite.width, playerSprite.height);
 
-      playerContainer.setDepth(3);
+        playerContainer.setDepth(3);
 
-      this.playerEntities[sessionId] = playerContainer;
+        this.playerEntities[sessionId] = playerContainer;
 
-      if (sessionId === this.room.sessionId) {
-        this.currentPlayer = playerContainer;
-        this.cameras?.main?.startFollow(this.currentPlayer, true);
-      }
+        if (sessionId === this.room.sessionId) {
+          this.currentPlayer = playerContainer;
+          this.cameras?.main?.startFollow(this.currentPlayer, true);
+        }
 
-      // React to player state changes, playeronchange
-      player.onChange(() => {
-        const container = this.playerEntities[
-          sessionId
-        ] as Phaser.GameObjects.Container;
+        // React to player state changes, playeronchange
+        player.onChange(() => {
+          const container = this.playerEntities[
+            sessionId
+          ] as Phaser.GameObjects.Container;
 
-        if (container) {
-          container.setPosition(player.x, player.y);
+          if (container) {
+            container.setPosition(player.x, player.y);
 
-          if (player.isDead) {
-            container.setVisible(false);
-          } else {
-            container.setVisible(true);
-
-            if (player.isProtected) {
-              playerContainer.setAlpha(0.08);
+            if (player.isDead) {
+              container.setVisible(false);
             } else {
-              playerContainer.setAlpha(1);
-            }
+              container.setVisible(true);
 
-            this.tweens.add({
-              targets: container,
-              x: player.x,
-              y: player.y,
-              duration: 100,
-              ease: "Linear",
-            });
+              if (player.isProtected) {
+                playerContainer.setAlpha(0.08);
+              } else {
+                playerContainer.setAlpha(1);
+              }
 
-            playerSprite.setRotation(player.rotation);
+              this.tweens.add({
+                targets: container,
+                x: player.x,
+                y: player.y,
+                duration: 100,
+                ease: "Linear",
+              });
 
-            if (player.isMoving) {
-              // to-do: add foot steps sound for current and remote players, diff sounds
-              /*this.playSpatialSound(
+              playerSprite.setRotation(player.rotation);
+
+              if (player.isMoving) {
+                // to-do: add foot steps sound for current and remote players, diff sounds
+                /*this.playSpatialSound(
                 player,
                 player.speed > player.defaultSpeed
                   ? player.runningSound
                   : player.walkingSound
               );*/
 
-              if (
-                playerSprite?.anims &&
-                (playerSprite?.anims?.currentAnim?.key !==
-                  `${player.skin}_walk` ||
-                  !playerSprite?.anims?.isPlaying)
-              ) {
-                playerSprite?.play(`${player.skin}_walk`, true);
+                if (
+                  playerSprite?.anims &&
+                  (playerSprite?.anims?.currentAnim?.key !==
+                    `${player.skin}_walk` ||
+                    !playerSprite?.anims?.isPlaying)
+                ) {
+                  playerSprite?.play(`${player.skin}_walk`, true);
+                }
+              } else {
+                if (playerSprite?.anims?.isPlaying) {
+                  playerSprite.stop();
+                  playerSprite.setTexture("players", `${player.skin}_01.png`);
+                }
               }
-            } else {
-              if (playerSprite?.anims?.isPlaying) {
-                playerSprite.stop();
-                playerSprite.setTexture("players", `${player.skin}_01.png`);
-              }
+
+              healthBar.clear();
+              healthBar.fillStyle(0x4caf50, 1); // Green
+              healthBar.fillRect(
+                -25,
+                -33,
+                (player.health / player.maxHealth) * 50,
+                2
+              );
+
+              ammoBar.clear();
+              ammoBar.fillStyle(0x0000ff, 1); // Blue
+              ammoBar.fillRect(
+                -25,
+                -29,
+                (player.ammo / player.maxAmmo) * 50,
+                2
+              );
+
+              playerNameText.setText(`${player.name}`);
             }
-
-            healthBar.clear();
-            healthBar.fillStyle(0x4caf50, 1); // Green
-            healthBar.fillRect(
-              -25,
-              -33,
-              (player.health / player.maxHealth) * 50,
-              2
-            );
-
-            ammoBar.clear();
-            ammoBar.fillStyle(0x0000ff, 1); // Blue
-            ammoBar.fillRect(-25, -29, (player.ammo / player.maxAmmo) * 50, 2);
-
-            playerNameText.setText(`${player.name}`);
           }
-        }
-      });
+        });
+      } catch (error: any) {
+        console.log("Failed to create players");
+      }
     });
 
     // Listen for player death event from the server
@@ -738,16 +763,20 @@ export class BaseScene extends Phaser.Scene {
 
     // Handle bullet addition
     this.room.state.bullets.onAdd((bullet, bulletId) => {
-      const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
-      bulletEntity.setOrigin(0.5, 0.5);
-      bulletEntity.setDepth(3);
-      this.bulletEntities[bulletId] = bulletEntity;
+      try {
+        const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
+        bulletEntity.setOrigin(0.5, 0.5);
+        bulletEntity.setDepth(3);
+        this.bulletEntities[bulletId] = bulletEntity;
 
-      bullet.onChange(() => {
-        if (this.bulletEntities[bulletId]) {
-          this.bulletEntities[bulletId].setPosition(bullet.x, bullet.y);
-        }
-      });
+        bullet.onChange(() => {
+          if (this.bulletEntities[bulletId]) {
+            this.bulletEntities[bulletId].setPosition(bullet.x, bullet.y);
+          }
+        });
+      } catch (error: any) {
+        console.log("Failed to create bullets");
+      }
     });
 
     // When a bullet is destroyed
@@ -949,6 +978,12 @@ export class BaseScene extends Phaser.Scene {
   updatePlayerStats() {
     if (!this.room?.state?.players) {
       return;
+    }
+
+    if (this.room.state.waitingForPlayers || this.room.state.waitingToStart) {
+      document.getElementById("player-ready").classList.add("show");
+    } else {
+      document.getElementById("player-ready").classList.remove("show");
     }
 
     document.getElementById("team-red-stats").innerText = `${

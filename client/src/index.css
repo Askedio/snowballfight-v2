@@ -25,8 +25,28 @@ input {
   @apply w-full h-full;
 }
 
+#round-ended {
+  @apply text-center;
+
+  h1 {
+    @apply text-2xl;
+  }
+
+  .stats {
+    @apply flex gap-0 mx-auto w-fit;
+
+    #round-ended-red {
+      @apply bg-red-500 py-1.5 px-3 w-fit;
+    }
+
+    #round-ended-blue {
+      @apply bg-blue-500 py-1.5 px-3 w-fit;
+    }
+  }
+}
+
 #player-ready {
-  @apply absolute left-1/2 bottom-3 transform -translate-x-1/2
+  @apply absolute left-1/2 bottom-3 transform -translate-x-1/2 hidden;
 }
 
 #player-ready-button {
@@ -84,7 +104,7 @@ input {
 
 /* Modal Styles */
 .modal {
-  @apply z-20 md:m-12 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center hidden border border-gray-600;
+  @apply z-20 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center hidden border border-gray-600;
 }
 
 .show {
