@@ -37,6 +37,8 @@ export class Player extends Schema {
   // Spawn Protection
   @type("boolean") isProtected = false; // Player wont take damage
   @type("number") protectionTime = 3000; // How long they are protected for
+  @type("number") respawnDelay = 5000; // How long to wait before allowing player to respawn
+  @type("number") lastKilledAt: number;
 
   // Firing rate/damage
   @type("number") bulletSpeed = 10; // How fast the bullet moves
@@ -86,11 +88,19 @@ export class Player extends Schema {
 
   // Carry pickup
   @type(Pickup) carriedPickup: Pickup; // ahh..
-  @type([ Pickup ]) pickups = new ArraySchema<Pickup>();
+  @type([Pickup]) pickups = new ArraySchema<Pickup>();
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 
+  canRespawn(): boolean {
+    if (!this.lastKilledAt) {
+      return true;
+    }
+
+    const now = Date.now(); // Current time
+    return now - this.lastKilledAt >= this.respawnDelay;
+  }
 
   /**
    * Reset the player to default settings.
@@ -101,6 +111,7 @@ export class Player extends Schema {
     this.health = this.defaultHealth;
     this.deaths = 0;
     this.kills = 0;
+    this.isDead = false;
   }
 
   resetTimeouts: Map<string, NodeJS.Timeout> = new Map<

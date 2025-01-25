@@ -33,7 +33,7 @@ let activeScene = "ffa";
 const chatInput = document.getElementById("chatSend") as HTMLInputElement;
 
 let disableChat = false;
-let canChangeMode = false
+let canChangeMode = false;
 
 // Add a mouseleave event listener to the chat input
 chatInput.addEventListener("mouseleave", () => {
@@ -94,7 +94,7 @@ document.getElementById("player-ready").addEventListener("click", (e: any) => {
 });
 
 document.getElementById("switch").addEventListener("click", (e: any) => {
-  if(!canChangeMode) {
+  if (!canChangeMode) {
     return;
   }
 
@@ -104,7 +104,7 @@ document.getElementById("switch").addEventListener("click", (e: any) => {
     }
 
     canChangeMode = false;
-    
+
     game.scene.stop(activeScene);
     if (activeScene !== "ffa") {
       game.scene.remove(activeScene);
@@ -187,13 +187,16 @@ function onJoined() {
 
 // Listen for rejoin button click
 rejoinButton.addEventListener("click", () => {
-  hideJoinModal();
   // Emit an event to rejoin the game
   window.dispatchEvent(new Event("player-rejoin"));
 });
 
 window.addEventListener("ready", () => {
   onReady();
+});
+
+window.addEventListener("client-respawned", () => {
+  hideJoinModal();
 });
 
 window.addEventListener("joined", () => {

@@ -13,6 +13,7 @@ export async function resetPlayer(
 
   // Respawn protection.
   player.isProtected = true;
+  
   setTimeout(() => {
     player.isProtected = false;
   }, player.protectionTime);

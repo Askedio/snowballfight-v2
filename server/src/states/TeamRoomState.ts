@@ -2,6 +2,8 @@ import { type } from "@colyseus/schema";
 import { BaseRoomState } from "./BaseRoomState";
 
 export class TeamRoomState extends BaseRoomState {
+  showRespawnScreenOnDeath = false;
+
   @type("boolean") trackPlayerScore = false;
   @type("string") playerScoreType = "kills";
 

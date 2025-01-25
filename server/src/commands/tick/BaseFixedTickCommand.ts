@@ -484,6 +484,8 @@ export class BaseTickCommand<
   }
 
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
+    player.lastKilledAt = Date.now();
+
     player.isDead = true;
     player.deaths += 1;
 
@@ -498,8 +500,9 @@ export class BaseTickCommand<
 
     if (player.type === "bot") {
       setTimeout(async () => {
+        console.log("bot?")
         await resetPlayer(player, this.tilemapManager);
-      }, 5000);
+      }, player.respawnDelay);
     }
   }
 }

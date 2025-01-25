@@ -5,6 +5,7 @@ import { BaseTickCommand } from "./BaseFixedTickCommand";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
+import { assignRandomPosition } from "../../lib/player.lib";
 
 export class CtfFixedTickCommand extends BaseTickCommand<
   CtfRoom,
@@ -41,11 +42,20 @@ export class CtfFixedTickCommand extends BaseTickCommand<
           redScore: this.state.redScore,
           blueScore: this.state.blueScore,
         });
+
+        this.state.players.forEach(async (player) => {
+          player.isDead = true;
+          await assignRandomPosition(player, this.tilemapManager); // Respawn at a new position
+        });
       }
     } else {
       this.setPlayerEnabled(false);
 
       if (this.state.waitingToStart) {
+        this.state.players.forEach((player) => {
+          player.isDead = false;
+        });
+
         if (totalReadyPlayers <= 1) {
           this.abortMatch();
         }
@@ -54,8 +64,7 @@ export class CtfFixedTickCommand extends BaseTickCommand<
         const now = Date.now();
         const timeLeft = endTime - now;
 
-       
-
+        // Start round!
         if (timeLeft <= 0) {
           this.state.redScore = 0;
           this.state.blueScore = 0;
@@ -64,7 +73,7 @@ export class CtfFixedTickCommand extends BaseTickCommand<
           this.state.waitingToStart = false;
           this.state.roundStartsAt = "";
 
-          this.state.players.forEach((player) => {
+          this.state.players.forEach(async (player) => {
             player.reset();
           });
 

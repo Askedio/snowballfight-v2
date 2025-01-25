@@ -77,6 +77,7 @@ export class BaseOnCreateCommand<
     this.room.onMessage(
       "rejoin",
       async (client, { playerName, roomName, skin }) => {
+        console.log("Player attempting to rejoin...");
         // Check if the player exists in the room state
         let player = this.room.state.players.get(client.sessionId);
 
@@ -94,12 +95,11 @@ export class BaseOnCreateCommand<
         }
 
         if (player) {
-          // Assign player name
-          const generator = new RandomNameGenerator();
-
           if (playerName !== "") {
             player.name = playerName;
           } else {
+            const generator = new RandomNameGenerator();
+
             player.name = player.name || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
           }
           console.log(`${client.sessionId} is respawning to room ${roomName}.`);
@@ -107,7 +107,13 @@ export class BaseOnCreateCommand<
             player.skin = skin;
           }
 
-          await resetPlayer(player, this.tilemapManager);
+          if (player.canRespawn()) {
+            await resetPlayer(player, this.tilemapManager);
+
+            this.room.broadcast("client-respawned", {
+              sessionId: client.sessionId,
+            });
+          }
         } else {
           console.warn(
             `Failed to create or fetch player for ${client.sessionId}`
@@ -233,9 +239,6 @@ export class BaseOnCreateCommand<
     await assignRandomPosition(player, this.tilemapManager);
 
     player.type = type;
-    player.ammo = player.defaultAmmo;
-    player.health = 100;
-    player.isDead = false;
 
     if (!skin) {
       player.skin = this.assignRandomSkin();

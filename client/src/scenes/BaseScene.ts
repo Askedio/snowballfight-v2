@@ -223,7 +223,7 @@ export class BaseScene extends Phaser.Scene {
     } else {
       this.room.send("rejoin", { playerName, roomName, skin: this.skin });
     }
-
+    
     window.dispatchEvent(new Event("joined"));
   }
 
@@ -458,6 +458,15 @@ export class BaseScene extends Phaser.Scene {
   }
 
   setRoomListeners() {
+    // Player respawned
+    this.room.onMessage("client-respawned", ({ sessionId }) => {
+      if(sessionId === this.room.sessionId) {
+        window.dispatchEvent(new Event("client-respawned"));
+
+      }
+
+    });
+
     // Team round ended
     this.room.onMessage("round-over", ({ redScore, blueScore }) => {
       document.getElementById("round-ended-red").innerHTML = redScore;

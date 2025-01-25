@@ -8,6 +8,8 @@ export class BaseRoomState extends Schema {
   @type("number") mapWidth = 2240;
   @type("number") mapHeight = 1600;
 
+  @type("boolean") showRespawnScreenOnDeath = true;
+
   @type({ map: Player }) players = new MapSchema<Player>();
   @type([Bullet]) bullets = new ArraySchema<Bullet>();
   @type([Pickup]) pickups = new ArraySchema<Pickup>();
