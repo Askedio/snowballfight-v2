@@ -53,6 +53,10 @@ input {
   @apply bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-fit;
 }
 
+#player-ready-button.not-ready {
+  @apply bg-green-900 hover:bg-blue-600;
+}
+
 /* Menu Styles */
 .menu {
   @apply text-sm absolute top-0 md:w-fit left-1/2 transform -translate-x-1/2 text-white text-lg;

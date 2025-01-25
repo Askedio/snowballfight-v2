@@ -88,10 +88,62 @@ window.addEventListener("player-rejoin", async (e: any) => {
   game.events.emit("onPlayerRejoin", e);
 });
 
-document.getElementById("player-ready").addEventListener("click", (e: any) => {
-  e.preventDefault();
-  game.events.emit("onPlayerReady", e);
+window.addEventListener("round-started", () => {
+  document.getElementById("player-ready").classList.remove("show");
 });
+
+window.addEventListener("round-over", (event: any) => {
+  const button = document.getElementById("player-ready-button");
+  button.classList.add("not-ready");
+  button.innerHTML = "Ready";
+
+  document.getElementById("round-ended-red").innerHTML = event.detail.redScore;
+  document.getElementById("round-ended-blue").innerHTML =
+    event.detail.blueScore;
+
+  document.getElementById("round-ended").style.display = "block";
+});
+
+window.addEventListener("player-state-updated", (event: any) => {
+  document.getElementById("active-player-kills").innerText = `${
+    event.detail.kills || 0
+  }`;
+  document.getElementById("active-player-deaths").innerText = `${
+    event.detail.deaths || 0
+  }`;
+});
+
+window.addEventListener("room-state-updated", (event: any) => {
+  if (event.detail.waitingForPlayers || event.detail.waitingToStart) {
+    document.getElementById("player-ready").classList.add("show");
+  }
+
+  document.getElementById("team-red-stats").innerText = `${
+    event.detail.redScore || 0
+  }`;
+
+  document.getElementById("team-blue-stats").innerText = `${
+    event.detail.blueScore || 0
+  }`;
+});
+
+document
+  .getElementById("player-ready-button")
+  .addEventListener("click", (e: any) => {
+    e.preventDefault();
+
+    const notReady = e.target.classList.contains("not-ready");
+
+    game.events.emit("onPlayerReady", notReady);
+
+    if (notReady) {
+      e.target.classList.remove("not-ready");
+      e.target.innerHTML = "Unready";
+    } else {
+      e.target.classList.add("not-ready");
+      e.target.innerHTML = "Ready";
+    }
+  });
 
 document.getElementById("switch").addEventListener("click", (e: any) => {
   if (!canChangeMode) {

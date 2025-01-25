@@ -69,16 +69,17 @@ export class CtfFixedTickCommand extends BaseTickCommand<
           this.state.redScore = 0;
           this.state.blueScore = 0;
 
-          this.state.roundActive = true;
-          this.state.waitingToStart = false;
-          this.state.roundStartsAt = "";
-
           this.state.players.forEach(async (player) => {
             player.reset();
           });
 
           this.state.setRoundEndsAt();
           this.setPlayerEnabled(true);
+          this.room.broadcast("round-started");
+
+          this.state.waitingToStart = false;
+          this.state.roundStartsAt = "";
+          this.state.roundActive = true;
         }
       } else {
         if (totalReadyPlayers >= 2) {
@@ -101,6 +102,10 @@ export class CtfFixedTickCommand extends BaseTickCommand<
   }
 
   abortMatch() {
+    if (this.state.waitingToStart) {
+      return;
+    }
+
     this.state.waitingToStart = true;
     this.state.roundActive = false;
     this.state.roundStartsAt = "";
@@ -108,6 +113,11 @@ export class CtfFixedTickCommand extends BaseTickCommand<
 
     this.setPlayerUnready();
     this.setPlayerEnabled(false);
+
+    this.room.broadcast("round-over", {
+      redScore: this.state.redScore,
+      blueScore: this.state.blueScore,
+    });
   }
 
   setPlayerEnabled(enabled: boolean) {

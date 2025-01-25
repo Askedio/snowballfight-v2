@@ -16,7 +16,8 @@ export class BaseScene extends Phaser.Scene {
   skin: string;
   debugging = false;
 
-  playerStatsInterval: any;
+  roomStateInterval: any;
+  currentPlayerStateInterval: any;
 
   currentPlayer: Phaser.GameObjects.Container;
   playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -223,7 +224,7 @@ export class BaseScene extends Phaser.Scene {
     } else {
       this.room.send("rejoin", { playerName, roomName, skin: this.skin });
     }
-    
+
     window.dispatchEvent(new Event("joined"));
   }
 
@@ -241,7 +242,9 @@ export class BaseScene extends Phaser.Scene {
       this.events.once("shutdown", async () => {
         console.log("Scene is shutting down!");
 
-        clearInterval(this.playerStatsInterval);
+        clearInterval(this.roomStateInterval);
+        clearInterval(this.currentPlayerStateInterval);
+
         this.game.events.off("onSkinChange", this.onSkinChange);
         this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
         this.game.events.off("onChatSendMessage", this.onChatSendMessage);
@@ -257,9 +260,13 @@ export class BaseScene extends Phaser.Scene {
       this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
       this.game.events.on("onPlayerReady", this.onPlayerReady, this);
 
-      this.playerStatsInterval = setInterval(() => {
-        this.updatePlayerStats();
+      this.roomStateInterval = setInterval(() => {
+        this.updateRoomState();
       }, 1000);
+
+      this.currentPlayerStateInterval = setInterval(() => {
+        this.updateCurrentPlayerState();
+      }, 250);
 
       console.log("Starting scene", this.mode);
 
@@ -460,19 +467,19 @@ export class BaseScene extends Phaser.Scene {
   setRoomListeners() {
     // Player respawned
     this.room.onMessage("client-respawned", ({ sessionId }) => {
-      if(sessionId === this.room.sessionId) {
+      if (sessionId === this.room.sessionId) {
         window.dispatchEvent(new Event("client-respawned"));
-
       }
+    });
 
+    // Team round started
+    this.room.onMessage("round-started", () => {
+      window.dispatchEvent(new Event("round-started"));
     });
 
     // Team round ended
     this.room.onMessage("round-over", ({ redScore, blueScore }) => {
-      document.getElementById("round-ended-red").innerHTML = redScore;
-      document.getElementById("round-ended-blue").innerHTML = blueScore;
-
-      document.getElementById("round-ended").style.display = "block";
+      window.dispatchEvent(new CustomEvent("round-over", {detail: { redScore, blueScore }}));
     });
 
     // Add pickups
@@ -986,36 +993,33 @@ export class BaseScene extends Phaser.Scene {
     return x >= left && x <= right && y >= top && y <= bottom;
   }
 
-  updatePlayerStats() {
+  updateCurrentPlayerState() {
     if (!this.room?.state?.players) {
       return;
     }
 
-    if (this.room.state.waitingForPlayers || this.room.state.waitingToStart) {
-      document.getElementById("player-ready").classList.add("show");
-    } else {
-      document.getElementById("player-ready").classList.remove("show");
-    }
-
-    document.getElementById("team-red-stats").innerText = `${
-      this.room.state.redScore || 0
-    }`;
-
-    document.getElementById("team-blue-stats").innerText = `${
-      this.room.state.blueScore || 0
-    }`;
-
     const player = this.room.state.players.get(this.room.sessionId);
-    if (player) {
-      document.getElementById("active-player-kills").innerText = `${
-        player.kills || 0
-      }`;
-      document.getElementById("active-player-deaths").innerText = `${
-        player.deaths || 0
-      }`;
+
+    if (!player) {
+      return;
     }
+
+    window.dispatchEvent(
+      new CustomEvent("player-state-updated", { detail: player })
+    );
   }
 
+  updateRoomState() {
+    if (!this.room?.state?.players) {
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("room-state-updated", { detail: this.room.state })
+    );
+  }
+
+  // TO-DO: This should be moved to index.ts...
   showLeaderboard() {
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardBody = document.getElementById("leaderboard-body");

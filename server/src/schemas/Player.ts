@@ -39,6 +39,7 @@ export class Player extends Schema {
   @type("number") protectionTime = 3000; // How long they are protected for
   @type("number") respawnDelay = 5000; // How long to wait before allowing player to respawn
   @type("number") lastKilledAt: number;
+  @type("boolean") isRespawnable = false; // eh..
 
   // Firing rate/damage
   @type("number") bulletSpeed = 10; // How fast the bullet moves
