@@ -34,6 +34,8 @@ const chatInput = document.getElementById("chatSend") as HTMLInputElement;
 
 let disableChat = false;
 let canChangeMode = false;
+let playerState: any;
+let roomState: any;
 
 // Add a mouseleave event listener to the chat input
 chatInput.addEventListener("mouseleave", () => {
@@ -84,14 +86,12 @@ window.addEventListener("scene-ready", async (e: any) => {
   canChangeMode = true;
 });
 
-window.addEventListener("player-rejoin", async (e: any) => {
-  game.events.emit("onPlayerRejoin", e);
-});
-
+// Team modes, round started
 window.addEventListener("round-started", () => {
   document.getElementById("player-ready").classList.remove("show");
 });
 
+// Team modes, round ended
 window.addEventListener("round-over", (event: any) => {
   const button = document.getElementById("player-ready-button");
   button.classList.add("not-ready");
@@ -104,7 +104,27 @@ window.addEventListener("round-over", (event: any) => {
   document.getElementById("round-ended").style.display = "block";
 });
 
+window.addEventListener("player-killed", (event: any) => {
+  const { killer } = event.detail;
+
+  const joinModal = document.getElementById("join-modal");
+  const modalTitle = document.getElementById("modal-title");
+  const modalMessage = document.getElementById("modal-message");
+  const joinButton = document.getElementById("join-button");
+
+  document.getElementById("killedBy").innerHTML = `Killed By ${killer.name}`;
+
+  modalTitle.textContent = "You Died!";
+  modalMessage.textContent = "Rejoin the snowball fight!";
+  joinButton.textContent = "Rejoin Game";
+
+  joinModal.classList.add("show");
+});
+
+// Player state changed
 window.addEventListener("player-state-updated", (event: any) => {
+  playerState = event.detail;
+
   document.getElementById("active-player-kills").innerText = `${
     event.detail.kills || 0
   }`;
@@ -113,7 +133,10 @@ window.addEventListener("player-state-updated", (event: any) => {
   }`;
 });
 
+// Room state changed
 window.addEventListener("room-state-updated", (event: any) => {
+  roomState = event.detail;
+
   if (event.detail.waitingForPlayers || event.detail.waitingToStart) {
     document.getElementById("player-ready").classList.add("show");
   }
@@ -125,6 +148,85 @@ window.addEventListener("room-state-updated", (event: any) => {
   document.getElementById("team-blue-stats").innerText = `${
     event.detail.blueScore || 0
   }`;
+
+  //
+  if (roomState.waitingForPlayers) {
+    document.getElementById("round-time").innerHTML =
+      "Waiting for players to be ready...";
+  } else if (roomState.roundStartsAt) {
+    const endTime = new Date(roomState.roundStartsAt).getTime();
+    const now = Date.now(); // Get the current time
+    const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
+
+    if (timeLeft <= 0) {
+      document.getElementById("round-time").innerHTML = "Now!";
+    } else {
+      const minutes = Math.floor(timeLeft / 1000 / 60);
+      const seconds = Math.floor((timeLeft / 1000) % 60);
+
+      // Format the time as MM:SS
+      const formattedTime = `Starts in ${String(seconds)}...`;
+
+      if (seconds === 0) {
+        document.getElementById("round-time").innerHTML = "NOW!";
+        return;
+      }
+
+      document.getElementById("round-time").innerHTML = formattedTime;
+    }
+  } else if (roomState.roundEndsAt) {
+    const endTime = new Date(roomState.roundEndsAt).getTime();
+    const now = Date.now(); // Get the current time
+    const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
+
+    if (timeLeft <= 0) {
+      document.getElementById("round-time").innerHTML = "00:00";
+    } else {
+      const minutes = Math.floor(timeLeft / 1000 / 60);
+      const seconds = Math.floor((timeLeft / 1000) % 60);
+
+      // Format the time as MM:SS
+      const formattedTime = `${String(minutes)}:${String(seconds).padStart(
+        2,
+        "0"
+      )}`;
+
+      document.getElementById("round-time").innerHTML = formattedTime;
+    }
+  }
+});
+
+// Update connection status
+window.addEventListener("connection-status-changed", (event: any) => {
+  document.getElementById("connectionStatusText").innerHTML = event.detail;
+});
+
+// Update error
+window.addEventListener("on-error", (event: any) => {
+  document.getElementById("error").innerHTML = event.detail;
+});
+
+window.addEventListener("update-fps", (event: any) => {
+  document.getElementById("fps").innerHTML = `FPS: ${event.detail}`;
+});
+
+window.addEventListener("chat-message-received", (event: any) => {
+  const { playerName, message, timestamp } = event.detail;
+
+  const chatBox = document.getElementById("chatBox") as HTMLUListElement;
+
+  // Add the chat message to the chat box
+  const chatItem = document.createElement("li");
+  chatItem.textContent = `${playerName}: ${message}`;
+  chatBox.appendChild(chatItem);
+
+  // Scroll to the bottom of the chat box
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Remove the chat item after 1 minute
+  setTimeout(() => {
+    chatItem.remove();
+  }, 10000);
 });
 
 document
@@ -135,6 +237,8 @@ document
     const notReady = e.target.classList.contains("not-ready");
 
     game.events.emit("onPlayerReady", notReady);
+
+    document.getElementById("round-ended").style.display = "none";
 
     if (notReady) {
       e.target.classList.remove("not-ready");
@@ -239,8 +343,15 @@ function onJoined() {
 
 // Listen for rejoin button click
 rejoinButton.addEventListener("click", () => {
-  // Emit an event to rejoin the game
-  window.dispatchEvent(new Event("player-rejoin"));
+  const playerName = (<HTMLInputElement>(
+    document.getElementById("player-name")
+  )).value.trim();
+
+  const roomName =
+    (<HTMLInputElement>document.getElementById("room-name")).value.trim() ||
+    window.location.hash.substring(1);
+
+  game.events.emit("onPlayerRejoin", { playerName, roomName });
 });
 
 window.addEventListener("ready", () => {
@@ -253,4 +364,57 @@ window.addEventListener("client-respawned", () => {
 
 window.addEventListener("joined", () => {
   onJoined();
+});
+
+document.addEventListener("keydown", (event: KeyboardEvent) => {
+  event.preventDefault();
+  if (event.key === "Tab") {
+    const leaderboard = document.getElementById("leaderboard");
+    const leaderboardBody = document.getElementById("leaderboard-body");
+
+    leaderboard.style.display = "block";
+    leaderboardBody.innerHTML = ""; // Clear previous content
+
+    if (roomState.players) {
+      const players = Array.from(roomState.players.entries()).map(
+        ([sessionId, player]: any) => ({
+          sessionId,
+          name: player.name || "",
+          kills: player.kills || 0,
+          deaths: player.deaths || 0,
+          isDead: player.isDead || false,
+        })
+      );
+
+      players.forEach((player) => {
+        const row = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = player.name || player.sessionId;
+        row.appendChild(nameCell);
+
+        const killsCell = document.createElement("td");
+        killsCell.textContent = player.kills.toString();
+        row.appendChild(killsCell);
+
+        const deathsCell = document.createElement("td");
+        deathsCell.textContent = player.deaths.toString();
+        row.appendChild(deathsCell);
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = player.isDead ? "Dead" : "Alive";
+        row.appendChild(statusCell);
+
+        leaderboardBody.appendChild(row);
+      });
+    }
+  }
+});
+
+document.addEventListener("keyup", (event: KeyboardEvent) => {
+  event.preventDefault();
+  if (event.key === "Tab") {
+    const leaderboard = document.getElementById("leaderboard");
+    leaderboard.style.display = "none";
+  }
 });

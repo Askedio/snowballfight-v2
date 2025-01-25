@@ -193,15 +193,7 @@ export class BaseScene extends Phaser.Scene {
     this.skin = skin;
   }
 
-  async onPlayerRejoin(e: any) {
-    const playerName = (<HTMLInputElement>(
-      document.getElementById("player-name")
-    )).value.trim();
-
-    const roomName =
-      (<HTMLInputElement>document.getElementById("room-name")).value.trim() ||
-      window.location.hash.substring(1);
-
+  async onPlayerRejoin({ playerName, roomName }) {
     if (roomName) {
       if (roomName !== this.roomName) {
         this.roomName = roomName;
@@ -228,13 +220,22 @@ export class BaseScene extends Phaser.Scene {
     window.dispatchEvent(new Event("joined"));
   }
 
+  setError(error: string) {
+    window.dispatchEvent(new CustomEvent("on-error", { detail: error }));
+  }
+
+  changeConnectionStatus(status: string) {
+    window.dispatchEvent(
+      new CustomEvent("connection-status-changed", { detail: status })
+    );
+  }
+
   onChatSendMessage(message: string) {
     this.room.send("chat", { message });
   }
 
   onPlayerReady(ready: boolean) {
     this.room.send("player-ready", { ready });
-    document.getElementById("round-ended").style.display = "none";
   }
 
   async create() {
@@ -270,14 +271,13 @@ export class BaseScene extends Phaser.Scene {
 
       console.log("Starting scene", this.mode);
 
-      document.getElementById("error").innerHTML = "";
+      this.setError("");
 
       await this.connect();
 
       if (!this.room?.state) {
         console.error("Unable to join, no state!");
-        document.getElementById("error").innerHTML =
-          "Sorry, there was a problem while loading the game.";
+        this.setError("Sorry, there was a problem while loading the game.");
 
         return;
       }
@@ -303,24 +303,12 @@ export class BaseScene extends Phaser.Scene {
         false
       );
 
-      const tabKey = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.TAB
-      );
-      tabKey.on("down", this.showLeaderboard.bind(this));
-      tabKey.on("up", this.hideLeaderboard.bind(this));
-
       // Space bar for shooting
       spaceBar.on("down", () => {
-        const chatInput = document.getElementById(
-          "chatSend"
-        ) as HTMLInputElement;
-        if (chatInput && document.activeElement === chatInput) {
-          return true; // Ignore space bar if the chat input is focused
+        if (!this.canShoot) {
+          return;
         }
-
-        if (this.canShoot) {
-          this.inputPayload.shoot = true;
-        }
+        this.inputPayload.shoot = true;
       });
 
       // Reset shooting on space bar release
@@ -336,8 +324,7 @@ export class BaseScene extends Phaser.Scene {
 
   async connect() {
     console.log("Connecting to servers...");
-    document.getElementById("connectionStatusText").innerHTML =
-      "Connecting to servers...";
+    this.changeConnectionStatus("Connecting to servers...");
 
     const client = new Client(BACKEND_URL);
     this.client = client;
@@ -363,75 +350,27 @@ export class BaseScene extends Phaser.Scene {
     } catch (e) {
       console.log(e);
 
-      document.getElementById("connectionStatusText").innerHTML =
-        "Could not connect to the servers.";
+      this.changeConnectionStatus("Could not connect to the servers.");
       return;
     }
 
-    document.getElementById("connectionStatusText").innerHTML = "";
+    this.changeConnectionStatus("");
+  }
+
+  updateFps(fps: any) {
+    window.dispatchEvent(new CustomEvent("update-fps", { detail: fps }));
   }
 
   handlePlayerDeath(killer: any) {
-    const joinModal = document.getElementById("join-modal");
-    const modalTitle = document.getElementById("modal-title");
-    const modalMessage = document.getElementById("modal-message");
-    const joinButton = document.getElementById("join-button");
-
-    document.getElementById("killedBy").innerHTML = `Killed By ${killer.name}`;
-
-    modalTitle.textContent = "You Died!";
-    modalMessage.textContent = "Rejoin the snowball fight!";
-    joinButton.textContent = "Rejoin Game";
-
-    joinModal.classList.add("show");
+    window.dispatchEvent(
+      new CustomEvent("player-killed", { detail: { killer } })
+    );
   }
 
   update(time: number, delta: number): void {
     if (!this.currentPlayer) return;
 
-    if (this.room.state.waitingForPlayers) {
-      document.getElementById("round-time").innerHTML =
-        "Waiting for players to be ready...";
-    } else if (this.room.state.roundStartsAt) {
-      const endTime = new Date(this.room.state.roundStartsAt).getTime();
-      const now = Date.now(); // Get the current time
-      const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
-
-      if (timeLeft <= 0) {
-        document.getElementById("round-time").innerHTML = "Now!";
-      } else {
-        const minutes = Math.floor(timeLeft / 1000 / 60);
-        const seconds = Math.floor((timeLeft / 1000) % 60);
-
-        // Format the time as MM:SS
-        const formattedTime = `Starts in ${String(seconds)}...`;
-
-        document.getElementById("round-time").innerHTML = formattedTime;
-      }
-    } else if (this.room.state.roundEndsAt) {
-      const endTime = new Date(this.room.state.roundEndsAt).getTime();
-      const now = Date.now(); // Get the current time
-      const timeLeft = endTime - now; // Calculate the remaining time in milliseconds
-
-      if (timeLeft <= 0) {
-        document.getElementById("round-time").innerHTML = "00:00";
-      } else {
-        const minutes = Math.floor(timeLeft / 1000 / 60);
-        const seconds = Math.floor((timeLeft / 1000) % 60);
-
-        // Format the time as MM:SS
-        const formattedTime = `${String(minutes)}:${String(seconds).padStart(
-          2,
-          "0"
-        )}`;
-
-        document.getElementById("round-time").innerHTML = formattedTime;
-      }
-    }
-
-    document.getElementById(
-      "fps"
-    ).innerHTML = `FPS: ${this.game.loop.actualFps.toFixed(1)}`;
+    this.updateFps(this.game.loop.actualFps.toFixed(1));
 
     this.inputPayload.left =
       this.cursorKeys.left.isDown || this.keyboardKeys.A.isDown;
@@ -457,8 +396,7 @@ export class BaseScene extends Phaser.Scene {
       this.room.send("input", this.inputPayload);
     } catch (e: any) {
       console.log("Detect error, exit?");
-      document.getElementById("error").innerHTML =
-        "Sorry, there was a problem while loading the game.";
+      this.setError("Sorry, there was a problem while loading the game.");
 
       console.error(e);
     }
@@ -479,7 +417,9 @@ export class BaseScene extends Phaser.Scene {
 
     // Team round ended
     this.room.onMessage("round-over", ({ redScore, blueScore }) => {
-      window.dispatchEvent(new CustomEvent("round-over", {detail: { redScore, blueScore }}));
+      window.dispatchEvent(
+        new CustomEvent("round-over", { detail: { redScore, blueScore } })
+      );
     });
 
     // Add pickups
@@ -878,20 +818,11 @@ export class BaseScene extends Phaser.Scene {
 
     // When a chat message is received
     this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
-      const chatBox = document.getElementById("chatBox") as HTMLUListElement;
-
-      // Add the chat message to the chat box
-      const chatItem = document.createElement("li");
-      chatItem.textContent = `${playerName}: ${message}`;
-      chatBox.appendChild(chatItem);
-
-      // Scroll to the bottom of the chat box
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      // Remove the chat item after 1 minute
-      setTimeout(() => {
-        chatItem.remove();
-      }, 10000);
+      window.dispatchEvent(
+        new CustomEvent("chat-message-received", {
+          detail: { playerName, message, timestamp },
+        })
+      );
     });
   }
 
@@ -1017,51 +948,5 @@ export class BaseScene extends Phaser.Scene {
     window.dispatchEvent(
       new CustomEvent("room-state-updated", { detail: this.room.state })
     );
-  }
-
-  // TO-DO: This should be moved to index.ts...
-  showLeaderboard() {
-    const leaderboard = document.getElementById("leaderboard");
-    const leaderboardBody = document.getElementById("leaderboard-body");
-
-    leaderboard.style.display = "block";
-    leaderboardBody.innerHTML = ""; // Clear previous content
-
-    const players = Array.from(this.room.state.players.entries()).map(
-      ([sessionId, player]: any) => ({
-        sessionId,
-        name: player.name || "",
-        kills: player.kills || 0,
-        deaths: player.deaths || 0,
-        isDead: player.isDead || false,
-      })
-    );
-
-    players.forEach((player) => {
-      const row = document.createElement("tr");
-
-      const nameCell = document.createElement("td");
-      nameCell.textContent = player.name || player.sessionId;
-      row.appendChild(nameCell);
-
-      const killsCell = document.createElement("td");
-      killsCell.textContent = player.kills.toString();
-      row.appendChild(killsCell);
-
-      const deathsCell = document.createElement("td");
-      deathsCell.textContent = player.deaths.toString();
-      row.appendChild(deathsCell);
-
-      const statusCell = document.createElement("td");
-      statusCell.textContent = player.isDead ? "Dead" : "Alive";
-      row.appendChild(statusCell);
-
-      leaderboardBody.appendChild(row);
-    });
-  }
-
-  hideLeaderboard() {
-    const leaderboard = document.getElementById("leaderboard");
-    leaderboard.style.display = "none";
   }
 }
