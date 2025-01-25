@@ -83,6 +83,7 @@ document.getElementById("skinlist").addEventListener("click", (e: any) => {
 });
 
 window.addEventListener("scene-ready", async (e: any) => {
+  console.log("redd")
   canChangeMode = true;
 });
 
@@ -367,8 +368,8 @@ window.addEventListener("joined", () => {
 });
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
-  event.preventDefault();
   if (event.key === "Tab") {
+    event.preventDefault();
     const leaderboard = document.getElementById("leaderboard");
     const leaderboardBody = document.getElementById("leaderboard-body");
 
@@ -412,8 +413,9 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 });
 
 document.addEventListener("keyup", (event: KeyboardEvent) => {
-  event.preventDefault();
   if (event.key === "Tab") {
+    event.preventDefault();
+
     const leaderboard = document.getElementById("leaderboard");
     leaderboard.style.display = "none";
   }

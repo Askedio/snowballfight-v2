@@ -82,76 +82,7 @@
       </table>
     </div>
 
-    <div id="join-modal" class="modal">
-      <div id="killedBy"></div>
-
-      <h2 id="modal-title" class="text-2xl font-bold mb-4">
-        Welcome to Snowball Fight!
-      </h2>
-      <p id="modal-message" class="mb-4">Click Join Game to play!</p>
-
-      <input
-        id="player-name"
-        type="text"
-        placeholder="Player name (optional)"
-        class="input-field"
-      />
-      <input
-        id="room-name"
-        type="text"
-        placeholder="Room name (optional)"
-        class="input-field"
-      />
-
-      <ul id="switch">
-        <li id="ffa" class="activeMode gameMode">FFA</li>
-        <li id="ctf" class="gameMode">CTF</li>
-        <li id="tdm" class="gameMode">TDM</li>
-        <li id="ts" class="gameMode">TS</li>
-      </ul>
-
-      <div id="skins">
-        <ul id="skinlist">
-          <li>
-            <img
-              id="playersa"
-              src="/static/assets/images/skins/player/playersa_01.png"
-            />
-          </li>
-          <li>
-            <img
-              id="playersb"
-              src="/static/assets/images/skins/player/playersb_01.png"
-            />
-          </li>
-          <li>
-            <img
-              id="playersc"
-              src="/static/assets/images/skins/player/playersc_01.png"
-            />
-          </li>
-          <li>
-            <img
-              id="playersd"
-              src="/static/assets/images/skins/player/playersd_01.png"
-            />
-          </li>
-        </ul>
-      </div>
-
-      <button id="join-button" class="btn-primary">Join Game</button>
-      <p class="instructions">
-        <span class="text-white"
-          >Tip: Use your respawn protection to reload your snowballs!</span
-        >
-        <br /><br />
-        Move: WASD/Arrow keys in the direction of your mouse
-        <br />
-        Shoot: Space or Left Click
-        <br />
-        Reload: R or Right Click
-      </p>
-    </div>
+    
 
     <div id="chatOnReady" class="onReady">
       <div id="chat">
@@ -160,27 +91,7 @@
       </div>
     </div>
 
-    <div id="loading">
-      <div class="loading-container">
-        <img
-          class="loading-image"
-          src="../static/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
-        <img
-          class="loading-image"
-          src="../static/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
-        <img
-          class="loading-image"
-          src="../static/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
-      </div>
-
-      prepairing the battlefield...
-    </div>
+    
 
     <div id="error"></div>
 
@@ -189,7 +100,8 @@
     <div id="connectionStatusText"></div>
 
     <div id="game-container" class="onReady"></div>
+    <div id="app"></div>
 
-    <script src="index.ts" type="module"></script>
+    <script src="index.tsx" type="module"></script>
   </body>
 </html>

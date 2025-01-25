@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import { Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
+import { EventBus } from "../EventBus";
 
 export class BaseScene extends Phaser.Scene {
   roomName: string;
@@ -256,8 +257,9 @@ export class BaseScene extends Phaser.Scene {
         await this.room?.leave(true);
       });
 
+
       this.game.events.on("onSkinChange", this.onSkinChange, this);
-      this.game.events.on("onPlayerRejoin", this.onPlayerRejoin, this);
+      EventBus.on("onPlayerRejoin", this.onPlayerRejoin, this);
       this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
       this.game.events.on("onPlayerReady", this.onPlayerReady, this);
 
@@ -315,6 +317,8 @@ export class BaseScene extends Phaser.Scene {
       spaceBar.on("up", () => {
         this.inputPayload.shoot = false;
       });
+
+      EventBus.emit("scene-ready", this);
 
       window.dispatchEvent(new Event("scene-ready"));
     } catch (e: any) {

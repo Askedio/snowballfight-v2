@@ -108,7 +108,7 @@ input {
 
 /* Modal Styles */
 .modal {
-  @apply z-20 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center hidden border border-gray-600;
+  @apply z-20 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center  border border-gray-600;
 }
 
 .show {
@@ -267,39 +267,7 @@ input {
   @apply hidden;
 }
 
-#loading {
-  @apply absolute text-black text-sm fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
-}
 
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  @apply mb-6 h-[60px];
-}
-.loading-image {
-  animation: bounce 1s infinite ease-in-out;
-  margin: 0 10px;
-}
-.loading-image:nth-child(1) {
-  animation-delay: 0s;
-}
-.loading-image:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.loading-image:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-30px);
-  }
-}
 
 #error {
   @apply bg-red-500 text-white text-center fixed bottom-0 rounded-t-lg p-3 left-1/2 transform -translate-x-1/2;
