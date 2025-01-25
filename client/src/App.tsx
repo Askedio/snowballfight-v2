@@ -1,6 +1,5 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
-import { EventBus } from "./EventBus";
 import { Loading } from "./components/Loading/Loading";
 import { SpawnScreen } from "./components/SpawnScreen/SpawnScreen";
 

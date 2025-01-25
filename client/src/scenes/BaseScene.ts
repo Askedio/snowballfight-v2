@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import { Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
-import { EventBus } from "../EventBus";
+import { EventBus } from "../lib/EventBus";
 
 export class BaseScene extends Phaser.Scene {
   roomName: string;

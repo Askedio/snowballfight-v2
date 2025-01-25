@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { EventBus } from "../../EventBus";
+import { EventBus } from "../../lib/EventBus";
 import "./Loading.css"
 
 export function Loading() {
