@@ -1,0 +1,47 @@
+* Menu Styles */ .menu {
+  @apply text-sm absolute top-0 md:w-fit left-1/2 transform -translate-x-1/2 text-white text-lg;
+
+  #round-time {
+    @apply text-center text-white text-xs mt-1 bg-gray-900 bg-opacity-75 w-fit mx-auto py-1.5 px-3 rounded-lg border-2 border-white/20;
+
+    &:empty {
+      @apply hidden;
+    }
+  }
+
+  #player-stats {
+    @apply flex flex-row items-center md:space-x-0 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0;
+
+    div {
+      @apply m-0 px-3 flex items-center gap-3;
+
+      span {
+        @apply bg-gray-700 py-1.5 w-[48px] block text-center;
+      }
+    }
+  }
+
+  #team-stats {
+    @apply flex px-3 flex-row items-center md:space-x-3 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0 w-fit mx-auto;
+
+    div {
+      @apply m-0  flex items-center gap-3;
+
+      #team-red-stats {
+        @apply bg-red-500;
+      }
+
+      #team-blue-stats {
+        @apply bg-blue-500;
+      }
+
+      span {
+        @apply bg-gray-700 py-1.5 w-[48px] block text-center;
+      }
+    }
+  }
+}
+
+.menu > div {
+  @apply mb-2;
+}

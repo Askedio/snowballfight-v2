@@ -1,0 +1,30 @@
+/* Modal Styles */
+.modal {
+    @apply z-20 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center  border border-gray-600;
+  }
+  
+  
+  #modal-message,
+  #modal-title {
+    @apply text-center;
+  }
+  
+  .modal h2 {
+    @apply text-2xl font-bold mb-4;
+  }
+  
+  .modal p {
+    @apply mb-4;
+  }
+  
+  .modal input {
+    @apply w-full p-3 mb-4 border border-gray-300 rounded-lg text-black;
+  }
+  
+  .modal button {
+    @apply bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-full;
+  }
+  
+  .modal button:focus {
+    @apply outline-none ring-2 ring-blue-400;
+  }

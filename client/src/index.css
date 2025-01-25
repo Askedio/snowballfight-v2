@@ -25,148 +25,12 @@ input {
   @apply w-full h-full;
 }
 
-#round-ended {
-  @apply text-center;
-
-  h1 {
-    @apply text-2xl;
-  }
-
-  .stats {
-    @apply flex gap-0 mx-auto w-fit;
-
-    #round-ended-red {
-      @apply bg-red-500 py-1.5 px-3 w-fit;
-    }
-
-    #round-ended-blue {
-      @apply bg-blue-500 py-1.5 px-3 w-fit;
-    }
-  }
-}
-
-#player-ready {
-  @apply absolute left-1/2 bottom-3 transform -translate-x-1/2 hidden;
-}
-
-#player-ready-button {
-  @apply bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-fit;
-}
-
-#player-ready-button.not-ready {
-  @apply bg-green-900 hover:bg-blue-600;
-}
-
-/* Menu Styles */
-.menu {
-  @apply text-sm absolute top-0 md:w-fit left-1/2 transform -translate-x-1/2 text-white text-lg;
-
-  #round-time {
-    @apply text-center text-white text-xs mt-1 bg-gray-900 bg-opacity-75 w-fit mx-auto py-1.5 px-3 rounded-lg border-2 border-white/20;
-
-    &:empty {
-      @apply hidden;
-    }
-  }
-
-  #player-stats {
-    @apply flex flex-row items-center md:space-x-0 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0;
-
-    div {
-      @apply m-0 px-3 flex items-center gap-3;
-
-      span {
-        @apply bg-gray-700 py-1.5 w-[48px] block text-center;
-      }
-    }
-  }
-
-  #team-stats {
-    @apply flex px-3 flex-row items-center md:space-x-3 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0 w-fit mx-auto;
-
-    div {
-      @apply m-0  flex items-center gap-3;
-
-      #team-red-stats {
-        @apply bg-red-500;
-      }
-
-      #team-blue-stats {
-        @apply bg-blue-500;
-      }
-
-      span {
-        @apply bg-gray-700 py-1.5 w-[48px] block text-center;
-      }
-    }
-  }
-}
-
-.menu > div {
-  @apply mb-2;
-}
-
-/* Modal Styles */
-.modal {
-  @apply z-20 w-full max-w-[380px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800/90 text-white p-8 rounded-lg shadow-lg z-50 flex flex-col items-center  border border-gray-600;
-}
-
 .show {
   @apply !block;
 }
 
-#modal-message,
-#modal-title {
-  @apply text-center;
-}
-
-.modal h2 {
-  @apply text-2xl font-bold mb-4;
-}
-
-.modal p {
-  @apply mb-4;
-}
-
-.modal input {
-  @apply w-full p-3 mb-4 border border-gray-300 rounded-lg text-black;
-}
-
-.modal button {
-  @apply bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-full;
-}
-
-.modal button:focus {
-  @apply outline-none ring-2 ring-blue-400;
-}
-
 .instructions {
   @apply mt-8 text-xs text-gray-400;
-}
-
-/* Leaderboard Styles */
-#leaderboard {
-  @apply bg-gray-900/75 text-white rounded-lg p-4 shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30;
-}
-
-#leaderboard h3 {
-  @apply text-xl font-bold mb-4;
-}
-
-#leaderboard table {
-  @apply w-full text-left border-collapse;
-}
-
-#leaderboard th {
-  @apply py-2 px-4 bg-gray-700 text-white font-semibold;
-}
-
-#leaderboard td {
-  @apply py-2 px-4 border-t border-gray-700;
-}
-
-#leaderboard tbody tr:nth-child(even) {
-  @apply bg-gray-800;
 }
 
 #switch {
@@ -219,66 +83,8 @@ input {
   }
 }
 
-#chat {
-  @apply absolute bottom-1.5 left-1.5 z-40 hidden sm:block w-[250px] bg-gray-700/70 opacity-50 hover:opacity-100 overflow-hidden rounded text-xs;
-
-  #chatBox {
-    @apply w-full p-1.5 max-h-[95px] overflow-auto border border-white/10 list-none leading-3 text-white/90;
-
-    scrollbar-width: thin; /* For Firefox */
-    scrollbar-color: gray transparent; /* For Firefox */
-
-    &::-webkit-scrollbar {
-      @apply w-1; /* Thin scrollbar width */
-    }
-
-    &::-webkit-scrollbar-thumb {
-      @apply bg-gray-500 rounded; /* Gray scrollbar thumb with rounded edges */
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-400; /* Slightly lighter gray on hover */
-    }
-
-    &::-webkit-scrollbar-track {
-      @apply bg-transparent; /* Transparent track for contrast */
-    }
-
-    &:empty {
-      @apply hidden;
-    }
-
-    i {
-      @apply font-bold;
-    }
-  }
-
-  #chatSend {
-    @apply w-full p-1.5 bg-gray-700/70 border border-white/10 text-white;
-
-    &:active,
-    &:hover {
-      @apply bg-white/20;
-    }
-  }
-}
-
 .onReady {
   @apply hidden;
-}
-
-
-
-#error {
-  @apply bg-red-500 text-white text-center fixed bottom-0 rounded-t-lg p-3 left-1/2 transform -translate-x-1/2;
-}
-
-#error:empty {
-  @apply hidden;
-}
-
-#fps {
-  @apply absolute right-3 top-3 text-xs text-white/80;
 }
 
 #connectionStatusText {

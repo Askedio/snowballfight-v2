@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { EventBus } from "../../EventBus";
+import "./SpawnScreen.css";
 
 export function SpawnScreen() {
   const [loading, setLoading] = useState(true);
