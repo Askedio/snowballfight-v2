@@ -33,6 +33,7 @@ let activeScene = "ffa";
 const chatInput = document.getElementById("chatSend") as HTMLInputElement;
 
 let disableChat = false;
+let canChangeMode = false
 
 // Add a mouseleave event listener to the chat input
 chatInput.addEventListener("mouseleave", () => {
@@ -79,6 +80,10 @@ document.getElementById("skinlist").addEventListener("click", (e: any) => {
   }
 });
 
+window.addEventListener("scene-ready", async (e: any) => {
+  canChangeMode = true;
+});
+
 window.addEventListener("player-rejoin", async (e: any) => {
   game.events.emit("onPlayerRejoin", e);
 });
@@ -89,11 +94,17 @@ document.getElementById("player-ready").addEventListener("click", (e: any) => {
 });
 
 document.getElementById("switch").addEventListener("click", (e: any) => {
+  if(!canChangeMode) {
+    return;
+  }
+
   if (["ffa", "ctf", "tdm", "ts"].includes(e.target.id)) {
     if (activeScene === e.target.id) {
       return;
     }
 
+    canChangeMode = false;
+    
     game.scene.stop(activeScene);
     if (activeScene !== "ffa") {
       game.scene.remove(activeScene);

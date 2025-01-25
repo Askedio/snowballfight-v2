@@ -320,6 +320,8 @@ export class BaseScene extends Phaser.Scene {
       spaceBar.on("up", () => {
         this.inputPayload.shoot = false;
       });
+
+      window.dispatchEvent(new Event("scene-ready"));
     } catch (e: any) {
       console.log("Failed to initalize create");
     }
