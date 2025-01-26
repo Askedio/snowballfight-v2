@@ -15,6 +15,7 @@ import { TsScene } from "./scenes/TsScene";
 import { TdmScene } from "./scenes/TdmScene";
 import { CtfScene } from "./scenes/CtfScene";
 import { ErrorDialog } from "./components/ErrorDialog/ErrorDialog";
+import { RoundComplete } from "./components/RoundComplete/RoundComplete";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -119,6 +120,7 @@ export function App() {
       <Leaderboard />
       <PlayerReady />
       <ErrorDialog />
+      <RoundComplete />
       <div id="phaser-game" />
     </>
   );

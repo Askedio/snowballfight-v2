@@ -18,6 +18,12 @@ interface SpawnState {
 i think we want to make room name a seeprate button..
 */
 
+const defaultLanguage = {
+  title: "Welcome to Snowball Fight!",
+  subTitle: "Click Join Game to play!",
+  joinButton: "Join Game",
+};
+
 export function SpawnScreen() {
   const room = useColyseusRoom();
 
@@ -33,11 +39,7 @@ export function SpawnScreen() {
   const [lastRoomName, setLastRoomName] = useState<string>("");
   const [lastGameMode, setLastGameMode] = useState<string>(spawnState.gameMode);
 
-  const [screenLanguage, setScreenLanguage] = useState({
-    title: "Welcome to Snowball Fight!",
-    subTitle: "Click Join Game to play!",
-    joinButton: "Join Game",
-  });
+  const [screenLanguage, setScreenLanguage] = useState(defaultLanguage);
 
   useEffect(() => {
     EventBus.on("scene-ready", () => {
@@ -68,7 +70,7 @@ export function SpawnScreen() {
           joinButton: "Respawn",
         });
 
-        setLoading(false)
+        setLoading(false);
       }
     });
   }, [room]);
@@ -78,7 +80,7 @@ export function SpawnScreen() {
   }, [spawnState.gameMode, spawnState.roomName]);
 
   const connectToRoom = async () => {
-    console.log("Connecting...", spawnState);
+    setScreenLanguage(defaultLanguage);
 
     await disconnectFromColyseus();
     await connectToColyseus(
@@ -232,6 +234,7 @@ export function SpawnScreen() {
       <button
         type="button"
         className="btn-primary"
+        disabled={!room}
         onClick={() => handleJoinButtonClick()}
       >
         {screenLanguage.joinButton}

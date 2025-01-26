@@ -275,7 +275,7 @@ export class BaseScene extends Phaser.Scene {
     };
 
     try {
-      this.room.send("input", this.inputPayload);
+      this.room?.send("input", this.inputPayload);
     } catch (e: any) {
       console.log("Detect error, exit?");
       this.setError("Sorry, there was a problem while loading the game.");

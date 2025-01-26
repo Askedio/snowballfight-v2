@@ -1,4 +1,5 @@
-#round-ended {
+/* Modal Styles */
+.round-ended {
   @apply text-center;
 
   h1 {
@@ -8,11 +9,11 @@
   .stats {
     @apply flex gap-0 mx-auto w-fit;
 
-    #round-ended-red {
+    .round-ended-red {
       @apply bg-red-500 py-1.5 px-3 w-fit;
     }
 
-    #round-ended-blue {
+    .round-ended-blue {
       @apply bg-blue-500 py-1.5 px-3 w-fit;
     }
   }

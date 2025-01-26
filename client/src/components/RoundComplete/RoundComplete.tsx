@@ -24,18 +24,18 @@ export function RoundComplete() {
   }, [room]);
 
   if (!showDialog) {
-    return;
+    return null;
   }
 
   return (
-    <div id="round-ended" className="modal">
+    <div className="round-ended modal">
       <h1>This round is over!</h1>
 
       <p>Click ready to start the next round!</p>
 
       <div className="stats">
-        <div id="round-ended-red">{scores.redScore}</div>
-        <div id="round-ended-blue">{scores.blueScore}</div>
+        <div className="round-ended-red">{scores.redScore}</div>
+        <div className="round-ended-blue">{scores.blueScore}</div>
       </div>
     </div>
   );
