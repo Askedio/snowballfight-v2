@@ -6,6 +6,10 @@ import {
   disconnectFromColyseus,
   useColyseusRoom,
 } from "../../lib/colyseus";
+import { Dropdown } from "../Dropdown/Dropdown";
+import { RoomModal } from "../RoomModal/RoomModal";
+import { gameModes } from "../../lib/gameModes";
+import { skins } from "../../lib/skins";
 
 interface SpawnState {
   playerName: string;
@@ -13,10 +17,6 @@ interface SpawnState {
   skin: string;
   gameMode: string;
 }
-
-/*
-i think we want to make room name a seeprate button..
-*/
 
 const defaultLanguage = {
   title: "Welcome to Snowball Fight!",
@@ -38,7 +38,8 @@ export function SpawnScreen() {
   const [killedBy, setKilledBy] = useState<string>("");
   const [lastRoomName, setLastRoomName] = useState<string>("");
   const [lastGameMode, setLastGameMode] = useState<string>(spawnState.gameMode);
-
+  const [respawnDelay, setRespawnDelay] = useState<number>(0); // Track respawn delay
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false); // Modal state
   const [screenLanguage, setScreenLanguage] = useState(defaultLanguage);
 
   useEffect(() => {
@@ -60,24 +61,48 @@ export function SpawnScreen() {
       }
     });
 
-    room.onMessage("player-death", ({ sessionId, player, killer }) => {
-      if (sessionId === room.sessionId) {
-        setKilledBy(killer.name);
+    room.onMessage(
+      "player-death",
+      ({ sessionId, player, killer, respawnDelay }) => {
+        if (sessionId === room.sessionId) {
+          setKilledBy(killer.name);
 
-        setScreenLanguage({
-          title: "You Died!",
-          subTitle: "Rejoin the snowball fight!",
-          joinButton: "Respawn",
-        });
+          setScreenLanguage({
+            title: "You Died!",
+            subTitle: "Rejoin the snowball fight!",
+            joinButton: "Respawn",
+          });
 
-        setLoading(false);
+          setRespawnDelay(respawnDelay); // Set the respawn delay
+
+          setLoading(false);
+        }
       }
-    });
+    );
   }, [room]);
 
   useEffect(() => {
     connectToRoom();
-  }, [spawnState.gameMode, spawnState.roomName]);
+  }, [spawnState.gameMode]);
+
+  // Countdown timer for respawn delay
+  useEffect(() => {
+    if (respawnDelay > 0) {
+      const timer = setInterval(() => {
+        setRespawnDelay((prev) => Math.max(prev - 1, 0)); // Decrement delay
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [respawnDelay]);
+
+  useEffect(() => {
+    const connect = async () => {
+      await connectToRoom();
+      EventBus.emit("change-room", { mode: spawnState.gameMode });
+    };
+    connect();
+  }, [spawnState.roomName]);
 
   const connectToRoom = async () => {
     setScreenLanguage(defaultLanguage);
@@ -91,19 +116,6 @@ export function SpawnScreen() {
     );
   };
 
-  const handleGameModeClick = async (gameMode: string) => {
-    if (lastGameMode === gameMode) {
-      return;
-    }
-
-    setSpawnState((prevState) => ({
-      ...prevState,
-      gameMode,
-    }));
-
-    setLastGameMode(gameMode);
-  };
-
   const handleJoinButtonClick = async () => {
     setLastRoomName(spawnState.roomName);
 
@@ -114,19 +126,29 @@ export function SpawnScreen() {
     });
   };
 
-  const handleSkinClick = (skin: string) => {
-    setSpawnState((prevState) => ({
-      ...prevState,
-      skin,
-    }));
-  };
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSpawnState((prevState) => ({
       ...prevState,
       [name]: value,
     }));
+  };
+
+  const handleGameModeChange = (gameMode: string) => {
+    if (lastGameMode === gameMode) {
+      return;
+    }
+
+    setSpawnState((prev) => ({ ...prev, gameMode }));
+    setLastGameMode(gameMode);
+  };
+
+  const handleSkinChange = (skin: string) => {
+    setSpawnState((prev) => ({ ...prev, skin }));
+  };
+
+  const handleRoomChange = (newRoomName: string) => {
+    setSpawnState((prev) => ({ ...prev, roomName: newRoomName }));
   };
 
   if (loading) {
@@ -148,96 +170,42 @@ export function SpawnScreen() {
         value={spawnState.playerName}
         onChange={handleNameChange}
       />
-      <input
-        name="roomName"
-        type="text"
-        placeholder="Room name (optional)"
-        className="input-field"
-        value={spawnState.roomName}
-        onChange={handleNameChange}
-      />
 
-      {/* Game Mode Switch */}
-      <div className="switch">
-        <button
-          type="button"
-          className={`gameMode ${
-            spawnState.gameMode === "ffa" ? "activeMode" : ""
-          }`}
-          onClick={() => handleGameModeClick("ffa")}
-        >
-          FFA
-        </button>
-        <button
-          type="button"
-          className={`gameMode ${
-            spawnState.gameMode === "ctf" ? "activeMode" : ""
-          }`}
-          onClick={() => handleGameModeClick("ctf")}
-        >
-          CTF
-        </button>
-        <button
-          type="button"
-          className={`gameMode ${
-            spawnState.gameMode === "tdm" ? "activeMode" : ""
-          }`}
-          onClick={() => handleGameModeClick("tdm")}
-        >
-          TDM
-        </button>
-        <button
-          type="button"
-          className={`gameMode ${
-            spawnState.gameMode === "ts" ? "activeMode" : ""
-          }`}
-          onClick={() => handleGameModeClick("ts")}
-        >
-          TS
-        </button>
-      </div>
+      <div className="flex items-center gap-6 w-full mb-4">
+        <Dropdown
+          options={gameModes}
+          selected={spawnState.gameMode}
+          onChange={handleGameModeChange}
+        />
 
-      {/* Skin Selection */}
-      <div className="skins">
-        <div className="skinlist">
-          <button
-            type="button"
-            className={spawnState.skin === "playersa" ? "active" : ""}
-            onClick={() => handleSkinClick("playersa")}
-          >
-            <img alt="" src="/assets/images/skins/player/playersa_01.png" />
-          </button>
-          <button
-            type="button"
-            className={spawnState.skin === "playersb" ? "active" : ""}
-            onClick={() => handleSkinClick("playersb")}
-          >
-            <img alt="" src="/assets/images/skins/player/playersb_01.png" />
-          </button>
-          <button
-            type="button"
-            className={spawnState.skin === "playersc" ? "active" : ""}
-            onClick={() => handleSkinClick("playersc")}
-          >
-            <img alt="" src="/assets/images/skins/player/playersc_01.png" />
-          </button>
-          <button
-            type="button"
-            className={spawnState.skin === "playersd" ? "active" : ""}
-            onClick={() => handleSkinClick("playersd")}
-          >
-            <img alt="" src="/assets/images/skins/player/playersd_01.png" />
-          </button>
+        <div className="w-32">
+          <Dropdown
+            options={skins}
+            selected={spawnState.skin}
+            onChange={handleSkinChange}
+          />
         </div>
       </div>
 
       <button
         type="button"
         className="btn-primary"
-        disabled={!room}
-        onClick={() => handleJoinButtonClick()}
+        disabled={!room || respawnDelay > 0} // Disable if room is unavailable or delay > 0
+        onClick={handleJoinButtonClick}
       >
-        {screenLanguage.joinButton}
+        {respawnDelay > 0
+          ? `Can respawn in ${respawnDelay}...`
+          : screenLanguage.joinButton}
+      </button>
+
+      <button
+        type="button"
+        className="mt-3 btn-plain"
+        onClick={() => setIsRoomModalOpen(true)} // Open modal
+      >
+        {spawnState.roomName
+          ? `Current Room: ${spawnState.roomName}`
+          : "Change Room"}
       </button>
 
       <p className="instructions">
@@ -252,6 +220,14 @@ export function SpawnScreen() {
         <br />
         Reload: R or Right Click
       </p>
+
+      {isRoomModalOpen && (
+        <RoomModal
+          currentRoom={spawnState.roomName}
+          onChangeRoom={handleRoomChange}
+          onClose={() => setIsRoomModalOpen(false)} // Close modal
+        />
+      )}
     </div>
   );
 }

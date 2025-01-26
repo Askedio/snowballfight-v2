@@ -61,7 +61,7 @@ export class BaseTickCommand<
 
       // Reload logic
       if (
-        player.enabled && 
+        player.enabled &&
         isReloading &&
         player.ammo < player.maxAmmo &&
         (!player.lastReloadTime ||
@@ -496,11 +496,12 @@ export class BaseTickCommand<
       sessionId,
       player,
       killer: shooter,
+      respawnDelay: player.respawnDelay,
     });
 
     if (player.type === "bot") {
       setTimeout(async () => {
-        console.log("bot?")
+        console.log("bot?");
         await resetPlayer(player, this.tilemapManager);
       }, player.respawnDelay);
     }

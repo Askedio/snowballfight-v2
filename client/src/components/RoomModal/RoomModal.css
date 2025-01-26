@@ -1,0 +1,8 @@
+.room-modal-overlay {
+    @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center;
+  }
+  
+  .room-modal {
+    @apply bg-gray-800 p-6 rounded-lg shadow-lg w-80;
+  }
+  

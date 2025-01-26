@@ -37,7 +37,7 @@ export class Player extends Schema {
   // Spawn Protection
   @type("boolean") isProtected = false; // Player wont take damage
   @type("number") protectionTime = 3000; // How long they are protected for
-  @type("number") respawnDelay = 5000; // How long to wait before allowing player to respawn
+  @type("number") respawnDelay = 5; // How long to wait before allowing player to respawn
   @type("number") lastKilledAt: number;
   @type("boolean") isRespawnable = false; // eh..
 
@@ -49,9 +49,9 @@ export class Player extends Schema {
   @type("number") bulletDamage = 20; // The damage caused by the bullet
 
   // Ammo
-  @type("number") ammo = 10;
-  @type("number") previousAmmo = 10;
-  @type("number") defaultAmmo = 10;
+  @type("number") ammo = 20;
+  @type("number") previousAmmo = 20;
+  @type("number") defaultAmmo = 20;
   @type("number") maxAmmo = 50;
   @type("boolean") ammoUnlimited = false;
   @type("boolean") defaultAmmoUnlimited = false;

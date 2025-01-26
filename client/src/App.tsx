@@ -16,6 +16,7 @@ import { TdmScene } from "./scenes/TdmScene";
 import { CtfScene } from "./scenes/CtfScene";
 import { ErrorDialog } from "./components/ErrorDialog/ErrorDialog";
 import { RoundComplete } from "./components/RoundComplete/RoundComplete";
+import { useLocation } from "react-router";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -35,23 +36,23 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
   },
-  scene: [FreeForAllScene],
+  scene: [],
 };
 
 export function App() {
   const [game, setGame] = useState<Phaser.Game | null>(null);
   const mode = useColyseusState((state) => state.mode);
-  const [lastScene, setLastScene] = useState("ffa");
+  const location = useLocation();
+
+  const [lastScene, setLastScene] = useState("");
 
   useEffect(() => {
     if (!mode || lastScene === mode) {
       return;
     }
 
-    game.scene.stop(mode);
-    if (mode !== "ffa") {
-      game.scene.remove(mode);
-    }
+    game.scene.stop(lastScene);
+    game.scene.remove(lastScene);
 
     const keys = game.scene.keys;
 
@@ -76,10 +77,13 @@ export function App() {
   }, [mode]);
 
   useEffect(() => {
-    // Connect to Colyseus when the component mounts
+    const customRoomName = window.location.hash
+      ? window.location.hash.substring(1)
+      : "";
+
     (async () => {
-      await connectToColyseus("ffa_room", {
-        customRoomName: "",
+      await connectToColyseus(customRoomName ? "user_ffa_room" : "ffa_room", {
+        customRoomName,
       });
     })();
 

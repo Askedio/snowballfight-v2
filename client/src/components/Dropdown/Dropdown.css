@@ -1,0 +1,31 @@
+.dropdown {
+  @apply relative inline-block w-full;
+}
+
+.dropdown-toggle {
+  @apply flex items-center justify-between text-white py-2 px-4 cursor-pointer text-center w-full border border-white/50 rounded-lg bg-white/10 h-14;
+}
+
+.dropdown-image {
+  @apply w-12 h-12 rounded-md mx-auto;
+}
+
+.dropdown-toggle:hover {
+  @apply bg-gray-700;
+}
+
+.dropdown-menu {
+  @apply absolute top-full left-0 bg-gray-800 border border-white/50 rounded-lg mt-1 z-10 w-full shadow-lg overflow-hidden;
+}
+
+.dropdown-item {
+  @apply flex items-center gap-2 py-2 px-4 text-white cursor-pointer w-full text-center bg-transparent border-0;
+}
+
+.dropdown-item:hover {
+  @apply bg-gray-700;
+}
+
+.dropdown-item.active {
+  @apply bg-gray-700;
+}

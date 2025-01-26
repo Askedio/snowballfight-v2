@@ -42,7 +42,11 @@ input {
 }
 
 .modal .btn-primary {
-  @apply bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 w-full;
+  @apply bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 w-full;
+}
+
+.modal .btn-primary:disabled {
+  @apply bg-blue-500/40;
 }
 
 .modal .btn-primary:focus {
