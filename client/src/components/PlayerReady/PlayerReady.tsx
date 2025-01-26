@@ -1,12 +1,28 @@
 import { useState, useEffect } from "react";
 import { useColyseusRoom, useColyseusState } from "../../lib/colyseus"; // Importing the hook
 import "./PlayerReady.css";
+import { EventBus } from "../../lib/EventBus";
 
 export function PlayerReady() {
   const room = useColyseusRoom();
   const requiresPlayerToReady = useColyseusState(
     (state) => state.requiresPlayerToReady
   );
+  const [loading, setLoading] = useState(true);
+
+  const player = useColyseusState((state) =>
+    state?.players?.get(room?.sessionId)
+  );
+
+  useEffect(() => {
+    EventBus.on("scene-ready", () => {
+      setLoading(false);
+    });
+
+    return () => {
+      EventBus.removeListener("scene-ready");
+    };
+  }, []);
 
   const [showReadyButton, setShowReadyButton] = useState(false);
 
@@ -49,7 +65,7 @@ export function PlayerReady() {
     setIsReady(!isReady);
   };
 
-  if (!showReadyButton) {
+  if (!showReadyButton || loading || !player) {
     return;
   }
 

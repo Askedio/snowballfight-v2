@@ -6,7 +6,7 @@ export function Loading() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    EventBus.on("scene-ready", (currentScene) => {
+    EventBus.on("scene-ready", () => {
       setLoading(false);
     });
 

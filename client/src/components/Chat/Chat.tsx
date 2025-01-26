@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useColyseusRoom } from "../../lib/colyseus";
+import { useColyseusRoom, useColyseusState } from "../../lib/colyseus";
 import "./Chat.css";
+import { EventBus } from "../../lib/EventBus";
 
 interface ChatMessage {
   playerName: string;
@@ -14,6 +15,21 @@ export function Chat() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+
+  const player = useColyseusState((state) =>
+    state?.players?.get(room?.sessionId)
+  );
+
+  useEffect(() => {
+    EventBus.on("scene-ready", () => {
+      setLoading(false);
+    });
+
+    return () => {
+      EventBus.removeListener("scene-ready");
+    };
+  }, []);
 
   // Handle incoming chat messages
   useEffect(() => {
@@ -45,9 +61,6 @@ export function Chat() {
     }
   }, [room]);
 
-  // Don't render if no room is available
-  if (!room) return null;
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (isDisabled) {
@@ -72,6 +85,10 @@ export function Chat() {
       e.preventDefault();
     }
   };
+
+  if (loading || !player) {
+    return;
+  }
 
   return (
     <div className="chat-container">
