@@ -3,6 +3,7 @@ import type { Room } from "colyseus.js";
 import { Client } from "colyseus.js";
 import { BACKEND_URL } from "../backend";
 import { EventBus } from "../lib/EventBus";
+import { colyseusRoom, roomStore } from "../lib/colyseus";
 
 export class BaseScene extends Phaser.Scene {
   roomName: string;
@@ -280,9 +281,9 @@ export class BaseScene extends Phaser.Scene {
       
       this.initMap();
 
-      ///this.createAnimations();
+      this.createAnimations();
 
-     // this.setRoomListeners();
+      this.setRoomListeners();
 
       this.cursorKeys = this.input.keyboard.createCursorKeys();
       this.keyboardKeys = {
@@ -324,8 +325,7 @@ export class BaseScene extends Phaser.Scene {
     console.log("Connecting to servers...");
     this.changeConnectionStatus("Connecting to servers...");
 
-    const client = new Client(BACKEND_URL);
-    this.client = client;
+ this.room =  roomStore.get()
 
     try {
       let roomName = this.roomName;

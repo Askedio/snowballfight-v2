@@ -5,7 +5,12 @@ import "./Menu.css";
 export function Menu() {
   const room = useColyseusRoom();
 
+  
+
   const state = useColyseusState(); // Get the entire room state
+
+  
+
   const player = state?.players?.get(room?.sessionId); // Get the current player's state
 
   // Default values in case player data is not available yet
@@ -71,8 +76,7 @@ export function Menu() {
     }
   }, [waitingForPlayers, waitingToStart, roundStartsAt, roundEndsAt]);
 
-  console.log(state, player);
-
+ 
   if (!state || !player) {
     return null;
   }

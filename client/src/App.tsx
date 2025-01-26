@@ -52,7 +52,7 @@ export function App() {
 
     // Handle window resize
     const handleResize = () => {
-      console.log(window.innerHeight, window.innerWidth)
+      console.log(window.innerHeight, window.innerWidth);
       if (_game) {
         _game.scale.setGameSize(window.innerWidth, window.innerHeight);
         _game.scale.refresh();

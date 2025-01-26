@@ -6,7 +6,7 @@ import { useColyseusRoom } from "../../lib/colyseus";
 export function SpawnScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedGameMode, setSelectedGameMode] = useState<string>("ffa");
-  const [selectedSkin, setSelectedSkin] = useState<string>("playersa_01");
+  const [selectedSkin, setSelectedSkin] = useState<string>("playersa");
   const room = useColyseusRoom();
 
   useEffect(() => {
@@ -94,29 +94,29 @@ export function SpawnScreen() {
         <div className="skinlist">
           <button
             type="button"
-            className={selectedSkin === "playersa_01" ? "active" : ""}
-            onClick={() => handleSkinClick("playersa_01")}
+            className={selectedSkin === "playersa" ? "active" : ""}
+            onClick={() => handleSkinClick("playersa")}
           >
             <img alt="" src="/assets/images/skins/player/playersa_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersb_01" ? "active" : ""}
-            onClick={() => handleSkinClick("playersb_01")}
+            className={selectedSkin === "playersb" ? "active" : ""}
+            onClick={() => handleSkinClick("playersb")}
           >
             <img alt="" src="/assets/images/skins/player/playersb_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersc_01" ? "active" : ""}
-            onClick={() => handleSkinClick("playersc_01")}
+            className={selectedSkin === "playersc" ? "active" : ""}
+            onClick={() => handleSkinClick("playersc")}
           >
             <img alt="" src="/assets/images/skins/player/playersc_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersd_01" ? "active" : ""}
-            onClick={() => handleSkinClick("playersd_01")}
+            className={selectedSkin === "playersd" ? "active" : ""}
+            onClick={() => handleSkinClick("playersd")}
           >
             <img alt="" src="/assets/images/skins/player/playersd_01.png" />
           </button>
