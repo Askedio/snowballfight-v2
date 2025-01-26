@@ -11,6 +11,11 @@ import { pickupItemTypes } from "../../pickups";
 import { assignRandomPosition, resetPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
+import { Profanity } from "@2toad/profanity";
+
+const profanity = new Profanity({
+  languages: ['ar', "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
+});
 
 // When a room is created.
 export class BaseOnCreateCommand<
@@ -55,7 +60,7 @@ export class BaseOnCreateCommand<
 
         const chatMessage = new ChatMessage();
         chatMessage.playerName = player.name || "Anonymous";
-        chatMessage.message = message;
+        chatMessage.message = profanity.censor(message);
         chatMessage.timestamp = Date.now();
 
         // Add the chat message to the state
@@ -102,7 +107,7 @@ export class BaseOnCreateCommand<
 
         if (player) {
           if (playerName !== "") {
-            player.name = playerName;
+            player.name = profanity.censor(playerName);
           } else {
             const generator = new RandomNameGenerator();
 
