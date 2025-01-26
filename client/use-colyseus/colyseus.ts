@@ -13,8 +13,6 @@ export const colyseus = <S = Schema>(
   const roomStore = store<Room<S> | undefined>(undefined);
   const stateStore = store<S | undefined>(undefined);
 
-  let room: any = undefined
-
   let connecting = false;
 
   const connectToColyseus = async (roomName: string, options = {}) => {
@@ -23,9 +21,7 @@ export const colyseus = <S = Schema>(
     connecting = true;
 
     try {
-       room = await client.joinOrCreate<S>(roomName, options, schema);
-
-      
+      const room = await client.joinOrCreate<S>(roomName, options, schema);
 
       roomStore.set(room);
       stateStore.set(room.state);
@@ -134,7 +130,7 @@ export const colyseus = <S = Schema>(
     disconnectFromColyseus,
     useColyseusRoom,
     useColyseusState,
-    colyseusRoom: room,
-    roomStore
+    roomStore,
+    stateStore,
   };
 };

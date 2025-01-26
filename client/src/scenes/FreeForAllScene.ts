@@ -28,7 +28,7 @@ export class FreeForAllScene extends BaseScene {
 
       setTeamModeMenu(false, this.mode);
     } catch (e: any) {
-      console.log("failed to initalize map");
+      console.log("failed to initalize map", e);
     }
   }
 }

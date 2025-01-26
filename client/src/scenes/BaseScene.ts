@@ -1,9 +1,8 @@
 import Phaser from "phaser";
 import type { Room } from "colyseus.js";
-import { Client } from "colyseus.js";
-import { BACKEND_URL } from "../backend";
+import type { Client } from "colyseus.js";
 import { EventBus } from "../lib/EventBus";
-import { colyseusRoom, roomStore } from "../lib/colyseus";
+import { roomStore } from "../lib/colyseus";
 
 export class BaseScene extends Phaser.Scene {
   roomName: string;
@@ -258,7 +257,6 @@ export class BaseScene extends Phaser.Scene {
         await this.room?.leave(true);
       });
 
-
       this.game.events.on("onSkinChange", this.onSkinChange, this);
       EventBus.on("onPlayerRejoin", this.onPlayerRejoin, this);
       this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
@@ -278,7 +276,6 @@ export class BaseScene extends Phaser.Scene {
 
       await this.connect();
 
-      
       this.initMap();
 
       this.createAnimations();
@@ -325,7 +322,7 @@ export class BaseScene extends Phaser.Scene {
     console.log("Connecting to servers...");
     this.changeConnectionStatus("Connecting to servers...");
 
- this.room =  roomStore.get()
+    this.room = roomStore.get();
 
     try {
       let roomName = this.roomName;
@@ -333,8 +330,6 @@ export class BaseScene extends Phaser.Scene {
       if (window.location.hash) {
         roomName = window.location.hash.substring(1);
       }
-
-      
 
       console.log("Scene is ready!");
 

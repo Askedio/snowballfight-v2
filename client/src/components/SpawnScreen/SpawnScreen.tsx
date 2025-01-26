@@ -132,6 +132,8 @@ export function SpawnScreen() {
             roomName: "",
             skin: selectedSkin,
           });
+
+          setLoading(true)
         }}
       >
         Join Game
