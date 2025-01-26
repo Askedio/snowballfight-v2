@@ -91,6 +91,10 @@ export class Player extends Schema {
   @type(Pickup) carriedPickup: Pickup; // ahh..
   @type([Pickup]) pickups = new ArraySchema<Pickup>();
 
+  // Chat
+  @type("number") lastChatted: number;
+
+
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 

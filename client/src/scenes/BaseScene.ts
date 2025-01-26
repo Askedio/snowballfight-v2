@@ -59,6 +59,8 @@ export class BaseScene extends Phaser.Scene {
   canShoot = true;
   shootCooldown = 400;
 
+  enableKeyboard = true;
+
   disableChat = false;
 
   preload() {
@@ -202,9 +204,17 @@ export class BaseScene extends Phaser.Scene {
         EventBus.removeAllListeners();
       });
 
+      EventBus.on("disable-keyboard", () => {
+        this.enableKeyboard = false;
+      });
+
+      EventBus.on("enable-keyboard", () => {
+        this.enableKeyboard = true
+      });
+
       EventBus.on("change-room", () => {
         // Listeners are set on create, but user can change room in the same scene, so reset room and listeners here.
-        console.log("Game change-room")
+        console.log("Game change-room");
 
         this.room?.removeAllListeners();
         this.room = roomStore.get();
@@ -223,38 +233,59 @@ export class BaseScene extends Phaser.Scene {
 
       this.setRoomListeners();
 
-      this.cursorKeys = this.input.keyboard.createCursorKeys();
-      this.keyboardKeys = {
-        W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
-        A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
-        S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
-        D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
-        R: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
-        E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
-      };
-
-      const spaceBar = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.SPACE,
-        false
-      );
-
-      // Space bar for shooting
-      spaceBar.on("down", () => {
-        if (!this.canShoot) {
-          return;
-        }
-        this.inputPayload.shoot = true;
-      });
-
-      // Reset shooting on space bar release
-      spaceBar.on("up", () => {
-        this.inputPayload.shoot = false;
-      });
+      this.setKeyListeners();
 
       EventBus.emit("scene-ready", this);
     } catch (e: any) {
       console.error("Failed to initalize create!", e);
     }
+  }
+
+  setKeyListeners() {
+    this.cursorKeys = {
+      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
+      down: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.DOWN,
+        false
+      ),
+      left: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.LEFT,
+        false
+      ),
+      right: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        false
+      ),
+      space: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.SPACE,
+        false
+      ),
+      shift: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.SHIFT,
+        false
+      ),
+    };
+    this.keyboardKeys = {
+      W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+      A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+      S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+      D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+      R: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
+      E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+    };
+
+    // Space bar for shooting
+    this.cursorKeys.space.on("down", () => {
+      if (!this.canShoot) {
+        return;
+      }
+      this.inputPayload.shoot = true;
+    });
+
+    // Reset shooting on space bar release
+    this.cursorKeys.space.on("up", () => {
+      this.inputPayload.shoot = false;
+    });
   }
 
   update(time: number, delta: number): void {
@@ -280,7 +311,7 @@ export class BaseScene extends Phaser.Scene {
       reload: pointer.rightButtonDown(),
     };
 
-    if (this.room?.connection?.isOpen) {
+    if (this.room?.connection?.isOpen && this.enableKeyboard) {
       this.room?.send("input", this.inputPayload);
     }
   }

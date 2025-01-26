@@ -49,6 +49,10 @@ export class BaseOnCreateCommand<
       const player = this.room.state.players.get(client.sessionId);
 
       if (player && message?.trim() !== "") {
+        if(player.lastChatted && Date.now() - player.lastChatted < 2000) {
+          return;
+        }
+
         const chatMessage = new ChatMessage();
         chatMessage.playerName = player.name || "Anonymous";
         chatMessage.message = message;
@@ -63,6 +67,8 @@ export class BaseOnCreateCommand<
           message: chatMessage.message,
           timestamp: chatMessage.timestamp,
         });
+
+        player.lastChatted = Date.now();
       }
     });
 

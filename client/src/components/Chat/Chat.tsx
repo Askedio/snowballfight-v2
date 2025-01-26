@@ -42,24 +42,22 @@ export function Chat() {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
     );
+  }, [room]);
 
-    // Adding the mouseleave event listener to blur the input when the mouse leaves
+  useEffect(() => {
     const chatInput = chatInputRef.current;
     if (chatInput) {
       const handleMouseLeave = () => {
-        if (document.activeElement === chatInput) {
-          chatInput.blur(); // Remove focus when the mouse leaves the input
-        }
+        chatInput.blur();
       };
 
       chatInput.addEventListener("mouseleave", handleMouseLeave);
 
-      // Cleanup event listener on component unmount
       return () => {
         chatInput.removeEventListener("mouseleave", handleMouseLeave);
       };
     }
-  }, [room]);
+  }, [chatInputRef.current]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -69,21 +67,29 @@ export function Chat() {
 
       setIsDisabled(true);
 
-      // Trim the input and send it if there's a message
       const trimmedMessage = message.trim();
       if (trimmedMessage) {
         room.send("chat", { message: trimmedMessage });
 
-        setMessage(""); // Clear the input after sending
+        setMessage("");
       }
+      chatInputRef.current.blur();
 
       // Re-enable the input after 1 second
       setTimeout(() => {
         setIsDisabled(false);
-      }, 1000);
+      }, 2000);
 
       e.preventDefault();
     }
+  };
+
+  const handleFocus = () => {
+    EventBus.emit("disable-keyboard");
+  };
+
+  const handleBlur = () => {
+    EventBus.emit("enable-keyboard");
   };
 
   if (loading || !player) {
@@ -109,6 +115,8 @@ export function Chat() {
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isDisabled}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       />
     </div>
   );
