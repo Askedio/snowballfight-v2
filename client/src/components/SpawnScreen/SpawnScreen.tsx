@@ -10,6 +10,7 @@ import { Dropdown } from "../Dropdown/Dropdown";
 import { RoomModal } from "../RoomModal/RoomModal";
 import { gameModes } from "../../lib/gameModes";
 import { skins } from "../../lib/skins";
+import { useLocation } from "react-router";
 
 interface SpawnState {
   playerName: string;
@@ -26,12 +27,19 @@ const defaultLanguage = {
 
 export function SpawnScreen() {
   const room = useColyseusRoom();
+  const location = useLocation();
+
+  const local = location.pathname.split("/")[1];
+  let gameMode = local;
+  if (!gameModes.find((_) => _.value === local)) {
+    gameMode = "ffa";
+  }
 
   const [spawnState, setSpawnState] = useState<SpawnState>({
     playerName: "",
     roomName: window.location.hash ? window.location.hash.substring(1) : "", // Set room name from URL hash
     skin: "playersa",
-    gameMode: "ffa",
+    gameMode,
   });
 
   const [loading, setLoading] = useState(true);
@@ -83,6 +91,14 @@ export function SpawnScreen() {
 
   useEffect(() => {
     connectToRoom();
+
+    window.history.pushState(
+      null,
+      "",
+      `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}${
+        window.location.hash
+      }`
+    );
   }, [spawnState.gameMode]);
 
   // Countdown timer for respawn delay
@@ -97,8 +113,16 @@ export function SpawnScreen() {
   }, [respawnDelay]);
 
   useEffect(() => {
+    if(!spawnState.roomName) return
     const connect = async () => {
       await connectToRoom();
+      window.history.pushState(
+        null,
+        "",
+        `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}#${
+          spawnState.roomName
+        }`
+      );
       EventBus.emit("change-room", { mode: spawnState.gameMode });
     };
     connect();

@@ -17,6 +17,7 @@ import { CtfScene } from "./scenes/CtfScene";
 import { ErrorDialog } from "./components/ErrorDialog/ErrorDialog";
 import { RoundComplete } from "./components/RoundComplete/RoundComplete";
 import { useLocation } from "react-router";
+import { gameModes } from "./lib/gameModes";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -77,21 +78,30 @@ export function App() {
   }, [mode]);
 
   useEffect(() => {
+    const local = location.pathname.split("/")[1];
+    let gameMode = local;
+    if (!gameModes.find((_) => _.value === local)) {
+      gameMode = "ffa";
+    }
+
     const customRoomName = window.location.hash
       ? window.location.hash.substring(1)
       : "";
 
     (async () => {
-      await connectToColyseus(customRoomName ? "user_ffa_room" : "ffa_room", {
-        customRoomName,
-      });
+      await connectToColyseus(
+        `${customRoomName ? "user_" : ""}${gameMode}_room`,
+        {
+          customRoomName,
+        }
+      );
     })();
 
     return () => {
       // Disconnect from Colyseus when the component unmounts
       disconnectFromColyseus();
     };
-  }, []);
+  }, [location.pathname]);
 
   useLayoutEffect(() => {
     const _game = new Phaser.Game(config);
