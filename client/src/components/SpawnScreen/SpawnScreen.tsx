@@ -1,13 +1,43 @@
 import { useEffect, useState } from "react";
 import { EventBus } from "../../lib/EventBus";
 import "./SpawnScreen.css";
-import { useColyseusRoom } from "../../lib/colyseus";
+import {
+  connectToColyseus,
+  disconnectFromColyseus,
+  useColyseusRoom,
+} from "../../lib/colyseus";
+
+interface SpawnState {
+  playerName: string;
+  roomName: string;
+  skin: string;
+  gameMode: string;
+}
+
+/*
+i think we want to make room name a seeprate button..
+*/
 
 export function SpawnScreen() {
-  const [loading, setLoading] = useState(true);
-  const [selectedGameMode, setSelectedGameMode] = useState<string>("ffa");
-  const [selectedSkin, setSelectedSkin] = useState<string>("playersa");
   const room = useColyseusRoom();
+
+  const [spawnState, setSpawnState] = useState<SpawnState>({
+    playerName: "",
+    roomName: window.location.hash ? window.location.hash.substring(1) : "", // Set room name from URL hash
+    skin: "playersa",
+    gameMode: "ffa",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [killedBy, setKilledBy] = useState<string>("");
+  const [lastRoomName, setLastRoomName] = useState<string>("");
+  const [lastGameMode, setLastGameMode] = useState<string>(spawnState.gameMode);
+
+  const [screenLanguage, setScreenLanguage] = useState({
+    title: "Welcome to Snowball Fight!",
+    subTitle: "Click Join Game to play!",
+    joinButton: "Join Game",
+  });
 
   useEffect(() => {
     EventBus.on("scene-ready", () => {
@@ -19,12 +49,82 @@ export function SpawnScreen() {
     };
   }, []);
 
-  const handleGameModeClick = (mode: string) => {
-    setSelectedGameMode(mode);
+  useEffect(() => {
+    if (!room) return;
+
+    room.onMessage("client-respawned", ({ sessionId }) => {
+      if (sessionId === room.sessionId) {
+        setLoading(true);
+      }
+    });
+
+    room.onMessage("player-death", ({ sessionId, player, killer }) => {
+      if (sessionId === room.sessionId) {
+        setKilledBy(killer.name);
+
+        setScreenLanguage({
+          title: "You Died!",
+          subTitle: "Rejoin the snowball fight!",
+          joinButton: "Respawn",
+        });
+
+        setLoading(false)
+      }
+    });
+  }, [room]);
+
+  useEffect(() => {
+    connectToRoom();
+  }, [spawnState.gameMode, spawnState.roomName]);
+
+  const connectToRoom = async () => {
+    console.log("Connecting...", spawnState);
+
+    await disconnectFromColyseus();
+    await connectToColyseus(
+      `${spawnState.roomName && "user_"}${spawnState.gameMode}_room`,
+      {
+        customRoomName: spawnState.roomName,
+      }
+    );
+  };
+
+  const handleGameModeClick = async (gameMode: string) => {
+    if (lastGameMode === gameMode) {
+      return;
+    }
+
+    setSpawnState((prevState) => ({
+      ...prevState,
+      gameMode,
+    }));
+
+    setLastGameMode(gameMode);
+  };
+
+  const handleJoinButtonClick = async () => {
+    setLastRoomName(spawnState.roomName);
+
+    room.send("rejoin", {
+      playerName: spawnState.playerName,
+      roomName: spawnState.roomName,
+      skin: spawnState.skin,
+    });
   };
 
   const handleSkinClick = (skin: string) => {
-    setSelectedSkin(skin);
+    setSpawnState((prevState) => ({
+      ...prevState,
+      skin,
+    }));
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSpawnState((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   if (loading) {
@@ -33,20 +133,26 @@ export function SpawnScreen() {
 
   return (
     <div className="modal">
-      <div className="killedBy" />
+      {killedBy && <div className="killedBy">Killed By {killedBy}</div>}
 
-      <h2 className="text-2xl font-bold mb-4">Welcome to Snowball Fight!</h2>
-      <p className="mb-4">Click Join Game to play!</p>
+      <h2 className="text-2xl font-bold mb-4">{screenLanguage.title}</h2>
+      <p className="mb-4">{screenLanguage.subTitle}</p>
 
       <input
+        name="playerName"
         type="text"
         placeholder="Player name (optional)"
         className="input-field"
+        value={spawnState.playerName}
+        onChange={handleNameChange}
       />
       <input
+        name="roomName"
         type="text"
         placeholder="Room name (optional)"
         className="input-field"
+        value={spawnState.roomName}
+        onChange={handleNameChange}
       />
 
       {/* Game Mode Switch */}
@@ -54,7 +160,7 @@ export function SpawnScreen() {
         <button
           type="button"
           className={`gameMode ${
-            selectedGameMode === "ffa" ? "activeMode" : ""
+            spawnState.gameMode === "ffa" ? "activeMode" : ""
           }`}
           onClick={() => handleGameModeClick("ffa")}
         >
@@ -63,7 +169,7 @@ export function SpawnScreen() {
         <button
           type="button"
           className={`gameMode ${
-            selectedGameMode === "ctf" ? "activeMode" : ""
+            spawnState.gameMode === "ctf" ? "activeMode" : ""
           }`}
           onClick={() => handleGameModeClick("ctf")}
         >
@@ -72,7 +178,7 @@ export function SpawnScreen() {
         <button
           type="button"
           className={`gameMode ${
-            selectedGameMode === "tdm" ? "activeMode" : ""
+            spawnState.gameMode === "tdm" ? "activeMode" : ""
           }`}
           onClick={() => handleGameModeClick("tdm")}
         >
@@ -81,7 +187,7 @@ export function SpawnScreen() {
         <button
           type="button"
           className={`gameMode ${
-            selectedGameMode === "ts" ? "activeMode" : ""
+            spawnState.gameMode === "ts" ? "activeMode" : ""
           }`}
           onClick={() => handleGameModeClick("ts")}
         >
@@ -94,28 +200,28 @@ export function SpawnScreen() {
         <div className="skinlist">
           <button
             type="button"
-            className={selectedSkin === "playersa" ? "active" : ""}
+            className={spawnState.skin === "playersa" ? "active" : ""}
             onClick={() => handleSkinClick("playersa")}
           >
             <img alt="" src="/assets/images/skins/player/playersa_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersb" ? "active" : ""}
+            className={spawnState.skin === "playersb" ? "active" : ""}
             onClick={() => handleSkinClick("playersb")}
           >
             <img alt="" src="/assets/images/skins/player/playersb_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersc" ? "active" : ""}
+            className={spawnState.skin === "playersc" ? "active" : ""}
             onClick={() => handleSkinClick("playersc")}
           >
             <img alt="" src="/assets/images/skins/player/playersc_01.png" />
           </button>
           <button
             type="button"
-            className={selectedSkin === "playersd" ? "active" : ""}
+            className={spawnState.skin === "playersd" ? "active" : ""}
             onClick={() => handleSkinClick("playersd")}
           >
             <img alt="" src="/assets/images/skins/player/playersd_01.png" />
@@ -126,17 +232,9 @@ export function SpawnScreen() {
       <button
         type="button"
         className="btn-primary"
-        onClick={() => {
-          room.send("rejoin", {
-            playerName: "",
-            roomName: "",
-            skin: selectedSkin,
-          });
-
-          setLoading(true)
-        }}
+        onClick={() => handleJoinButtonClick()}
       >
-        Join Game
+        {screenLanguage.joinButton}
       </button>
 
       <p className="instructions">

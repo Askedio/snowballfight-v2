@@ -1,9 +1,36 @@
 import { useState, useEffect } from "react";
-import { useColyseusRoom } from "../../lib/colyseus"; // Importing the hook
+import { useColyseusRoom, useColyseusState } from "../../lib/colyseus"; // Importing the hook
 import "./PlayerReady.css";
 
 export function PlayerReady() {
-  const room = useColyseusRoom(); // Hook to get the current room
+  const room = useColyseusRoom();
+  const requiresPlayerToReady = useColyseusState(
+    (state) => state.requiresPlayerToReady
+  );
+
+  const [showReadyButton, setShowReadyButton] = useState(false);
+
+  useEffect(() => {
+    setShowReadyButton(requiresPlayerToReady);
+  }, [requiresPlayerToReady]);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+
+    room.onMessage("round-started", () => {
+      setShowReadyButton(false);
+    });
+
+    room.onMessage("round-over", () => {
+      setIsReady(false);
+      setShowReadyButton(true);
+    });
+  }, [room]);
+
+  // need more to check find in menu waitingToStart
+  const teamScoring = useColyseusState((state) => state.teamScoring);
 
   const [isReady, setIsReady] = useState(false); // Track if the player is ready
 
@@ -21,6 +48,10 @@ export function PlayerReady() {
     // Toggle ready state and update button text
     setIsReady(!isReady);
   };
+
+  if (!showReadyButton) {
+    return;
+  }
 
   return (
     <div className="player-ready">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useColyseusRoom } from "../../lib/colyseus";
 import "./Chat.css";
 
@@ -13,6 +13,7 @@ export function Chat() {
   const [message, setMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   // Handle incoming chat messages
   useEffect(() => {
@@ -22,10 +23,26 @@ export function Chat() {
       "chat",
       ({ playerName, message, timestamp }: ChatMessage) => {
         const newMessage = { playerName, message, timestamp };
-
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
     );
+
+    // Adding the mouseleave event listener to blur the input when the mouse leaves
+    const chatInput = chatInputRef.current;
+    if (chatInput) {
+      const handleMouseLeave = () => {
+        if (document.activeElement === chatInput) {
+          chatInput.blur(); // Remove focus when the mouse leaves the input
+        }
+      };
+
+      chatInput.addEventListener("mouseleave", handleMouseLeave);
+
+      // Cleanup event listener on component unmount
+      return () => {
+        chatInput.removeEventListener("mouseleave", handleMouseLeave);
+      };
+    }
   }, [room]);
 
   // Don't render if no room is available
@@ -67,6 +84,7 @@ export function Chat() {
       </ul>
 
       <input
+        ref={chatInputRef}
         className="chat-send"
         type="text"
         placeholder="Type to chat..."

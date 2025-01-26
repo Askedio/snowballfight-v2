@@ -8,6 +8,9 @@
       "complexity": {
         "noForEach": "off",
         "noStaticOnlyClass": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off"
       }
     }
   }

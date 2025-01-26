@@ -190,53 +190,8 @@ export class BaseScene extends Phaser.Scene {
 
   initMap() {}
 
-  onSkinChange(skin: string) {
-    this.skin = skin;
-  }
-
-  async onPlayerRejoin({ playerName, roomName }) {
-    if (roomName) {
-      if (roomName !== this.roomName) {
-        this.roomName = roomName;
-
-        for (const sessionId in this.playerEntities) {
-          const container = this.playerEntities[sessionId];
-          if (container) {
-            container.destroy();
-            delete this.playerEntities[sessionId];
-          }
-        }
-
-        this.room = await this.client.joinOrCreate("ctf_room", {
-          customRoomName: roomName,
-        });
-        this.setRoomListeners();
-      }
-      this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-      window.location.hash = roomName;
-    } else {
-      this.room.send("rejoin", { playerName, roomName, skin: this.skin });
-    }
-
-    window.dispatchEvent(new Event("joined"));
-  }
-
   setError(error: string) {
-    window.dispatchEvent(new CustomEvent("on-error", { detail: error }));
-  }
-
-  changeConnectionStatus(status: string) {
-    window.dispatchEvent(
-      new CustomEvent("connection-status-changed", { detail: status })
-    );
-  }
-
-  onChatSendMessage(message: string) {
-    this.room.send("chat", { message });
-  }
-
-  onPlayerReady(ready: boolean) {
-    this.room.send("player-ready", { ready });
+    EventBus.emit("error", { error });
   }
 
   async create() {
@@ -244,39 +199,19 @@ export class BaseScene extends Phaser.Scene {
       this.events.once("shutdown", async () => {
         console.log("Scene is shutting down!");
 
-        clearInterval(this.roomStateInterval);
-        clearInterval(this.currentPlayerStateInterval);
-
-        this.game.events.off("onSkinChange", this.onSkinChange);
-        this.game.events.off("onPlayerRejoin", this.onPlayerRejoin);
-        this.game.events.off("onChatSendMessage", this.onChatSendMessage);
-        this.game.events.off("onPlayerReady", this.onPlayerReady);
         this.input.shutdown();
 
         this.room?.removeAllListeners();
         await this.room?.leave(true);
       });
 
-      this.game.events.on("onSkinChange", this.onSkinChange, this);
-      EventBus.on("onPlayerRejoin", this.onPlayerRejoin, this);
-      this.game.events.on("onChatSendMessage", this.onChatSendMessage, this);
-      this.game.events.on("onPlayerReady", this.onPlayerReady, this);
-
-      this.roomStateInterval = setInterval(() => {
-        this.updateRoomState();
-      }, 1000);
-
-      this.currentPlayerStateInterval = setInterval(() => {
-        this.updateCurrentPlayerState();
-      }, 250);
-
       console.log("Starting scene", this.mode);
 
       this.setError("");
 
-      await this.connect();
-
       this.initMap();
+
+      this.room = roomStore.get();
 
       this.createAnimations();
 
@@ -311,55 +246,13 @@ export class BaseScene extends Phaser.Scene {
       });
 
       EventBus.emit("scene-ready", this);
-
-      window.dispatchEvent(new Event("scene-ready"));
     } catch (e: any) {
       console.log("Failed to initalize create");
     }
   }
 
-  async connect() {
-    console.log("Connecting to servers...");
-    this.changeConnectionStatus("Connecting to servers...");
-
-    this.room = roomStore.get();
-
-    try {
-      let roomName = this.roomName;
-
-      if (window.location.hash) {
-        roomName = window.location.hash.substring(1);
-      }
-
-      console.log("Scene is ready!");
-
-      this.disableChat = false;
-
-      window.dispatchEvent(new Event("ready"));
-    } catch (e) {
-      console.log(e);
-
-      this.changeConnectionStatus("Could not connect to the servers.");
-      return;
-    }
-
-    this.changeConnectionStatus("");
-  }
-
-  updateFps(fps: any) {
-    window.dispatchEvent(new CustomEvent("update-fps", { detail: fps }));
-  }
-
-  handlePlayerDeath(killer: any) {
-    window.dispatchEvent(
-      new CustomEvent("player-killed", { detail: { killer } })
-    );
-  }
-
   update(time: number, delta: number): void {
     if (!this.currentPlayer) return;
-
-    this.updateFps(this.game.loop.actualFps.toFixed(1));
 
     this.inputPayload.left =
       this.cursorKeys.left.isDown || this.keyboardKeys.A.isDown;
@@ -392,25 +285,6 @@ export class BaseScene extends Phaser.Scene {
   }
 
   setRoomListeners() {
-    // Player respawned
-    this.room.onMessage("client-respawned", ({ sessionId }) => {
-      if (sessionId === this.room.sessionId) {
-        window.dispatchEvent(new Event("client-respawned"));
-      }
-    });
-
-    // Team round started
-    this.room.onMessage("round-started", () => {
-      window.dispatchEvent(new Event("round-started"));
-    });
-
-    // Team round ended
-    this.room.onMessage("round-over", ({ redScore, blueScore }) => {
-      window.dispatchEvent(
-        new CustomEvent("round-over", { detail: { redScore, blueScore } })
-      );
-    });
-
     // Add pickups
     this.room.state.pickups.onAdd((pickup) => {
       try {
@@ -683,10 +557,6 @@ export class BaseScene extends Phaser.Scene {
       }
 
       this.playSpatialSound(player, player.onKilledSound);
-
-      if (sessionId === this.room.sessionId) {
-        this.handlePlayerDeath(killer);
-      }
     });
 
     // Handle player removal
@@ -804,15 +674,6 @@ export class BaseScene extends Phaser.Scene {
     this.room.onMessage("play-sound", ({ item, key }) => {
       this.playSpatialSound(item, key);
     });
-
-    // When a chat message is received
-    this.room.onMessage("chat", ({ playerName, message, timestamp }) => {
-      window.dispatchEvent(
-        new CustomEvent("chat-message-received", {
-          detail: { playerName, message, timestamp },
-        })
-      );
-    });
   }
 
   playAnimation(key: string, x: number, y: number, scale = 0.2) {
@@ -911,31 +772,5 @@ export class BaseScene extends Phaser.Scene {
 
     // Check if the coordinates are within the bounds
     return x >= left && x <= right && y >= top && y <= bottom;
-  }
-
-  updateCurrentPlayerState() {
-    if (!this.room?.state?.players) {
-      return;
-    }
-
-    const player = this.room.state.players.get(this.room.sessionId);
-
-    if (!player) {
-      return;
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("player-state-updated", { detail: player })
-    );
-  }
-
-  updateRoomState() {
-    if (!this.room?.state?.players) {
-      return;
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("room-state-updated", { detail: this.room.state })
-    );
   }
 }

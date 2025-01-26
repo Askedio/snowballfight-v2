@@ -1,8 +1,7 @@
-#error {
-    @apply bg-red-500 text-white text-center fixed bottom-0 rounded-t-lg p-3 left-1/2 transform -translate-x-1/2;
-  }
-  
-  #error:empty {
-    @apply hidden;
-  }
-  
+.error {
+  @apply bg-red-500 text-white text-center fixed bottom-0 rounded-t-lg p-3 left-1/2 transform -translate-x-1/2;
+}
+
+.error:empty {
+  @apply hidden;
+}

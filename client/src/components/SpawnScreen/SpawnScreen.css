@@ -75,3 +75,8 @@
     @apply hidden;
   }
 }
+
+
+.instructions {
+  @apply mt-8 text-xs text-gray-400;
+}

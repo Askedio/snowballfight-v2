@@ -23,8 +23,8 @@ export default config({
      * Define your room handlers:
      */
 
-    gameServer.define("default_room", FreeForAllRoom);
-    gameServer.define("ffa_room", FreeForAllRoom).filterBy(["customRoomName"]);
+    gameServer.define("ffa_room", FreeForAllRoom);
+    gameServer.define("user_ffa_room", FreeForAllRoom).filterBy(["customRoomName"]);
 
     gameServer.define("ctf_room", CtfRoom);
     gameServer.define("user_ctf_room", CtfRoom).filterBy(["customRoomName"]);

@@ -3,10 +3,18 @@ import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
 import { SpawnScreen } from "./components/SpawnScreen/SpawnScreen";
 import { Chat } from "./components/Chat/Chat";
-import { connectToColyseus, disconnectFromColyseus } from "./lib/colyseus";
+import {
+  connectToColyseus,
+  disconnectFromColyseus,
+  useColyseusState,
+} from "./lib/colyseus";
 import { Leaderboard } from "./components/Leaderboard/Leaderboard";
 import { Menu } from "./components/Menu/Menu";
 import { PlayerReady } from "./components/PlayerReady/PlayerReady";
+import { TsScene } from "./scenes/TsScene";
+import { TdmScene } from "./scenes/TdmScene";
+import { CtfScene } from "./scenes/CtfScene";
+import { ErrorDialog } from "./components/ErrorDialog/ErrorDialog";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -31,6 +39,40 @@ const config: Phaser.Types.Core.GameConfig = {
 
 export function App() {
   const [game, setGame] = useState<Phaser.Game | null>(null);
+  const mode = useColyseusState((state) => state.mode);
+  const [lastScene, setLastScene] = useState("ffa");
+
+  useEffect(() => {
+    if (!mode || lastScene === mode) {
+      return;
+    }
+
+    game.scene.stop(mode);
+    if (mode !== "ffa") {
+      game.scene.remove(mode);
+    }
+
+    const keys = game.scene.keys;
+
+    // Weird, when injected into the game itself the mouse and movement were broken on scenes after #2
+    switch (mode) {
+      case "ffa":
+        !keys.ffa && game.scene.add("ffa", FreeForAllScene);
+        break;
+      case "ctf":
+        !keys.ctf && game.scene.add("ctf", CtfScene);
+        break;
+      case "tdm":
+        !keys.tdm && game.scene.add("tdm", TdmScene);
+        break;
+      case "ts":
+        !keys.ts && game.scene.add("ts", TsScene);
+        break;
+    }
+
+    game.scene.start(mode);
+    setLastScene(mode);
+  }, [mode]);
 
   useEffect(() => {
     // Connect to Colyseus when the component mounts
@@ -52,11 +94,11 @@ export function App() {
 
     // Handle window resize
     const handleResize = () => {
-      console.log(window.innerHeight, window.innerWidth);
-      if (_game) {
-        _game.scale.setGameSize(window.innerWidth, window.innerHeight);
-        _game.scale.refresh();
+      if (!_game) {
+        return;
       }
+      _game.scale.setGameSize(window.innerWidth, window.innerHeight);
+      _game.scale.refresh();
     };
 
     // Attach resize event listener
@@ -68,8 +110,6 @@ export function App() {
     };
   }, []);
 
-  console.log(process.env.BACKEND_URL);
-
   return (
     <>
       <Menu />
@@ -78,6 +118,7 @@ export function App() {
       <Chat />
       <Leaderboard />
       <PlayerReady />
+      <ErrorDialog />
       <div id="phaser-game" />
     </>
   );

@@ -5,11 +5,7 @@ import "./Menu.css";
 export function Menu() {
   const room = useColyseusRoom();
 
-  
-
   const state = useColyseusState(); // Get the entire room state
-
-  
 
   const player = state?.players?.get(room?.sessionId); // Get the current player's state
 
@@ -32,6 +28,7 @@ export function Menu() {
     blueScore = 0,
     roundStartsAt,
     roundEndsAt,
+    teamScoring,
   } = state || {};
 
   const [roundTime, setRoundTime] = useState<string>("");
@@ -76,23 +73,18 @@ export function Menu() {
     }
   }, [waitingForPlayers, waitingToStart, roundStartsAt, roundEndsAt]);
 
- 
   if (!state || !player) {
     return null;
   }
 
   return (
     <div className="menu">
-      {waitingForPlayers || waitingToStart ? (
-        <div id="player-ready" className="show">
-          Player ready
-        </div>
-      ) : null}
-
       <div className="menu-player-stats">
-        <div className="team-player-stats">
-          score <span className="active-player-score">0</span>
-        </div>
+        {teamScoring && (
+          <div className="team-player-stats">
+            score <span className="active-player-score">0</span>
+          </div>
+        )}
         <div>
           kills <span className="active-player-kills">{kills}</span>
         </div>
@@ -101,16 +93,20 @@ export function Menu() {
         </div>
       </div>
 
-      <div className="menu-team-stats">
-        <div className="team-red">
-          <span className="team-red-stats">{redScore}</span>
-        </div>
-        <div className="team-blue">
-          <span className="team-blue-stats">{blueScore}</span>
-        </div>
-      </div>
+      {teamScoring && (
+        <>
+          <div className="menu-team-stats">
+            <div className="team-red">
+              <span className="team-red-stats">{redScore}</span>
+            </div>
+            <div className="team-blue">
+              <span className="team-blue-stats">{blueScore}</span>
+            </div>
+          </div>
 
-      <div className="menu-round-time">{roundTime}</div>
+          <div className="menu-round-time">{roundTime}</div>
+        </>
+      )}
     </div>
   );
 }

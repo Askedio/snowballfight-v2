@@ -1,5 +1,4 @@
-import { colyseus } from "../../use-colyseus/colyseus";
-
+import { colyseus } from "../use-colyseus/colyseus";
 
 // To-do, we can share game states..
 export const {
@@ -8,6 +7,6 @@ export const {
   disconnectFromColyseus,
   useColyseusRoom,
   useColyseusState,
-  colyseusRoom,
-  roomStore
+  roomStore,
+  stateStore,
 } = colyseus<any>(process.env.BACKEND_URL);

@@ -3,6 +3,7 @@ import { BaseRoomState } from "./BaseRoomState";
 
 export class TeamRoomState extends BaseRoomState {
   showRespawnScreenOnDeath = false;
+  teamScoring = true;
 
   @type("boolean") trackPlayerScore = false;
   @type("string") playerScoreType = "kills";
@@ -18,6 +19,8 @@ export class TeamRoomState extends BaseRoomState {
   @type("boolean") roundActive = false;
   @type("boolean") waitingForPlayers = true;
   @type("boolean") waitingToStart = false;
+  @type("boolean") requiresPlayerToReady = true;
+
 
   setRoundStartsAt() {
     const now = Date.now(); // Current timestamp in milliseconds

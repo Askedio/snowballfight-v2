@@ -23,27 +23,3 @@ input {
 #app {
   @apply w-full h-full;
 }
-
-/* old */
-
-.show {
-  @apply !block;
-}
-
-.instructions {
-  @apply mt-8 text-xs text-gray-400;
-}
-
-
-
-.onReady {
-  @apply hidden;
-}
-
-#connectionStatusText {
-  @apply absolute left-3 bottom-3 text-black text-xs;
-}
-
-.text-white {
-  font-color: white;
-}

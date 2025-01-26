@@ -1,4 +1,3 @@
-import { setTeamModeMenu } from "../lib/teamMode";
 import { BaseScene } from "./BaseScene";
 
 export class TsScene extends BaseScene {
@@ -25,8 +24,6 @@ export class TsScene extends BaseScene {
       const tileset = map.addTilesetImage("Tileset");
 
       map.createLayer("base", tileset); // base
-
-      setTeamModeMenu(true, this.mode);
     } catch (e: any) {
       console.log("failed to initalize map");
     }
