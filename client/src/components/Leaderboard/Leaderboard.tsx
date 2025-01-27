@@ -11,7 +11,7 @@ interface Player {
 }
 
 export function Leaderboard() {
-  const clients = useColyseusState((state) => state.players); // Using roomState.players
+  const clients = useColyseusState((state) => state.players);
   const [isLeaderboardVisible, setLeaderboardVisible] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
 

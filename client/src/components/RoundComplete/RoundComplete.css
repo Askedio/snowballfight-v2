@@ -18,3 +18,20 @@
     }
   }
 }
+
+
+.player-stats{ 
+  @apply flex items-center w-full gap-3 text-xs mt-8 mb-12;
+
+  img {
+    @apply mx-auto
+  }
+
+  h3 {
+    @apply font-bold
+  }
+
+  div {
+    @apply text-center
+  }
+}
