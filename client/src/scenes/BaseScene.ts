@@ -332,6 +332,14 @@ export class BaseScene extends Phaser.Scene {
             pickup.asset,
             pickup.spriteFrame
           );
+
+          if(pickup.autoPlay) {
+            (pickupEntity as Phaser.GameObjects.Sprite).play(pickup.asset);
+          }
+
+          if(pickup.tint) {
+            (pickupEntity as Phaser.GameObjects.Sprite).setTint(pickup.tint);
+          }
         } else {
           pickupEntity = this.add.image(0, 0, pickup.asset);
         }
@@ -386,6 +394,7 @@ export class BaseScene extends Phaser.Scene {
         } else {
           pickupContainer.setDepth(2);
         }
+        
 
         // Add the container to the pickup entities
         this.pickupEntities[pickup.id] = pickupContainer;

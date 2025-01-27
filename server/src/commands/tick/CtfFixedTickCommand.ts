@@ -6,6 +6,9 @@ import type { CtfRoomState } from "../../states/CtfRoomState";
 import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
 import { assignRandomPosition } from "../../lib/player.lib";
+import type { Pickup } from "../../schemas/Pickup";
+import { PickupFactory } from "../../pickups/PickupFactory";
+import { nanoid } from "nanoid";
 
 export class CtfFixedTickCommand extends BaseTickCommand<
   CtfRoom,
@@ -45,7 +48,7 @@ export class CtfFixedTickCommand extends BaseTickCommand<
 
         this.state.players.forEach(async (player) => {
           player.isDead = true;
-          
+
           await assignRandomPosition(player, this.tilemapManager); // Respawn at a new position
 
           this.room.broadcast("client-respawned", {
@@ -99,13 +102,16 @@ export class CtfFixedTickCommand extends BaseTickCommand<
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
     super.onPlayerDeath(sessionId, player, shooter);
 
-    shooter.score += 1;
+    /* for td..
 
+    shooter.score += 1;
+    
     if (shooter.team === "red") {
       this.room.state.redScore += 1;
     } else if (shooter.team === "blue") {
       this.room.state.blueScore += 1;
     }
+    */
   }
 
   abortMatch() {
@@ -143,5 +149,23 @@ export class CtfFixedTickCommand extends BaseTickCommand<
     });
 
     this.state.waitingForPlayers = true;
+  }
+
+  onPickupDroppedOff(player: Player, pickup: Pickup) {
+    super.onPickupDroppedOff(player, pickup);
+
+    if (pickup.type === "redFlag" && player.team === "blue") {
+      this.room.state.blueScore += 1;
+    }
+
+    if (pickup.type === "blueFlag" && player.team === "red") {
+      this.room.state.redScore += 1;
+    }
+
+    player.score += 1;
+
+    return {
+      restorePickup: true,
+    };
   }
 }

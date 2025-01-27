@@ -7,4 +7,6 @@ export const pickupItemTypes = [
   "sword",
   "treasure",
   "wings",
+  "redFlag",
+  "blueFlag",
 ];

@@ -1,4 +1,5 @@
 import { Schema, type } from "@colyseus/schema";
+import type { Player } from "./Player";
 
 export class Pickup extends Schema {
   @type("string") id: string; // Unique identifier
@@ -6,7 +7,10 @@ export class Pickup extends Schema {
 
   // Display
   @type("boolean") isSprite = false;
+  @type("boolean") showOnPlayer = false;
+  @type("boolean") autoPlay = false;
   @type("string") spriteFrame: string;
+  @type("string") tint: string;
   @type("string") asset: string;
   @type("string") spawnTile: string;
 
@@ -47,7 +51,6 @@ export class Pickup extends Schema {
   @type("string") audioKey: string; // The audio key for the sound to play when picked up
 
   // Carry pickup
-  @type("boolean") userCarry = false; // On colission the user will carry this pickup with them, ie: flag
   @type("string") dropOffLocation: string; // The location where this item will be dropped off, ie: capture point
 
   constructor(type: string, x: number, y: number) {
@@ -57,7 +60,11 @@ export class Pickup extends Schema {
     this.y = y;
   }
 
-  onPlayerCollision(player: any): void {}
+  canCarry(player: Player): boolean {
+    return false
+  }
+
+  onPlayerCollision(player: Player): void {}
 
   onBulletCollision(): boolean {
     return this.bulletKills;

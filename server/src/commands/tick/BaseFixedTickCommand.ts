@@ -10,12 +10,12 @@ import { nanoid } from "nanoid";
 import { generateBotInput } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
+import type { Pickup } from "../../schemas/Pickup";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
   TRoom extends BaseRoom<TState>,
   TState extends BaseRoomState
- 
 > extends Command<
   TRoom,
   { tilemapManager: TilemapManager; collisionSystem: Collision }
@@ -39,7 +39,11 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-        input = generateBotInput(player, this.room.state.players, this.room.state.pickups); // Function to create bot input
+        input = generateBotInput(
+          player,
+          this.room.state.players,
+          this.room.state.pickups
+        ); // Function to create bot input
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -118,7 +122,6 @@ export class BaseTickCommand<
       }
 
       // Check for collisions with pickups
-      let isBlockedByPickup = false;
       this.room.state.pickups.forEach((pickupSource) => {
         const pickup = PickupFactory.createPickup(
           pickupSource.type,
@@ -149,11 +152,36 @@ export class BaseTickCommand<
         );
 
         if (isCollidingWithPickup) {
-          isColliding = true;
+          isColliding = pickup.blocking;
           pickup.onPlayerCollision(player); // Trigger collision effect
 
-          if (pickup.blocking) {
-            isBlockedByPickup = true; // Prevent movement if pickup blocks
+          if (player.pickups.length) {
+            for (let i = player.pickups.length - 1; i >= 0; i--) {
+              if (player.pickups[i].dropOffLocation === pickup.type) {
+                const playerPickup = { ...player.pickups[i] };
+                player.pickups.splice(i, 1); // Remove the item at index i
+                // Pickup is being dropped off!
+                const onDroppedOff = this.onPickupDroppedOff(
+                  player,
+                  playerPickup as Pickup
+                );
+
+                if (onDroppedOff?.restorePickup) {
+                  this.room.state.pickups.push(
+                    PickupFactory.createPickup(
+                      playerPickup.type,
+                      playerPickup.x,
+                      playerPickup.y,
+                      playerPickup
+                    )
+                  ); // Add it back
+                }
+              }
+            }
+          }
+
+          if (pickup.canCarry(player)) {
+            player.pickups.push(pickup);
           }
 
           if (pickup.playAudioOnPickup && pickup.audioKey) {
@@ -206,64 +234,6 @@ export class BaseTickCommand<
           if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
             return;
           }
-      
-          // Calculate the distance between the two players
-          const dx = player.x - otherPlayer.x;
-          const dy = player.y - otherPlayer.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-      
-          // Check for collision (distance < combined hit radius)
-          if (distance < player.hitRadius + otherPlayer.hitRadius) {
-            const overlap = player.hitRadius + otherPlayer.hitRadius - distance;
-      
-            // Normalize the collision vector (dx, dy)
-            const nx = dx / distance || 0;
-            const ny = dy / distance || 0;
-      
-            // Calculate the proposed new position
-            const proposedX = player.x + nx * overlap * 2;
-            const proposedY = player.y + ny * overlap * 2;
-      
-            // Check if the new position collides with the tilemap
-            const isCollidingInTilemap = this.tilemapManager.isColliding(
-              proposedX,
-              proposedY,
-              player.playerSize,
-              player.playerSize
-            );
-      
-            if (!isCollidingInTilemap) {
-              // Update player position if valid
-              player.x = proposedX;
-              player.y = proposedY;
-      
-              // Optionally, adjust the other player's position
-              const otherProposedX = otherPlayer.x - nx * overlap * 2;
-              const otherProposedY = otherPlayer.y - ny * overlap * 2;
-      
-              const otherPlayerColliding = this.tilemapManager.isColliding(
-                otherProposedX,
-                otherProposedY,
-                otherPlayer.playerSize,
-                otherPlayer.playerSize
-              );
-      
-              if (!otherPlayerColliding) {
-                otherPlayer.x = otherProposedX;
-                otherPlayer.y = otherProposedY;
-              }
-            }
-      
-            isColliding = true; // Collision occurred
-          }
-        });
-      }
-
-      if (!isColliding) {
-        this.room.state.players.forEach((otherPlayer) => {
-          if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
-            return;
-          }
 
           // Calculate the distance between the two players
           const dx = player.x - otherPlayer.x;
@@ -291,7 +261,7 @@ export class BaseTickCommand<
         });
       }
 
-      if (isBlockedByPickup || isColliding || !player.enabled) {
+      if (isColliding || !player.enabled) {
         isCurrentlyMoving = false;
       } else {
         player.x = newX;
@@ -575,5 +545,12 @@ export class BaseTickCommand<
         await respawnPlayer(player, this.tilemapManager);
       }, player.respawnDelay * 1000);
     }
+  }
+
+  onPickupDroppedOff(
+    player: Player,
+    pickup: Pickup
+  ): undefined | { restorePickup?: boolean } {
+    return undefined;
   }
 }

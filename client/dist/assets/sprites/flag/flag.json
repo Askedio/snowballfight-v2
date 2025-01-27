@@ -1,0 +1,125 @@
+{
+	"textures": [
+		{
+			"image": "flag.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 86,
+				"h": 316
+			},
+			"scale": 0.1,
+			"frames": [
+				{
+					"filename": "square_flag_02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 90,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 0,
+						"w": 84,
+						"h": 64
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 84,
+						"h": 64
+					}
+				},
+				{
+					"filename": "square_flag_03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 90,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 1,
+						"w": 84,
+						"h": 59
+					},
+					"frame": {
+						"x": 1,
+						"y": 67,
+						"w": 84,
+						"h": 59
+					}
+				},
+				{
+					"filename": "square_flag_01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 90,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 2,
+						"w": 82,
+						"h": 59
+					},
+					"frame": {
+						"x": 1,
+						"y": 128,
+						"w": 82,
+						"h": 59
+					}
+				},
+				{
+					"filename": "square_flag_04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 90,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 1,
+						"w": 81,
+						"h": 63
+					},
+					"frame": {
+						"x": 1,
+						"y": 189,
+						"w": 81,
+						"h": 63
+					}
+				},
+				{
+					"filename": "square_flag_05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 90,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 80,
+						"h": 61
+					},
+					"frame": {
+						"x": 1,
+						"y": 254,
+						"w": 80,
+						"h": 61
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:fb812314404aa8e0701e761444c3aee4:5bded5633696f04aae56061aa6622d48:649e98370082788fd8fd3ec33000549b$"
+	}
+}

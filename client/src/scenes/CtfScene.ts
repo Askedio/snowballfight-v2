@@ -28,4 +28,30 @@ export class CtfScene extends BaseScene {
       console.log("failed to initalize map");
     }
   }
+
+  preload() {
+    super.preload();
+
+    this.load.atlas(
+      "flag",
+      "/assets/sprites/flag/flag.png",
+      "/assets/sprites/flag/flag.json"
+    );
+  }
+
+  createAnimations() {
+      super.createAnimations();
+
+      if (this.anims.exists("flag")) {
+        return;
+      }
+  
+      this.anims.create({
+        key: "flag",
+        frames: "flag",
+        frameRate: 5,
+        repeat: -1,
+        hideOnComplete: false,
+      });
+  }
 }

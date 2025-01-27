@@ -38,7 +38,7 @@ export function Loading() {
           alt="Loading..."
         />
       </div>
-      prepairing the battlefield...
+      preparing the battlefield...
     </div>
   );
 }
