@@ -7,7 +7,7 @@ import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import { respawnPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
-import { generateBotInput, getNearestPlayer } from "../../lib/bots.lib";
+import { generateBotInput } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 
@@ -39,8 +39,7 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-        const target = getNearestPlayer(player, this.room.state.players); // Get nearest player (function below)
-        input = generateBotInput(player, target); // Function to create bot input
+        input = generateBotInput(player, this.room.state.players, this.room.state.pickups); // Function to create bot input
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();

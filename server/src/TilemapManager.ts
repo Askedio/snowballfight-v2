@@ -23,6 +23,7 @@ export class TilemapManager {
   private tileHeight: number;
   private mapJson: any;
   private players: any;
+  private collisionLayerName: string;
 
   constructor(
     mapFilePath: string,
@@ -32,6 +33,7 @@ export class TilemapManager {
   ) {
     this.players = players;
     this.collisionIndex = new RBush<CollisionTile>();
+    this.collisionLayerName = collisionLayerName;
 
     // Load and parse the map JSON
     const mapJson = JSON.parse(
@@ -136,7 +138,7 @@ export class TilemapManager {
         }
       );
 
-      console.log("Finding spawn", isFarEnough)
+      console.log("Finding spawn", isFarEnough);
 
       if (isFarEnough) {
         return { x: spawnX, y: spawnY };
@@ -197,5 +199,38 @@ export class TilemapManager {
     }
 
     return itemSpawnTiles;
+  }
+
+  /**
+   * Generates a collision grid for pathfinding.
+   * 0 = walkable tile, 1 = collision tile.
+   * @returns A 2D array representing the collision grid.
+   */
+  getCollisionGrid(): number[][] {
+    const collisionGrid: number[][] = [];
+
+    // Initialize the grid with empty rows
+    for (let y = 0; y < this.mapJson.height; y++) {
+      collisionGrid[y] = new Array(this.mapJson.width).fill(0);
+    }
+
+    // Populate the grid with collision data
+    const collisionLayer = this.mapJson.layers.find(
+      (layer: any) => layer.name === this.collisionLayerName // Replace with your collision layer name
+    );
+
+    if (!collisionLayer || collisionLayer.type !== "tilelayer") {
+      throw new Error("Collision layer not found or is not a tile layer!");
+    }
+
+    (collisionLayer.data as number[]).forEach((tileIndex, index) => {
+      const x = index % this.mapJson.width;
+      const y = Math.floor(index / this.mapJson.width);
+
+      // 0 indicates a walkable tile, non-zero is a collision
+      collisionGrid[y][x] = tileIndex !== 0 ? 1 : 0;
+    });
+
+    return collisionGrid;
   }
 }
