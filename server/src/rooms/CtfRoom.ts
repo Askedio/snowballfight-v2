@@ -8,7 +8,6 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
   maxClients = 10;
   mode = "ctf";
   scoring = "kills";
-  teams = false;
   maxBots = 1;
 
   // Map configuration

@@ -28,6 +28,7 @@ const defaultLanguage = {
 export function SpawnScreen() {
   const room = useColyseusRoom();
   const location = useLocation();
+  const [following, setFollowing] = useState(null);
 
   const local = location.pathname.split("/")[1];
   let gameMode = local;
@@ -61,6 +62,20 @@ export function SpawnScreen() {
   }, []);
 
   useEffect(() => {
+    if (!room) {
+      return;
+    }
+
+    // Handle round-over message
+    room.onMessage("round-over", ({ redScore, blueScore }) => {
+      if (room.state.mode === "ts") {
+        setFollowing("");
+        EventBus.emit("follow-player", room.sessionId);
+      }
+    });
+  }, [room]);
+
+  useEffect(() => {
     if (!room) return;
 
     room.onMessage("client-respawned", ({ sessionId }) => {
@@ -72,7 +87,12 @@ export function SpawnScreen() {
     room.onMessage(
       "player-death",
       ({ sessionId, player, killer, respawnDelay }) => {
-        if (sessionId === room.sessionId) {
+        if (sessionId === room.sessionId && room.state.mode === "ts") {
+          setFollowing(killer.name);
+          EventBus.emit("follow-player", killer.sessionId);
+        }
+
+        if (sessionId === room.sessionId && room.state.mode !== "ts") {
           setKilledBy(killer.name);
 
           setScreenLanguage({
@@ -174,6 +194,10 @@ export function SpawnScreen() {
   const handleRoomChange = (newRoomName: string) => {
     setSpawnState((prev) => ({ ...prev, roomName: newRoomName }));
   };
+
+  if (following) {
+    return <div className="following">Following {following}</div>;
+  }
 
   if (loading) {
     return null;

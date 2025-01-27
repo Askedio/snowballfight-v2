@@ -172,9 +172,9 @@ export class BaseOnCreateCommand<
       player.isDead = false;
       player.isReady = true;
 
-      player.enabled = false;
-      player.bulletFireRate = 0;
-      player.defaultBulletFireRate = 0;
+      //player.enabled = false;
+      //player.bulletFireRate = 0;
+      //player.defaultBulletFireRate = 0;
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

@@ -8,7 +8,7 @@ export class TsRoom extends BaseRoom<TsRoomState> {
   maxClients = 10;
   mode = "ts";
   scoring = "kills";
-  teams = false;
+  maxBots = 1;
 
   // Map configuration
   map = "../client/static/assets/maps/winter/map.json";

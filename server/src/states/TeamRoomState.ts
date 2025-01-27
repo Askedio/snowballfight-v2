@@ -21,16 +21,15 @@ export class TeamRoomState extends BaseRoomState {
   @type("boolean") waitingToStart = false;
   @type("boolean") requiresPlayerToReady = true;
 
-
   setRoundStartsAt() {
     const now = Date.now(); // Current timestamp in milliseconds
     const roundStartTime = new Date(now + this.roundStartsIn); // Add timeLimit to the current time
     this.roundStartsAt = roundStartTime.toISOString(); // Convert to ISO 8601 string
   }
 
-  setRoundEndsAt() {
+  setRoundEndsAt(limit: number = undefined) {
     const now = Date.now(); // Current timestamp in milliseconds
-    const roundEndTime = new Date(now + this.timeLimit); // Add timeLimit to the current time
+    const roundEndTime = new Date(now + (limit || this.timeLimit)); // Add timeLimit to the current time
     this.roundEndsAt = roundEndTime.toISOString(); // Convert to ISO 8601 string
   }
 }

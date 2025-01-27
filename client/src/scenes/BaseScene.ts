@@ -204,12 +204,18 @@ export class BaseScene extends Phaser.Scene {
         EventBus.removeAllListeners();
       });
 
+      EventBus.on("follow-player", (sessionId) => {
+        const playerContainer = this.children.getByName(sessionId);
+
+        this.cameras?.main?.startFollow(playerContainer, true);
+      });
+
       EventBus.on("disable-keyboard", () => {
         this.enableKeyboard = false;
       });
 
       EventBus.on("enable-keyboard", () => {
-        this.enableKeyboard = true
+        this.enableKeyboard = true;
       });
 
       EventBus.on("change-room", () => {
@@ -333,11 +339,11 @@ export class BaseScene extends Phaser.Scene {
             pickup.spriteFrame
           );
 
-          if(pickup.autoPlay) {
+          if (pickup.autoPlay) {
             (pickupEntity as Phaser.GameObjects.Sprite).play(pickup.asset);
           }
 
-          if(pickup.tint) {
+          if (pickup.tint) {
             (pickupEntity as Phaser.GameObjects.Sprite).setTint(pickup.tint);
           }
         } else {
@@ -394,7 +400,6 @@ export class BaseScene extends Phaser.Scene {
         } else {
           pickupContainer.setDepth(2);
         }
-        
 
         // Add the container to the pickup entities
         this.pickupEntities[pickup.id] = pickupContainer;
@@ -491,6 +496,8 @@ export class BaseScene extends Phaser.Scene {
         playerContainer.setSize(playerSprite.width, playerSprite.height);
 
         playerContainer.setDepth(3);
+
+        playerContainer.setName(sessionId);
 
         this.playerEntities[sessionId] = playerContainer;
 
