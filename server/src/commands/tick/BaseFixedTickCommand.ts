@@ -5,7 +5,7 @@ import { Bullet } from "../../schemas/Bullet";
 import type { Player } from "../../schemas/Player";
 import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
-import { resetPlayer, smoothAngle } from "../../lib/player.lib";
+import { respawnPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
 import { generateBotInput, getNearestPlayer } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
@@ -501,9 +501,8 @@ export class BaseTickCommand<
 
     if (player.type === "bot") {
       setTimeout(async () => {
-        console.log("bot?");
-        await resetPlayer(player, this.tilemapManager);
-      }, player.respawnDelay);
+        await respawnPlayer(player, this.tilemapManager);
+      }, player.respawnDelay * 1000);
     }
   }
 }

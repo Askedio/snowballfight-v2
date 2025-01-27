@@ -9,6 +9,7 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
   mode = "ctf";
   scoring = "kills";
   teams = false;
+  maxBots = 1;
 
   // Map configuration
   map = "../client/static/assets/maps/winter/map.json";

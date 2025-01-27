@@ -8,7 +8,7 @@ import type { InputData } from "../../interfaces/InputData";
 import { Player } from "../../schemas/Player";
 import { RandomNameGenerator } from "../../RandomNameGenerator";
 import { pickupItemTypes } from "../../pickups";
-import { assignRandomPosition, resetPlayer } from "../../lib/player.lib";
+import { assignRandomPosition, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
@@ -120,7 +120,7 @@ export class BaseOnCreateCommand<
 
           if (player.canRespawn()) {
             
-            await resetPlayer(player, this.tilemapManager);
+            await respawnPlayer(player, this.tilemapManager);
 
             this.room.broadcast("client-respawned", {
               sessionId: client.sessionId,
@@ -264,6 +264,8 @@ export class BaseOnCreateCommand<
 
       const generator = new RandomNameGenerator();
       player.name = generator.generateRandomName().name;
+      player.isDead = false;
+      player.isReady = true;
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

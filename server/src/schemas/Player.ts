@@ -94,7 +94,6 @@ export class Player extends Schema {
   // Chat
   @type("number") lastChatted: number;
 
-
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
 
@@ -117,6 +116,13 @@ export class Player extends Schema {
     this.deaths = 0;
     this.kills = 0;
     this.isDead = false;
+
+    this.bulletSpeed = this.defaultBulletSpeed;
+    this.bulletCooldown = this.defaultBulletCooldown;
+    this.bulletFireRate = this.defaultBulletFireRate;
+    this.bulletFireDelay = this.defaultBulletFireDelay;
+
+    this.ammoUnlimited = this.defaultAmmoUnlimited;
   }
 
   resetTimeouts: Map<string, NodeJS.Timeout> = new Map<

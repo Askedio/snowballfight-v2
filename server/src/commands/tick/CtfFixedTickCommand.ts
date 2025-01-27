@@ -46,6 +46,10 @@ export class CtfFixedTickCommand extends BaseTickCommand<
         this.state.players.forEach(async (player) => {
           player.isDead = true;
           await assignRandomPosition(player, this.tilemapManager); // Respawn at a new position
+
+          this.room.broadcast("client-respawned", {
+            sessionId: player.sessionId,
+          });
         });
       }
     } else {
@@ -128,6 +132,10 @@ export class CtfFixedTickCommand extends BaseTickCommand<
 
   setPlayerUnready() {
     this.state.players.forEach((player) => {
+      if (player.type === "bot") {
+        return;
+      }
+
       player.isReady = false;
     });
 
