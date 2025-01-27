@@ -21,7 +21,7 @@
 
 
 .player-stats{ 
-  @apply flex items-center w-full gap-3 text-xs mt-8 mb-12;
+  @apply flex items-center w-full gap-3 text-xs mt-8 mb-12 justify-between;
 
   img {
     @apply mx-auto

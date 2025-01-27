@@ -7,7 +7,7 @@ export async function respawnPlayer(
 ) {
   await assignRandomPosition(player, tilemapManager); // Respawn at a new position
 
-  player.reset();
+  player.respawn();
 
   // Respawn protection.
   player.isProtected = true;

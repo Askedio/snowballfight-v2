@@ -122,7 +122,19 @@ export class Player extends Schema {
     this.bulletCooldown = this.defaultBulletCooldown;
     this.bulletFireRate = this.defaultBulletFireRate;
     this.bulletFireDelay = this.defaultBulletFireDelay;
+    this.ammoUnlimited = this.defaultAmmoUnlimited;
+  }
 
+  respawn() {
+    this.ammo = this.defaultAmmo;
+    this.speed = this.defaultSpeed;
+    this.health = this.defaultHealth;
+    this.isDead = false;
+
+    this.bulletSpeed = this.defaultBulletSpeed;
+    this.bulletCooldown = this.defaultBulletCooldown;
+    this.bulletFireRate = this.defaultBulletFireRate;
+    this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
   }
 

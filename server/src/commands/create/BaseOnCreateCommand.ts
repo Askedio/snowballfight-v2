@@ -86,7 +86,7 @@ export class BaseOnCreateCommand<
 
     // Rejoin message handler
     this.room.onMessage(
-      "rejoin",
+      "respawn",
       async (client, { playerName, roomName, skin }) => {
         console.log("Player attempting to rejoin...")
         // Check if the player exists in the room state
@@ -114,12 +114,11 @@ export class BaseOnCreateCommand<
             player.name = player.name || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
           }
           console.log(`${client.sessionId} is respawning to room ${roomName}.`);
-          if (skin) {
+          if (skin && !player.team) {
             player.skin = skin;
           }
 
           if (player.canRespawn()) {
-            
             await respawnPlayer(player, this.tilemapManager);
 
             this.room.broadcast("client-respawned", {

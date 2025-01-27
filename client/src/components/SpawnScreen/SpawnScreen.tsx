@@ -113,7 +113,7 @@ export function SpawnScreen() {
   }, [respawnDelay]);
 
   useEffect(() => {
-    if(!spawnState.roomName) return
+    if (!spawnState.roomName) return;
     const connect = async () => {
       await connectToRoom();
       window.history.pushState(
@@ -143,7 +143,7 @@ export function SpawnScreen() {
   const handleJoinButtonClick = async () => {
     setLastRoomName(spawnState.roomName);
 
-    room.send("rejoin", {
+    room.send("respawn", {
       playerName: spawnState.playerName,
       roomName: spawnState.roomName,
       skin: spawnState.skin,
@@ -202,13 +202,15 @@ export function SpawnScreen() {
           onChange={handleGameModeChange}
         />
 
-        <div className="w-32">
-          <Dropdown
-            options={skins}
-            selected={spawnState.skin}
-            onChange={handleSkinChange}
-          />
-        </div>
+        {spawnState.gameMode === "ffa" && (
+          <div className="w-32">
+            <Dropdown
+              options={skins}
+              selected={spawnState.skin}
+              onChange={handleSkinChange}
+            />
+          </div>
+        )}
       </div>
 
       <button

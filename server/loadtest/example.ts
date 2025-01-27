@@ -6,7 +6,7 @@ async function main(options: Options) {
   const client = new Client(options.endpoint);
   const room: Room = await client.joinOrCreate(options.roomName, {});
  
-  // room.send("rejoin");
+  // room.send("respawn");
 
   console.log("joined successfully!");
 

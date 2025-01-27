@@ -1081,6 +1081,7 @@ input {
 }
 
 .player-stats {
+  justify-content: space-between;
   align-items: center;
   gap: .75rem;
   width: 100%;

@@ -20,4 +20,6 @@ export function assignTeam(player: Player, players: MapSchema<Player, string>) {
     player.team = "blue";
     player.skin = "playersd";
   }
+
+  console.log(player.name, player.skin)
 }
