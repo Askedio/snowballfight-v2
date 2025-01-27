@@ -37,7 +37,6 @@ export function RoundComplete() {
   }, [room, players]);
 
   const getSkinImage = (skinValue = "playersa") => {
-    console.log(skinValue)
     const skin = skins.find((s) => s.value === skinValue);
     return skin ? skin.image : null;
   };
@@ -60,15 +59,9 @@ export function RoundComplete() {
     });
 
     return {
-      topScorer: topScorer
-        ? { name: topScorer.name, score: topScorer.score }
-        : null,
-      topKiller: topKiller
-        ? { name: topKiller.name, kills: topKiller.kills }
-        : null,
-      topDeaths: topDeaths
-        ? { name: topDeaths.name, deaths: topDeaths.deaths }
-        : null,
+      topScorer,
+      topKiller,
+      topDeaths
     };
   };
 

@@ -45,6 +45,7 @@ export class CtfFixedTickCommand extends BaseTickCommand<
 
         this.state.players.forEach(async (player) => {
           player.isDead = true;
+          
           await assignRandomPosition(player, this.tilemapManager); // Respawn at a new position
 
           this.room.broadcast("client-respawned", {

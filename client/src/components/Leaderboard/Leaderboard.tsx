@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useColyseusState } from "../../lib/colyseus";
+import { useColyseusRoom, useColyseusState } from "../../lib/colyseus";
 import "./Leaderboard.css";
 
 interface Player {
@@ -12,19 +12,25 @@ interface Player {
 
 export function Leaderboard() {
   const clients = useColyseusState((state) => state.players);
+  const room = useColyseusRoom();
+  const state = useColyseusState(); // Get the entire room state
+ 
   const [isLeaderboardVisible, setLeaderboardVisible] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
 
   // Update players when roomState.players changes
   useEffect(() => {
     if (clients) {
-      const playersList = Array.from(clients.entries()).map(([sessionId, player]: any) => ({
-        sessionId,
-        name: player.name || "",
-        kills: player.kills || 0,
-        deaths: player.deaths || 0,
-        isDead: player.isDead || false,
-      }));
+      const playersList = Array.from(clients.entries()).map(
+        ([sessionId, player]: any) => ({
+          sessionId,
+          name: player.name || "",
+          kills: player.kills || 0,
+          deaths: player.deaths || 0,
+          isDead: player.isDead || false,
+        })
+      );
+
       setPlayers(playersList);
     }
   }, [clients]);
@@ -56,10 +62,12 @@ export function Leaderboard() {
     };
   }, []);
 
+  if (!isLeaderboardVisible) {
+    return;
+  }
+
   return (
-    <div
-      className={`leaderboard-container ${isLeaderboardVisible ? "block" : "hidden"}`}
-    >
+    <div className="leaderboard-container">
       <h3 className="leaderboard-title">Leaderboard</h3>
       <table className="leaderboard-table">
         <thead>
@@ -73,10 +81,14 @@ export function Leaderboard() {
         <tbody className="leaderboard-body">
           {players.map((player) => (
             <tr key={player.sessionId} className="leaderboard-row">
-              <td className="leaderboard-td">{player.name || player.sessionId}</td>
+              <td className="leaderboard-td">
+                {player.name || player.sessionId}
+              </td>
               <td className="leaderboard-td">{player.kills}</td>
               <td className="leaderboard-td">{player.deaths}</td>
-              <td className="leaderboard-td">{player.isDead ? "Dead" : "Alive"}</td>
+              <td className="leaderboard-td">
+                {player.isDead ? "Dead" : "Alive"}
+              </td>
             </tr>
           ))}
         </tbody>

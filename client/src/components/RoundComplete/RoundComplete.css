@@ -1,4 +1,16 @@
-/* Modal Styles */
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 10s linear infinite;
+}
+
 .round-ended {
   @apply text-center;
 
@@ -19,19 +31,18 @@
   }
 }
 
-
-.player-stats{ 
+.player-stats {
   @apply flex items-center w-full gap-3 text-xs mt-8 mb-12 justify-between;
 
   img {
-    @apply mx-auto
+    @apply mx-auto animate-spin-slow;
   }
 
   h3 {
-    @apply font-bold
+    @apply font-bold;
   }
 
   div {
-    @apply text-center
+    @apply text-center;
   }
 }

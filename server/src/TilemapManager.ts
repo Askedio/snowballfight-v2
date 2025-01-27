@@ -30,7 +30,6 @@ export class TilemapManager {
     spawnLayerName: string,
     players: any
   ) {
-
     this.players = players;
     this.collisionIndex = new RBush<CollisionTile>();
 
@@ -105,9 +104,10 @@ export class TilemapManager {
     if (this.spawnTiles.length === 0) {
       throw new Error("No spawn tiles found!");
     }
-  
+
     // If there are no players, pick any random spawn tile
     if (this.players.size === 0) {
+      console.warn("No players, picking random spawn.");
       const randomTile =
         this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
       return {
@@ -115,31 +115,38 @@ export class TilemapManager {
         y: randomTile.y + this.tileHeight / 2,
       };
     }
-  
-    const minDistance = this.tileWidth * 2; // Minimum distance from other players (adjust as needed)
+
+    const minDistance = this.tileWidth; // Minimum distance from other players (adjust as needed)
     const maxIterations = 50; // Fallback after 50 iterations
     let iterations = 0;
-  
+
     while (true) {
       const randomTile =
         this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
-  
+
       const spawnX = randomTile.x + this.tileWidth / 2; // Center the spawn
       const spawnY = randomTile.y + this.tileHeight / 2;
-  
+
       // Check distance from all players
-      const isFarEnough = Array.from(this.players.values()).every((player: any) => {
-        const distance = ((spawnX - player.x) ** 2 + (spawnY - player.y) ** 2) ** 0.5;
-        return distance >= minDistance;
-      });
-  
+      const isFarEnough = Array.from(this.players.values()).every(
+        (player: any) => {
+          const distance =
+            ((spawnX - player.x) ** 2 + (spawnY - player.y) ** 2) ** 0.5;
+          return distance >= minDistance;
+        }
+      );
+
+      console.log("Finding spawn", isFarEnough)
+
       if (isFarEnough) {
         return { x: spawnX, y: spawnY };
       }
-  
+
       iterations++;
       if (iterations >= maxIterations) {
-        console.warn("Fallback spawn: Could not find a valid spawn after max iterations.");
+        console.warn(
+          "Fallback spawn: Could not find a valid spawn after max iterations."
+        );
         const fallbackTile =
           this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
         return {
@@ -147,12 +154,11 @@ export class TilemapManager {
           y: fallbackTile.y + this.tileHeight / 2,
         };
       }
-  
+
       // Delay for 10ms to prevent blocking
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
   }
-  
 
   /**
    * Checks if a given rectangle collides with any collision tiles.
@@ -175,21 +181,21 @@ export class TilemapManager {
   getItemSpawnTiles(offsetX = 20, offsetY = 45): { x: number; y: number }[] {
     const itemSpawnTiles: { x: number; y: number }[] = [];
     const itemLayer = this.mapJson.layers.find(
-        (layer: any) => layer.name === "itemspawns"
+      (layer: any) => layer.name === "itemspawns"
     );
 
     if (itemLayer && itemLayer.type === "tilelayer") {
-        (itemLayer.data as number[]).forEach((tileIndex, index) => {
-            if (tileIndex !== 0) {
-                // Non-zero indicates a spawn tile
-                const x = (index % this.mapJson.width) * this.tileWidth + offsetX;
-                const y = Math.floor(index / this.mapJson.width) * this.tileHeight + offsetY;
-                itemSpawnTiles.push({ x, y });
-            }
-        });
+      (itemLayer.data as number[]).forEach((tileIndex, index) => {
+        if (tileIndex !== 0) {
+          // Non-zero indicates a spawn tile
+          const x = (index % this.mapJson.width) * this.tileWidth + offsetX;
+          const y =
+            Math.floor(index / this.mapJson.width) * this.tileHeight + offsetY;
+          itemSpawnTiles.push({ x, y });
+        }
+      });
     }
 
     return itemSpawnTiles;
-}
-
+  }
 }

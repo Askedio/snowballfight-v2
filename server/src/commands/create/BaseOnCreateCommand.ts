@@ -265,6 +265,7 @@ export class BaseOnCreateCommand<
       player.name = generator.generateRandomName().name;
       player.isDead = false;
       player.isReady = true;
+      player.enabled = false
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

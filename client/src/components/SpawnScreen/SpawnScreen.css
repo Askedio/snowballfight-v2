@@ -1,5 +1,5 @@
 .killedBy {
-  @apply absolute -mt-[53px] text-xs overflow-hidden w-fit left-1/2 transform -translate-x-1/2 px-2 py-0.5 whitespace-nowrap text-ellipsis border border-white/70 border-b-0 rounded-t-md rounded-b-none bg-gray-900/75;
+  @apply absolute -mt-[54px] text-xs overflow-hidden w-fit left-1/2 transform -translate-x-1/2 px-2 py-0.5 whitespace-nowrap text-ellipsis border border-gray-600 border-b-0 rounded-t-md rounded-b-none bg-gray-800/90;
 
   &:empty {
     @apply hidden;
