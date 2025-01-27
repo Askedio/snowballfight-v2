@@ -31,12 +31,19 @@ export function RoundComplete() {
     <div className="round-ended modal">
       <h1>This round is over!</h1>
 
-      <p>Click ready to start the next round!</p>
+      {scores.redScore === scores.blueScore && <div>Draw</div>}
+      {scores.redScore > scores.blueScore && <div>Red Wins</div>}
+      {scores.redScore < scores.blueScore && <div>Blue Wins</div>}
 
+     
       <div className="stats">
         <div className="round-ended-red">{scores.redScore}</div>
+        to
         <div className="round-ended-blue">{scores.blueScore}</div>
       </div>
+      
+       <p>Click ready to start the next round.</p>
+
     </div>
   );
 }

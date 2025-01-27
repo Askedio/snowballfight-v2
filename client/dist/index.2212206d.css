@@ -285,12 +285,21 @@ img, video {
   position: relative;
 }
 
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
 
 .mt-3 {
   margin-top: .75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
 }
 
 .block {
@@ -331,6 +340,10 @@ img, video {
 
 .gap-6 {
   gap: 1.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
 }
 
 .border {
@@ -1039,10 +1052,10 @@ input {
   }
 
   & .stats {
-    gap: 0;
+    align-items: center;
+    gap: 1rem;
     width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 1rem auto;
     display: flex;
   }
 
@@ -1050,14 +1063,18 @@ input {
     & .round-ended-red {
       --tw-bg-opacity: 1;
       background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+      border-radius: .5rem;
       width: fit-content;
+      min-width: 3rem;
       padding: .375rem .75rem;
     }
 
     & .round-ended-blue {
       --tw-bg-opacity: 1;
       background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+      border-radius: .5rem;
       width: fit-content;
+      min-width: 3rem;
       padding: .375rem .75rem;
     }
   }

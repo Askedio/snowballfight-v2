@@ -7,14 +7,14 @@
   }
 
   .stats {
-    @apply flex gap-0 mx-auto w-fit;
+    @apply flex gap-4 mx-auto w-fit my-4 items-center;
 
     .round-ended-red {
-      @apply bg-red-500 py-1.5 px-3 w-fit;
+      @apply bg-red-500 py-1.5 px-3 w-fit rounded-lg min-w-12;
     }
 
     .round-ended-blue {
-      @apply bg-blue-500 py-1.5 px-3 w-fit;
+      @apply bg-blue-500 py-1.5 px-3 w-fit rounded-lg min-w-12;
     }
   }
 }
