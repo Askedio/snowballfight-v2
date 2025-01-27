@@ -1,18 +1,16 @@
 import { Command } from "@colyseus/command";
 import { matchMaker, type Client } from "colyseus";
 import type { TilemapManager } from "../../TilemapManager";
-import { PickupFactory } from "../../pickups/PickupFactory";
 import { nanoid } from "nanoid";
 import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";
 import { Player } from "../../schemas/Player";
 import { RandomNameGenerator } from "../../RandomNameGenerator";
-import { pickupItemTypes } from "../../pickups";
 import { assignRandomPosition, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
-import { spawnPickups } from "../../lib/pickups.lib";
+import { spawnRandomPickups } from "../../lib/pickups.lib";
 
 const profanity = new Profanity({
   languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
@@ -146,7 +144,7 @@ export class BaseOnCreateCommand<
   }
 
   spawnPickups() {
-    spawnPickups(this.tilemapManager, this.room);
+    spawnRandomPickups(this.tilemapManager, this.room);
   }
 
   async createPlayer(

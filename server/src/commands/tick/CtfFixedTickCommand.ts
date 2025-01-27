@@ -7,7 +7,11 @@ import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
 import { assignRandomPosition } from "../../lib/player.lib";
 import type { Pickup } from "../../schemas/Pickup";
-import { removeAllPickups, spawnPickups } from "../../lib/pickups.lib";
+import {
+  removeAllPickups,
+  spawnPickupFromObjectLayer,
+  spawnRandomPickups,
+} from "../../lib/pickups.lib";
 
 export class CtfFixedTickCommand extends BaseTickCommand<
   CtfRoom,
@@ -74,7 +78,25 @@ export class CtfFixedTickCommand extends BaseTickCommand<
         // Start round!
         if (timeLeft <= 0) {
           removeAllPickups(this.tilemapManager, this.room);
-          spawnPickups(this.tilemapManager, this.room);
+          spawnRandomPickups(this.tilemapManager, this.room);
+
+          // Spawn the red flag
+          spawnPickupFromObjectLayer(
+            this.tilemapManager,
+            this.room,
+            "flags",
+            "redFlag",
+            "redFlag"
+          );
+
+          // Spawn the blue flag
+          spawnPickupFromObjectLayer(
+            this.tilemapManager,
+            this.room,
+            "flags",
+            "blueFlag",
+            "blueFlag"
+          );
 
           this.state.redScore = 0;
           this.state.blueScore = 0;

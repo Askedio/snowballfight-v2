@@ -22,11 +22,10 @@ export class RedFlagPickup extends Pickup {
 
   canCarry(player: Player): boolean {
     return player.team === "blue";
-
   }
 
   onPlayerCollision(player: any): void {
-    //
+    this.destroyOnCollision = player.team !== "red";
   }
 
   onBulletCollision(): boolean {

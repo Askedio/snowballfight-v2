@@ -180,7 +180,10 @@ export class BaseTickCommand<
             }
           }
 
-          if (pickup.canCarry(player)) {
+          if (
+            pickup.canCarry(player) &&
+            !player.pickups.find((_) => _.type === pickup.type)
+          ) {
             player.pickups.push(pickup);
           }
 

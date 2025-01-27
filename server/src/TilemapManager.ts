@@ -17,13 +17,13 @@ export interface CollisionTile {
 }
 
 export class TilemapManager {
-  private collisionIndex: RBush<CollisionTile>;
-  private spawnTiles: TileBounds[] = [];
-  private tileWidth: number;
-  private tileHeight: number;
-  private mapJson: any;
+  collisionIndex: RBush<CollisionTile>;
+  spawnTiles: TileBounds[] = [];
+  tileWidth: number;
+  tileHeight: number;
+  mapJson: any;
   private players: any;
-  private collisionLayerName: string;
+  collisionLayerName: string;
 
   constructor(
     mapFilePath: string,
