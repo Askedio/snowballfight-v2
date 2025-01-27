@@ -12,10 +12,19 @@
 }
 
 .menu-player-stats {
-  @apply flex flex-row items-center md:space-x-0 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0;
+  @apply flex flex-row items-center md:space-x-0 mb-0 text-xs bg-gray-900 bg-opacity-75 rounded-b-lg shadow-lg flex items-center border-2 border-white/20 border-t-0 overflow-hidden;
+
+  &.red {
+    @apply bg-red-500;
+  }
+
+  &.blue {
+    @apply bg-blue-500; 
+  }
+
 
   div {
-    @apply m-0 px-3 flex items-center gap-3;
+    @apply m-0 px-2 flex items-center gap-3;
 
     span {
       @apply bg-gray-700 py-1.5 w-[48px] block text-center;
@@ -41,4 +50,8 @@
       @apply bg-gray-700 py-1.5 w-[48px] block text-center;
     }
   }
+}
+
+.player-team{
+  @apply bg-gray-700 capitalize py-1.5
 }

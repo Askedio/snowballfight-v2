@@ -115,6 +115,7 @@ export class Player extends Schema {
     this.health = this.defaultHealth;
     this.deaths = 0;
     this.kills = 0;
+    this.score = 0;
     this.isDead = false;
 
     this.bulletSpeed = this.defaultBulletSpeed;

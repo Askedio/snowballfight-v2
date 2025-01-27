@@ -14,14 +14,18 @@ export function Menu() {
   // Default values in case player data is not available yet
   const [kills, setKills] = useState(player?.kills || 0);
   const [deaths, setDeaths] = useState(player?.deaths || 0);
+  const [score, setScore] = useState(player?.score || 0);
+  const [team, setTeam] = useState(player?.team || "");
 
   // Re-fetch player data when it changes
   useEffect(() => {
     if (player) {
       setKills(player.kills || 0);
       setDeaths(player.deaths || 0);
+      setScore(player.score || 0);
+      setTeam(player.team || "");
     }
-  }, [player?.kills, player?.deaths]);
+  }, [player?.kills, player?.deaths, player?.score, player?.team]);
 
   const {
     waitingToStart,
@@ -45,7 +49,7 @@ export function Menu() {
         const now = Date.now();
         const timeLeft = endTime - now;
         const seconds = Math.ceil(timeLeft / 1000);
-    
+
         if (seconds <= 0) {
           setRoundTime("NOW!");
         } else {
@@ -55,7 +59,7 @@ export function Menu() {
         const endTime = new Date(roundEndsAt).getTime(); // Ensure this gets a valid timestamp
         const now = Date.now();
         const timeLeft = endTime - now;
-    
+
         if (timeLeft <= 0) {
           setRoundTime("00:00");
         } else {
@@ -67,7 +71,6 @@ export function Menu() {
         }
       }
     };
-    
 
     // Update time immediately and then at regular intervals
     updateRoundTime();
@@ -82,11 +85,13 @@ export function Menu() {
 
   return (
     <div className="menu">
-      <div className="menu-player-stats">
+      <div className={`menu-player-stats ${team}`}>
         {teamScoring && (
+          <>
+          <div className="player-team">{team} team</div>
           <div className="team-player-stats">
-            score <span className="active-player-score">0</span>
-          </div>
+            score <span className="active-player-score">{score}</span>
+          </div></>
         )}
         <div>
           kills <span className="active-player-kills">{kills}</span>

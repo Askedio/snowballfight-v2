@@ -98,6 +98,8 @@ export class CtfFixedTickCommand extends BaseTickCommand<
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
     super.onPlayerDeath(sessionId, player, shooter);
 
+    shooter.score += 1;
+
     if (shooter.team === "red") {
       this.room.state.redScore += 1;
     } else if (shooter.team === "blue") {

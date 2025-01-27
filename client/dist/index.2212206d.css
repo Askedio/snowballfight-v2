@@ -862,6 +862,7 @@ input {
   font-size: .75rem;
   line-height: 1rem;
   display: flex;
+  overflow: hidden;
 }
 
 @media (width >= 768px) {
@@ -873,12 +874,22 @@ input {
 }
 
 .menu-player-stats {
+  &.red {
+    --tw-bg-opacity: 1;
+    background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+  }
+
+  &.blue {
+    --tw-bg-opacity: 1;
+    background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+  }
+
   & div {
     align-items: center;
     gap: .75rem;
     margin: 0;
-    padding-left: .75rem;
-    padding-right: .75rem;
+    padding-left: .5rem;
+    padding-right: .5rem;
     display: flex;
   }
 
@@ -955,6 +966,14 @@ input {
       display: block;
     }
   }
+}
+
+.player-team {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
+  text-transform: capitalize;
+  padding-top: .375rem;
+  padding-bottom: .375rem;
 }
 
 .player-ready {
