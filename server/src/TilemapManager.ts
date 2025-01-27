@@ -180,10 +180,14 @@ export class TilemapManager {
     return result.length > 0;
   }
 
-  getItemSpawnTiles(offsetX = 20, offsetY = 45): { x: number; y: number }[] {
+  getItemSpawnTiles(
+    layer = "itemspawns",
+    offsetX = 20,
+    offsetY = 45
+  ): { x: number; y: number }[] {
     const itemSpawnTiles: { x: number; y: number }[] = [];
     const itemLayer = this.mapJson.layers.find(
-      (layer: any) => layer.name === "itemspawns"
+      (_layer: any) => _layer.name === layer
     );
 
     if (itemLayer && itemLayer.type === "tilelayer") {

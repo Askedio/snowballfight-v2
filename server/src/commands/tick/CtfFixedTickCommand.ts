@@ -7,8 +7,6 @@ import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
 import { assignRandomPosition } from "../../lib/player.lib";
 import type { Pickup } from "../../schemas/Pickup";
-import { PickupFactory } from "../../pickups/PickupFactory";
-import { nanoid } from "nanoid";
 import { removeAllPickups, spawnPickups } from "../../lib/pickups.lib";
 
 export class CtfFixedTickCommand extends BaseTickCommand<

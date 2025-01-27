@@ -8,8 +8,13 @@ export function removeAllPickups(tilemapManager: TilemapManager, room: Room) {
   room.state.pickups = [];
 }
 
-export function spawnPickups(tilemapManager: TilemapManager, room: Room) {
-  const spawnTiles = tilemapManager.getItemSpawnTiles(); // Get all spawn tiles
+export function spawnPickups(
+  tilemapManager: TilemapManager,
+  room: Room,
+  type = "all",
+  layer = "itemspawns"
+) {
+  const spawnTiles = tilemapManager.getItemSpawnTiles(layer); // Get all spawn tiles
 
   let itemsSpawned = 0;
   const maxItems = 40; // Limit to 40 items
