@@ -5,7 +5,7 @@ import { BaseRoom } from "./BaseRoom";
 
 export class CtfRoom extends BaseRoom<CtfRoomState> {
   // Game configuration
-  maxClients = 20;
+  maxClients = 10;
   mode = "ctf";
   scoring = "kills";
   teams = false;
