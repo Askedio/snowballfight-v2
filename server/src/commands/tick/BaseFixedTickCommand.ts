@@ -13,9 +13,9 @@ import type { BaseRoomState } from "../../states/BaseRoomState";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
-  TRoom extends BaseRoom<TState>, // Room type that extends BaseRoom with TState
-  TState extends BaseRoomState // The schema (state) type for the room
-  // The schema (state) type for the room
+  TRoom extends BaseRoom<TState>,
+  TState extends BaseRoomState
+ 
 > extends Command<
   TRoom,
   { tilemapManager: TilemapManager; collisionSystem: Collision }
