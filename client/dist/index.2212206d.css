@@ -301,6 +301,10 @@ img, video {
   display: table;
 }
 
+.h-full {
+  height: 100%;
+}
+
 .w-32 {
   width: 8rem;
 }
@@ -327,6 +331,11 @@ img, video {
 
 .border {
   border-width: 1px;
+}
+
+.bg-\[\#0C3367\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(12 51 103 / var(--tw-bg-opacity, 1));
 }
 
 .text-2xl {
@@ -481,6 +490,16 @@ input {
   outline: 2px solid #0000;
 }
 
+#loading-wrapper {
+  z-index: 50;
+  --tw-bg-opacity: 1;
+  background-color: rgb(204 228 240 / var(--tw-bg-opacity, 1));
+  border-width: 4px;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+}
+
 #loading {
   --tw-translate-x: -50%;
   --tw-translate-y: -50%;
@@ -489,7 +508,7 @@ input {
   color: rgb(0 0 0 / var(--tw-text-opacity, 1));
   font-size: .875rem;
   line-height: 1.25rem;
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
 }

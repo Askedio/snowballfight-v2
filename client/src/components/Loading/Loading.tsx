@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { EventBus } from "../../lib/EventBus";
-import "./Loading.css"
+import "./Loading.css";
 
 export function Loading() {
   const [loading, setLoading] = useState(true);
@@ -20,25 +20,27 @@ export function Loading() {
   }
 
   return (
-    <div id="loading">
-      <div className="loading-container">
-        <img
-          className="loading-image"
-          src="/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
-        <img
-          className="loading-image"
-          src="/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
-        <img
-          className="loading-image"
-          src="/assets/images/weapons/snowball.png"
-          alt="Loading..."
-        />
+    <div id="loading-wrapper">
+      <div id="loading">
+        <div className="loading-container">
+          <img
+            className="loading-image"
+            src="/assets/images/weapons/snowball.png"
+            alt="Loading..."
+          />
+          <img
+            className="loading-image"
+            src="/assets/images/weapons/snowball.png"
+            alt="Loading..."
+          />
+          <img
+            className="loading-image"
+            src="/assets/images/weapons/snowball.png"
+            alt="Loading..."
+          />
+        </div>
+        preparing the battlefield...
       </div>
-      preparing the battlefield...
     </div>
   );
 }
