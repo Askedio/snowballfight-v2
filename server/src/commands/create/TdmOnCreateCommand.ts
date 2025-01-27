@@ -1,11 +1,11 @@
 import type { TdmRoomState } from "./../../states/TdmRoomState";
 import type { TdmRoom } from "./../../rooms/TdmRoom";
 import type { TilemapManager } from "../../TilemapManager";
-import { BaseOnCreateCommand } from "./BaseOnCreateCommand";
 import type { Client } from "colyseus";
 import { assignTeam } from "../../lib/teams.lib";
+import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";
 
-export class TdmOnCreateCommand extends BaseOnCreateCommand<TdmRoom, TdmRoomState> {
+export class TdmOnCreateCommand extends BaseTeamOnCreateCommand<TdmRoom, TdmRoomState> {
   tilemapManager: TilemapManager;
   maxBots: number;
 

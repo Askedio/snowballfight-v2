@@ -20,7 +20,6 @@ const profanity = new Profanity({
 export class BaseOnCreateCommand<
   TRoom extends BaseRoom<TState>,
   TState extends BaseRoomState
- 
 > extends Command<TRoom, { tilemapManager: TilemapManager; maxBots: number }> {
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
@@ -173,9 +172,9 @@ export class BaseOnCreateCommand<
       player.isDead = false;
       player.isReady = true;
 
-       player.enabled = false;
-       player.bulletFireRate = 0;
-       player.defaultBulletFireRate = 0;
+      player.enabled = false;
+      player.bulletFireRate = 0;
+      player.defaultBulletFireRate = 0;
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

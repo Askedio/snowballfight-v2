@@ -1,11 +1,11 @@
 import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
-import { BaseTickCommand } from "./BaseFixedTickCommand";
 import type { TdmRoom } from "../../rooms/TdmRoom";
 import type { Player } from "../../schemas/Player";
 import type { TdmRoomState } from "../../states/TdmRoomState";
+import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";
 
-export class TdmFixedTickCommand extends BaseTickCommand<
+export class TdmFixedTickCommand extends BaseTeamFixedTickCommand<
   TdmRoom,
   TdmRoomState
 > {

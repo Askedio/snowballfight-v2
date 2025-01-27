@@ -2,10 +2,10 @@ import type { TsRoomState } from "./../../states/TsRoomState";
 import type { TsRoom } from "./../../rooms/TsRoom";
 import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
-import { BaseTickCommand } from "./BaseFixedTickCommand";
 import type { Player } from "../../schemas/Player";
+import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";
 
-export class TsFixedTickCommand extends BaseTickCommand<TsRoom, TsRoomState> {
+export class TsFixedTickCommand extends BaseTeamFixedTickCommand<TsRoom, TsRoomState> {
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
 

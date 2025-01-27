@@ -1,11 +1,11 @@
 import type { TsRoomState } from "../../states/TsRoomState";
 import type { TsRoom } from "../../rooms/TsRoom";
 import type { TilemapManager } from "../../TilemapManager";
-import { BaseOnCreateCommand } from "./BaseOnCreateCommand";
 import type { Client } from "colyseus";
 import { assignTeam } from "../../lib/teams.lib";
+import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";
 
-export class TsOnCreateCommand extends BaseOnCreateCommand<
+export class TsOnCreateCommand extends BaseTeamOnCreateCommand<
   TsRoom,
   TsRoomState
 > {
