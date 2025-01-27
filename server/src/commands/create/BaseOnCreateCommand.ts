@@ -14,7 +14,7 @@ import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
 
 const profanity = new Profanity({
-  languages: ['ar', "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
+  languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
 });
 
 // When a room is created.
@@ -25,6 +25,7 @@ export class BaseOnCreateCommand<
 > extends Command<TRoom, { tilemapManager: TilemapManager; maxBots: number }> {
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
+  generator = new RandomNameGenerator();
 
   async execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
@@ -54,7 +55,7 @@ export class BaseOnCreateCommand<
       const player = this.room.state.players.get(client.sessionId);
 
       if (player && message?.trim() !== "") {
-        if(player.lastChatted && Date.now() - player.lastChatted < 2000) {
+        if (player.lastChatted && Date.now() - player.lastChatted < 2000) {
           return;
         }
 
@@ -88,7 +89,7 @@ export class BaseOnCreateCommand<
     this.room.onMessage(
       "respawn",
       async (client, { playerName, roomName, skin }) => {
-        console.log("Player attempting to rejoin...")
+        console.log("Player attempting to rejoin...");
         // Check if the player exists in the room state
         let player = this.room.state.players.get(client.sessionId);
 
@@ -109,9 +110,8 @@ export class BaseOnCreateCommand<
           if (playerName !== "") {
             player.name = profanity.censor(playerName);
           } else {
-            const generator = new RandomNameGenerator();
-
-            player.name = player.name || generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
+            player.name =
+              player.name || this.generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
           }
           console.log(`${client.sessionId} is respawning to room ${roomName}.`);
           if (skin && !player.team) {
@@ -261,11 +261,13 @@ export class BaseOnCreateCommand<
       player.sessionId = `bot_${nanoid()}`; // Assign unique ID for bots
       this.room.state.players.set(player.sessionId, player);
 
-      const generator = new RandomNameGenerator();
-      player.name = generator.generateRandomName().name;
+      player.name = this.generator.generateRandomName().name;
       player.isDead = false;
       player.isReady = true;
-      player.enabled = false
+
+      // player.enabled = false;
+      // player.bulletFireRate = 0;
+      // player.defaultBulletFireRate = 0;
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

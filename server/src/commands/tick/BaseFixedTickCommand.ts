@@ -207,6 +207,64 @@ export class BaseTickCommand<
           if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
             return;
           }
+      
+          // Calculate the distance between the two players
+          const dx = player.x - otherPlayer.x;
+          const dy = player.y - otherPlayer.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+      
+          // Check for collision (distance < combined hit radius)
+          if (distance < player.hitRadius + otherPlayer.hitRadius) {
+            const overlap = player.hitRadius + otherPlayer.hitRadius - distance;
+      
+            // Normalize the collision vector (dx, dy)
+            const nx = dx / distance || 0;
+            const ny = dy / distance || 0;
+      
+            // Calculate the proposed new position
+            const proposedX = player.x + nx * overlap * 2;
+            const proposedY = player.y + ny * overlap * 2;
+      
+            // Check if the new position collides with the tilemap
+            const isCollidingInTilemap = this.tilemapManager.isColliding(
+              proposedX,
+              proposedY,
+              player.playerSize,
+              player.playerSize
+            );
+      
+            if (!isCollidingInTilemap) {
+              // Update player position if valid
+              player.x = proposedX;
+              player.y = proposedY;
+      
+              // Optionally, adjust the other player's position
+              const otherProposedX = otherPlayer.x - nx * overlap * 2;
+              const otherProposedY = otherPlayer.y - ny * overlap * 2;
+      
+              const otherPlayerColliding = this.tilemapManager.isColliding(
+                otherProposedX,
+                otherProposedY,
+                otherPlayer.playerSize,
+                otherPlayer.playerSize
+              );
+      
+              if (!otherPlayerColliding) {
+                otherPlayer.x = otherProposedX;
+                otherPlayer.y = otherProposedY;
+              }
+            }
+      
+            isColliding = true; // Collision occurred
+          }
+        });
+      }
+
+      if (!isColliding) {
+        this.room.state.players.forEach((otherPlayer) => {
+          if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
+            return;
+          }
 
           // Calculate the distance between the two players
           const dx = player.x - otherPlayer.x;
@@ -215,7 +273,21 @@ export class BaseTickCommand<
 
           // Check for collision (distance < combined hit radius)
           if (distance < player.hitRadius + otherPlayer.hitRadius) {
-            isColliding = true;
+            const overlap = player.hitRadius + otherPlayer.hitRadius - distance;
+
+            // Normalize the collision vector (dx, dy)
+            const nx = dx / distance || 0;
+            const ny = dy / distance || 0;
+
+            // Push the moving player out of collision by adjusting the position
+            player.x += nx * overlap * 2; // Adjust based on direction
+            player.y += ny * overlap * 2;
+
+            // Optionally, push the other player too (for equal collision response)
+            otherPlayer.x -= nx * overlap * 0.5;
+            otherPlayer.y -= ny * overlap * 0.5;
+
+            isColliding = true; // Flag that a collision occurred
           }
         });
       }
@@ -255,7 +327,7 @@ export class BaseTickCommand<
 
     player.lastBulletTime = now; // Update the last bullet fired time
 
-    const bulletFireRate = player.bulletFireRate || 1; // Default to 1 bullet if undefined
+    const bulletFireRate = player.bulletFireRate || 0; // Default to 1 bullet if undefined
     const bulletFireDelay = player.bulletFireDelay || 100; // Delay between bullets in milliseconds
 
     for (let i = 0; i < bulletFireRate; i++) {
