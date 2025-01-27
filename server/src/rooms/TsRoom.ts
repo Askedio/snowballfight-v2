@@ -14,7 +14,7 @@ export class TsRoom extends BaseRoom<TsRoomState> {
   map = "../client/static/assets/maps/winter/map.json";
   layers = {
     base: "base",
-    colissions: "Colissins",
+    colissions: "collisions",
     land: "Tile Layer 1",
     spawnLayer: "spawns",
   };

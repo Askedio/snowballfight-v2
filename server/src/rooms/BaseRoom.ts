@@ -23,7 +23,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   map: string;
   layers = {
     base: "base",
-    colissions: "Colissins",
+    colissions: "collisions",
     land: "Tile Layer 1",
     spawnLayer: "spawns",
   };
