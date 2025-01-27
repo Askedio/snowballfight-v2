@@ -9,6 +9,7 @@ import { assignRandomPosition } from "../../lib/player.lib";
 import type { Pickup } from "../../schemas/Pickup";
 import { PickupFactory } from "../../pickups/PickupFactory";
 import { nanoid } from "nanoid";
+import { removeAllPickups, spawnPickups } from "../../lib/pickups.lib";
 
 export class CtfFixedTickCommand extends BaseTickCommand<
   CtfRoom,
@@ -74,6 +75,9 @@ export class CtfFixedTickCommand extends BaseTickCommand<
 
         // Start round!
         if (timeLeft <= 0) {
+          removeAllPickups(this.tilemapManager, this.room);
+          spawnPickups(this.tilemapManager, this.room);
+
           this.state.redScore = 0;
           this.state.blueScore = 0;
 
