@@ -42,6 +42,4 @@ export class BaseTeamOnCreateCommand<
   onCreatePlayer(player: Player) {
     player.assignTeam(this.room.state.players);
   }
-
-  spawnPickups() {}
 }

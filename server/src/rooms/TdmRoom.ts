@@ -16,7 +16,7 @@ export class TdmRoom extends BaseRoom<TdmRoomState> {
     base: "base",
     collisions: "collisions",
     land: "Tile Layer 1",
-    spawnLayer: "spawns",
+    spawnLayer: { red: "redspawns", blue: "bluespawns" },
   };
 
   async onCreate() {
