@@ -1,6 +1,6 @@
 import { Command } from "@colyseus/command";
 import type { Client } from "colyseus";
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import { nanoid } from "nanoid";
 import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";

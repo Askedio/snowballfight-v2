@@ -1,7 +1,7 @@
 import type { MapSchema } from "@colyseus/schema";
 import type { TsRoomState } from "./../../states/TsRoomState";
 import type { TsRoom } from "./../../rooms/TsRoom";
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import type { Player } from "../../schemas/Player";
 import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";

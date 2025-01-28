@@ -1,5 +1,5 @@
 import type { FreeForAllRoom } from "../../rooms/FreeForAllRoom";
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import { BaseTickCommand } from "./BaseFixedTickCommand";
 import type { FreeForAllRoomState } from "../../states/FreeForAllRoomState";

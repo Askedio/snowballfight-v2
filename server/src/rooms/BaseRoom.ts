@@ -1,6 +1,6 @@
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
-import { type TilemapLayersConfig, TilemapManager } from "../TilemapManager";
+import { type TilemapLayersConfig, TilemapManager } from "../classes/TilemapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";

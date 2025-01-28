@@ -1,7 +1,7 @@
 import { CtfOnCreateCommand } from "../commands/create/CtfOnCreateCommand";
 import { CtfFixedTickCommand } from "../commands/tick/CtfFixedTickCommand";
 import { CtfRoomState } from "../states/CtfRoomState";
-import type { TilemapLayersConfig } from "../TilemapManager";
+import type { TilemapLayersConfig } from "../classes/TilemapManager";
 import { BaseRoom } from "./BaseRoom";
 
 export class CtfRoom extends BaseRoom<CtfRoomState> {

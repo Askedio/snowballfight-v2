@@ -1,5 +1,5 @@
 import type { Player } from "../schemas/Player";
-import type { TilemapManager } from "../TilemapManager";
+import type { TilemapManager } from "../classes/TilemapManager";
 
 export async function respawnPlayer(
   player: Player,

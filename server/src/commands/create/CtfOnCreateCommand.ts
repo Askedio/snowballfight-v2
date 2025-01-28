@@ -1,4 +1,4 @@
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import type { CtfRoom } from "../../rooms/CtfRoom";
 import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";

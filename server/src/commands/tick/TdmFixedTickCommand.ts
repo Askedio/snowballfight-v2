@@ -1,4 +1,4 @@
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import type { TdmRoom } from "../../rooms/TdmRoom";
 import type { Player } from "../../schemas/Player";

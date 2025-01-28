@@ -3,7 +3,7 @@ import { PickupFactory } from "../../pickups/PickupFactory";
 import type { InputData } from "../../interfaces/InputData";
 import { Bullet } from "../../schemas/Bullet";
 import type { Player } from "../../schemas/Player";
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import { respawnPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";

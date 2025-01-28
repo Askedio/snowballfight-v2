@@ -1,6 +1,6 @@
 import type { TdmRoomState } from "./../../states/TdmRoomState";
 import type { TdmRoom } from "./../../rooms/TdmRoom";
-import type { TilemapManager } from "../../TilemapManager";
+import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Client } from "colyseus";
 import { assignTeam } from "../../lib/teams.lib";
 import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";

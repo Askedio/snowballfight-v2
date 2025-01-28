@@ -1,5 +1,5 @@
 import type { Room } from "colyseus";
-import type { TilemapManager } from "../TilemapManager";
+import type { TilemapManager } from "../classes/TilemapManager";
 import { pickupItemTypes } from "../pickups";
 import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
