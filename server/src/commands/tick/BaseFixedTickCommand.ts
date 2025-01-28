@@ -7,10 +7,10 @@ import type { TilemapManager } from "../../TilemapManager";
 import type { Collision } from "../../classes/Collision";
 import { respawnPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
-import { generateBotInput } from "../../lib/bots.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
+import { BotManager } from "../../classes/BotManager";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
@@ -39,11 +39,12 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-        input = generateBotInput(
-          player,
+
+        const botManager = new BotManager(
           this.room.state.players,
           this.room.state.pickups
-        ); // Function to create bot input
+        );
+        input = botManager.generateBotInput(player);
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -537,7 +538,12 @@ export class BaseTickCommand<
     });
   }
 
-  onBulletHit(sessionId: string, bullet: Bullet, player: Player, shooter: Player) {
+  onBulletHit(
+    sessionId: string,
+    bullet: Bullet,
+    player: Player,
+    shooter: Player
+  ) {
     if (!player.isProtected) {
       player.health -= shooter.bulletDamage;
     }

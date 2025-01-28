@@ -87,6 +87,7 @@ export class Player extends Schema {
   @type("number") randomPointerX = 0;
   @type("number") randomPointerY = 0;
   @type("string") targetPlayer: string;
+  @type("number") lastPickupTime = 0; // Track last time bot targeted a pickup
 
   // Carry pickup
   @type(Pickup) carriedPickup: Pickup; // ahh..
