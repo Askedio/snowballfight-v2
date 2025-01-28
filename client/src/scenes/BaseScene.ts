@@ -39,6 +39,11 @@ export class BaseScene extends Phaser.Scene {
     R: Phaser.Input.Keyboard.Key;
     E: Phaser.Input.Keyboard.Key;
   };
+  joystickKeys: {
+    joystick: any;
+    shoot: any;
+    reload: any;
+  };
 
   inputPayload = {
     left: false,
@@ -232,6 +237,28 @@ export class BaseScene extends Phaser.Scene {
       this.setError("");
 
       this.initMap();
+
+      /*
+      this.joystickKeys.joystick = (
+        this.plugins.get("rexVirtualJoyStick") as any
+      ).add(this, {
+        x: 300,
+        y: 300,
+        radius: 100,
+        // base: this.add.circle(0, 0, 100, 0x888888),
+        // thumb: this.add.circle(0, 0, 50, 0xcccccc),
+        // dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+        // forceMin: 16,
+        // enable: true
+      });
+
+      this.joystickKeys.shoot = this.add
+        .circle(500, 300, 50)
+        .setStrokeStyle(2, 0xff0000)
+        .setInteractive()
+        .on("pointerdown", () => {
+          console.log("Click Button");
+        });*/
 
       this.room = roomStore.get();
 

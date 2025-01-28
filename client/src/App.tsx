@@ -18,6 +18,7 @@ import { ErrorDialog } from "./components/ErrorDialog/ErrorDialog";
 import { RoundComplete } from "./components/RoundComplete/RoundComplete";
 import { useLocation } from "react-router";
 import { gameModes } from "./lib/gameModes";
+import VirtualJoystickPlugin from "phaser3-rex-plugins/plugins/virtualjoystick-plugin.js";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -38,6 +39,15 @@ const config: Phaser.Types.Core.GameConfig = {
     default: "arcade",
   },
   scene: [],
+  plugins: {
+    global: [
+      {
+        key: "rexVirtualJoyStick",
+        plugin: VirtualJoystickPlugin,
+        start: true,
+      },
+    ],
+  },
 };
 
 export function App() {

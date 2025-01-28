@@ -10,7 +10,6 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
 import { BotManager } from "../../classes/BotManager";
-import { Pathfinding } from "../../classes/Pathfinding";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<

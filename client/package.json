@@ -27,6 +27,7 @@
     "colyseus.js": "^0.15.9",
     "parcel-reporter-static-files-copy": "^1.5.3",
     "phaser": "^3.87.0",
+    "phaser3-rex-plugins": "^1.80.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^7.1.3",
