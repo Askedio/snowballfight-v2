@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";
 import { Player } from "../../schemas/Player";
-import { RandomNameGenerator } from "../../RandomNameGenerator";
+import { RandomNameGenerator } from "../../classes/RandomNameGenerator";
 import { assignSpawn, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
