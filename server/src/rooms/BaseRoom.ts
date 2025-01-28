@@ -1,13 +1,14 @@
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
-import { type TilemapLayersConfig, TilemapManager } from "../classes/TilemapManager";
+import {
+  type TilemapLayersConfig,
+  TilemapManager,
+} from "../classes/TilemapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
-
-
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -16,6 +17,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   // Game configuration
   maxClients: number;
   maxBots: number;
+  minPlayers = 2;
 
   mode: string;
   scoring: string;

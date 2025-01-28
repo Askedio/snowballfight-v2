@@ -29,6 +29,43 @@ export class BaseOnCreateCommand<
     this.tilemapManager = payload.tilemapManager;
     this.pickupManager = new PickupManager(this.tilemapManager);
 
+    this.room.clock.setInterval(async () => {
+      const bots = Array.from(this.room.state.players.values()).filter(
+        (player) => player.type === "bot"
+      );
+      const humans = Array.from(this.room.state.players.values()).filter(
+        (player) => player.type === "human"
+      );
+      const totalPlayers = humans.length + bots.length;
+
+      // If we don't have enough players, add bots
+      if (totalPlayers < this.room.minPlayers) {
+        const botsToAdd = this.room.minPlayers - totalPlayers;
+
+        for (let i = 0; i < botsToAdd; i++) {
+          await this.createPlayer(null, null, "bot");
+        }
+      }
+
+      // If there are too many bots, remove the extra ones
+      if (
+        humans.length >= this.room.minPlayers ||
+        bots.length > this.room.maxBots
+      ) {
+        const botsToRemove = Math.max(
+          0,
+          bots.length - Math.max(0, this.room.maxBots - humans.length)
+        );
+
+        for (let i = 0; i < botsToRemove; i++) {
+          const botToRemove = bots[i];
+          if (botToRemove) {
+            this.room.state.players.delete(botToRemove.sessionId);
+          }
+        }
+      }
+    }, 5000);
+
     this.spawnPickups();
 
     for (let i = 0; i < payload.maxBots; i++) {
