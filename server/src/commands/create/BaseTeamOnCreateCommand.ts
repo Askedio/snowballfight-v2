@@ -1,6 +1,5 @@
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import { BaseOnCreateCommand } from "./BaseOnCreateCommand";
-import { assignTeam } from "../../lib/teams.lib";
 import type { Player } from "../../schemas/Player";
 import type { Delayed } from "colyseus";
 import { RoundManager } from "../../classes/RoundManager";
@@ -41,7 +40,7 @@ export class BaseTeamOnCreateCommand<
   }
 
   onCreatePlayer(player: Player) {
-    assignTeam(player, this.room.state.players);
+    player.assignTeam(this.room.state.players);
   }
 
   spawnPickups() {}

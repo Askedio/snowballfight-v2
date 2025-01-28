@@ -1,6 +1,7 @@
 import { Schema, ArraySchema, type } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
 import { Pickup } from "./Pickup";
+import type { MapSchema } from "@colyseus/schema";
 
 export class Player extends Schema {
   @type("string") sessionId = "";
@@ -100,10 +101,10 @@ export class Player extends Schema {
   inputQueue: InputData[] = [];
 
   canRespawn(): boolean {
-    if(this.respawnDisabled) {
+    if (this.respawnDisabled) {
       return false;
     }
-    
+
     if (!this.lastKilledAt) {
       return true;
     }
@@ -198,5 +199,26 @@ export class Player extends Schema {
 
     // Store the timeout reference
     this.resetTimeouts.set(keyString, timeout);
+  }
+
+  assignTeam(players: MapSchema<Player, string>) {
+    let redCount = 0;
+    let blueCount = 0;
+
+    players.forEach((_) => {
+      if (_.team === "red") {
+        redCount += 1;
+      } else if (_.team === "blue") {
+        blueCount += 1;
+      }
+    });
+
+    if (redCount <= blueCount) {
+      this.team = "red";
+      this.skin = "playersb";
+    } else {
+      this.team = "blue";
+      this.skin = "playersd";
+    }
   }
 }
