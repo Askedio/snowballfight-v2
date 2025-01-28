@@ -7,3 +7,4 @@ node_modules
 
 server/.devmode.json
 server/lib
+client/dist

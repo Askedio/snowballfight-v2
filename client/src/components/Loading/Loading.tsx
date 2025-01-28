@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { EventBus } from "../../lib/EventBus";
-import "./Loading.css";
+import "./Loading2.css";
 
 export function Loading() {
   const [loading, setLoading] = useState(true);
