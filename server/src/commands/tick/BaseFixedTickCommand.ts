@@ -156,6 +156,21 @@ export class BaseTickCommand<
           isColliding = pickup.blocking;
           pickup.onPlayerCollision(player); // Trigger collision effect
 
+          const onColission = this.onPickupColission(player, pickup);
+          if (onColission?.restorePickup) {
+            const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
+            this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+
+            this.room.state.pickups.push(
+              PickupFactory.createPickup(
+                pickup.type,
+                pickup.originalX,
+                pickup.originalY,
+                pickup
+              )
+            ); // Add it back
+          }
+
           if (player.pickups.length) {
             for (let i = player.pickups.length - 1; i >= 0; i--) {
               if (player.pickups[i].dropOffLocation === pickup.type) {
@@ -212,7 +227,7 @@ export class BaseTickCommand<
                   redeployedPickup.id = nanoid();
                   redeployedPickup.isRedeployable = pickup.isRedeployable;
                   redeployedPickup.redeployTimeout = pickup.redeployTimeout;
-               
+
                   this.room.state.pickups.push(redeployedPickup); // Add it back
                 }
               }, pickup.redeployTimeout);
@@ -491,14 +506,7 @@ export class BaseTickCommand<
               killer: shooter,
             });
 
-            if (!player.isProtected) {
-              player.health -= shooter.bulletDamage;
-            }
-
-            // Handle player death
-            if (player.health <= 0) {
-              this.onPlayerDeath(sessionId, player, shooter);
-            }
+            this.onBulletHit(sessionId, bullet, player, shooter);
 
             bulletsToRemove.push(bullet);
             return;
@@ -529,12 +537,22 @@ export class BaseTickCommand<
     });
   }
 
+  onBulletHit(sessionId: string, bullet: Bullet, player: Player, shooter: Player) {
+    if (!player.isProtected) {
+      player.health -= shooter.bulletDamage;
+    }
+
+    // Handle player death
+    if (player.health <= 0) {
+      this.onPlayerDeath(sessionId, player, shooter);
+    }
+  }
+
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
     player.lastKilledAt = Date.now();
-
     player.isDead = true;
     player.deaths += 1;
-    // Increment killer's kills count
+
     shooter.kills += 1;
 
     this.room.broadcast("player-death", {
@@ -545,21 +563,19 @@ export class BaseTickCommand<
     });
 
     player.pickups.forEach((pickup) => {
-      const redeployedPickup = PickupFactory.createPickup(
+      const droppedPickup = PickupFactory.createPickup(
         pickup.type,
         player.x,
         player.y,
         pickup
       );
-      if (redeployedPickup) {
+      if (droppedPickup) {
+        droppedPickup.id = nanoid();
+        droppedPickup.isRedeployable = pickup.isRedeployable;
+        droppedPickup.redeployTimeout = pickup.redeployTimeout;
+        droppedPickup.wasDropped = true;
 
-        console.log("addin bak", player.x,
-          player.y,)
-        redeployedPickup.id = nanoid();
-        redeployedPickup.isRedeployable = pickup.isRedeployable;
-        redeployedPickup.redeployTimeout = pickup.redeployTimeout;
-
-        this.room.state.pickups.push(redeployedPickup); // Add it back
+        this.room.state.pickups.push(droppedPickup); // Add it back
       }
     });
 
@@ -571,6 +587,13 @@ export class BaseTickCommand<
   }
 
   onPickupDroppedOff(
+    player: Player,
+    pickup: Pickup
+  ): undefined | { restorePickup?: boolean } {
+    return undefined;
+  }
+
+  onPickupColission(
     player: Player,
     pickup: Pickup
   ): undefined | { restorePickup?: boolean } {

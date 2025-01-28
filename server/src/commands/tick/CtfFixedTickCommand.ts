@@ -4,9 +4,7 @@ import type { Collision } from "../../classes/Collision";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import type { Player } from "../../schemas/Player";
 import type { Pickup } from "../../schemas/Pickup";
-import {
-  spawnPickupFromObjectLayer,
-} from "../../lib/pickups.lib";
+import { spawnPickupFromObjectLayer } from "../../lib/pickups.lib";
 import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";
 
 export class CtfFixedTickCommand extends BaseTeamFixedTickCommand<
@@ -15,6 +13,31 @@ export class CtfFixedTickCommand extends BaseTeamFixedTickCommand<
 > {
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
+
+  onPickupColission(player: Player, pickup: Pickup) {
+    super.onPickupDroppedOff(player, pickup);
+    let restorePickup = false;
+
+    if (
+      pickup.type === "redFlag" &&
+      player.team === "red" &&
+      pickup.wasDropped
+    ) {
+      restorePickup = true;
+    }
+
+    if (
+      pickup.type === "blueFlag" &&
+      player.team === "blue" &&
+      pickup.wasDropped
+    ) {
+      restorePickup = true;
+    }
+
+    return {
+      restorePickup,
+    };
+  }
 
   onPickupDroppedOff(player: Player, pickup: Pickup) {
     super.onPickupDroppedOff(player, pickup);

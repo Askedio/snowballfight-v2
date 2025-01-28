@@ -55,6 +55,7 @@ export class Pickup extends Schema {
 
   // Carry pickup
   @type("string") dropOffLocation: string; // The location where this item will be dropped off, ie: capture point
+  @type("boolean") wasDropped = false; // Was picked up then it was dropped.
 
 
   constructor(type: string, x: number, y: number) {

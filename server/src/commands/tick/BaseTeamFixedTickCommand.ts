@@ -3,12 +3,10 @@ import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
 import { assignRandomPosition } from "../../lib/player.lib";
 import type { Pickup } from "../../schemas/Pickup";
-import {
-  removeAllPickups,
-  spawnRandomPickups,
-} from "../../lib/pickups.lib";
+import { removeAllPickups, spawnRandomPickups } from "../../lib/pickups.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { TeamRoomState } from "../../states/TeamRoomState";
+import type { Bullet } from "../../schemas/Bullet";
 
 export class BaseTeamFixedTickCommand<
   TRoom extends BaseRoom<TState>,
@@ -158,5 +156,18 @@ export class BaseTeamFixedTickCommand<
     return {
       restorePickup: true,
     };
+  }
+
+  onBulletHit(
+    sessionId: string,
+    bullet: Bullet,
+    player: Player,
+    shooter: Player
+  ) {
+    if (shooter.team === player.team) {
+      return;
+    }
+
+    super.onBulletHit(sessionId, bullet, player, shooter);
   }
 }
