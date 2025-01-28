@@ -285,12 +285,21 @@ img, video {
   position: relative;
 }
 
+.mx-3 {
+  margin-left: .75rem;
+  margin-right: .75rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
 
 .mt-3 {
   margin-top: .75rem;
+}
+
+.ml-3 {
+  margin-left: .75rem;
 }
 
 .flex {
@@ -336,6 +345,15 @@ img, video {
 .bg-\[\#0C3367\] {
   --tw-bg-opacity: 1;
   background-color: rgb(12 51 103 / var(--tw-bg-opacity, 1));
+}
+
+.px-3 {
+  padding-left: .75rem;
+  padding-right: .75rem;
+}
+
+.pl-3 {
+  padding-left: .75rem;
 }
 
 .text-2xl {
@@ -912,8 +930,6 @@ input {
     align-items: center;
     gap: .75rem;
     margin: 0;
-    padding-left: .5rem;
-    padding-right: .5rem;
     display: flex;
   }
 

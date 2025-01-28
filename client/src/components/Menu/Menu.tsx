@@ -88,16 +88,20 @@ export function Menu() {
       <div className={`menu-player-stats ${team}`}>
         {teamScoring && (
           <>
-          <div className="player-team">{team} team</div>
-          <div className="team-player-stats">
-            score <span className="active-player-score">{score}</span>
-          </div></>
+            <div className="player-team px-3">{team} team</div>
+
+            {room.state.mode === "ctf" && (
+              <div className="team-player-stats pl-3">
+                captures <span className="active-player-score">{score}</span>
+              </div>
+            )}
+          </>
         )}
-        <div>
-          kills <span className="active-player-kills">{kills}</span>
+        <div className="pl-3">
+          kills <span>{kills}</span>
         </div>
-        <div>
-          deaths <span className="active-player-deaths">{deaths}</span>
+        <div className="pl-3">
+          deaths <span>{deaths}</span>
         </div>
       </div>
 

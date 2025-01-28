@@ -24,7 +24,7 @@
 
 
   div {
-    @apply m-0 px-2 flex items-center gap-3;
+    @apply m-0 flex items-center gap-3;
 
     span {
       @apply bg-gray-700 py-1.5 w-[48px] block text-center;
