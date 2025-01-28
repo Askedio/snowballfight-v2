@@ -1,5 +1,4 @@
 import type { BaseTeamOnCreateCommand } from "../commands/create/BaseTeamOnCreateCommand";
-import { assignSpawn } from "../lib/player.lib";
 import type { BaseRoom } from "../rooms/BaseRoom";
 import type { TeamRoomState } from "../states/TeamRoomState";
 
@@ -113,7 +112,7 @@ export class RoundManager<
 
     this.command.room.state.players.forEach(async (player: any) => {
       player.isDead = true;
-      await assignSpawn(player, this.command.room.tilemapManager);
+      await player.assignSpawn(this.command.room.tilemapManager);
       this.command.room.broadcast("client-respawned", {
         sessionId: player.sessionId,
       });

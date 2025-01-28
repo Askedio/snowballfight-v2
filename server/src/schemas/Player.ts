@@ -2,6 +2,7 @@ import { Schema, ArraySchema, type } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
 import { Pickup } from "./Pickup";
 import type { MapSchema } from "@colyseus/schema";
+import type { TilemapManager } from "../classes/TilemapManager";
 
 export class Player extends Schema {
   @type("string") sessionId = "";
@@ -133,7 +134,7 @@ export class Player extends Schema {
     this.pickups = new ArraySchema<Pickup>();
   }
 
-  respawn() {
+  async respawn(tilemapManager: TilemapManager) {
     this.ammo = this.defaultAmmo;
     this.speed = this.defaultSpeed;
     this.health = this.defaultHealth;
@@ -145,6 +146,22 @@ export class Player extends Schema {
     this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
     this.pickups = new ArraySchema<Pickup>();
+
+    // Respawn protection.
+    this.isProtected = true;
+
+    this.assignSpawn(tilemapManager);
+
+    setTimeout(() => {
+      this.isProtected = false;
+    }, this.protectionTime);
+  }
+
+  async assignSpawn(tilemapManager: TilemapManager) {
+    const spawn = await tilemapManager.getRandomSpawn(this.team);
+
+    this.x = spawn.x;
+    this.y = spawn.y;
   }
 
   resetTimeouts: Map<string, NodeJS.Timeout> = new Map<
@@ -220,5 +237,35 @@ export class Player extends Schema {
       this.team = "blue";
       this.skin = "playersd";
     }
+  }
+
+  smoothAngle(current: number, target: number, factor: number): number {
+    // Calculate the delta between the current and target angle
+    let delta = target - current;
+
+    // Normalize delta to the range [-PI, PI] (this is crucial)
+    delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+    // If delta is positive, rotate clockwise, otherwise rotate counter-clockwise
+    if (Math.abs(delta) > Math.PI) {
+      if (delta > 0) {
+        delta -= 2 * Math.PI; // Make sure we rotate the shorter distance (counter-clockwise)
+      } else {
+        delta += 2 * Math.PI; // Rotate clockwise if we're going the long way
+      }
+    }
+
+    // Apply the smoothing factor
+    const smoothedDelta = delta * factor;
+
+    // Add the smoothed delta to the current rotation
+    const newRotation = current + smoothedDelta;
+
+    // Wrap the result to ensure it's within the range [-PI, PI]
+    return this.wrapAngle(newRotation);
+  }
+
+  wrapAngle(angle: number): number {
+    return ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
   }
 }

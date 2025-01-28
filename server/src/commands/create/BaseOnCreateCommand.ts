@@ -6,7 +6,6 @@ import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";
 import { Player } from "../../schemas/Player";
 import { RandomNameGenerator } from "../../classes/RandomNameGenerator";
-import { assignSpawn, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
@@ -104,7 +103,7 @@ export class BaseOnCreateCommand<
           }
 
           if (player.canRespawn()) {
-            await respawnPlayer(player, this.tilemapManager);
+            await player.respawn(this.tilemapManager);
 
             this.room.broadcast("client-respawned", {
               sessionId: client.sessionId,
@@ -165,7 +164,7 @@ export class BaseOnCreateCommand<
     // All game types to modify player before spawn, ie: add a team.
     this.onCreatePlayer(player);
 
-    await assignSpawn(player, this.tilemapManager);
+    await player.assignSpawn(this.tilemapManager);
 
     return player;
   }

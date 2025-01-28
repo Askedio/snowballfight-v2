@@ -5,7 +5,6 @@ import { Bullet } from "../../schemas/Bullet";
 import type { Player } from "../../schemas/Player";
 import type { TilemapManager } from "../../classes/TilemapManager";
 import type { Collision } from "../../classes/Collision";
-import { respawnPlayer, smoothAngle } from "../../lib/player.lib";
 import { nanoid } from "nanoid";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
@@ -48,7 +47,7 @@ export class BaseTickCommand<
 
         const botManager = new BotManager(
           this.room.state.players,
-          this.room.state.pickups,
+          this.room.state.pickups
         );
         input = botManager.generateBotInput(player);
       } else {
@@ -114,7 +113,7 @@ export class BaseTickCommand<
 
         const targetAngle = Math.atan2(dy, dx);
 
-        player.rotation = smoothAngle(player.rotation, targetAngle, 0.1);
+        player.rotation = player.smoothAngle(player.rotation, targetAngle, 0.1);
 
         if (distance <= player.playerRadius) {
           newX = player.x;
@@ -593,7 +592,7 @@ export class BaseTickCommand<
 
     if (player.type === "bot" && !player.respawnDisabled) {
       setTimeout(async () => {
-        await respawnPlayer(player, this.tilemapManager);
+        await player.respawn(this.tilemapManager);
       }, player.respawnDelay * 1000);
     }
   }
