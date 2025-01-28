@@ -1,5 +1,4 @@
 import type { BaseTeamOnCreateCommand } from "../commands/create/BaseTeamOnCreateCommand";
-import { removeAllPickups, spawnRandomPickups } from "../lib/pickups.lib";
 import { assignSpawn } from "../lib/player.lib";
 import type { BaseRoom } from "../rooms/BaseRoom";
 import type { TeamRoomState } from "../states/TeamRoomState";
@@ -122,8 +121,8 @@ export class RoundManager<
   }
 
   private startRound() {
-    removeAllPickups(this.command.room.tilemapManager, this.command.room);
-    spawnRandomPickups(this.command.room.tilemapManager, this.command.room);
+    this.command.pickupManager.removeAllPickups(this.command.room);
+    this.command.pickupManager.spawnRandomPickups(this.command.room);
 
     this.command.spawnPickups();
 
@@ -150,7 +149,7 @@ export class RoundManager<
   }
 
   private abortMatch() {
-   // this.command.room.broadcast("match-aborted");
+    // this.command.room.broadcast("match-aborted");
     this.command.room.state.roundActive = false;
     this.command.room.state.waitingToStart = false;
     this.setPlayerUnready();

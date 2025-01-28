@@ -10,7 +10,7 @@ import { assignSpawn, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
-import { spawnRandomPickups } from "../../lib/pickups.lib";
+import { PickupManager } from "../../classes/PickupManager";
 
 const profanity = new Profanity({
   languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
@@ -24,9 +24,11 @@ export class BaseOnCreateCommand<
   tilemapManager: TilemapManager;
   fixedTimeStep = 1000 / 60;
   generator = new RandomNameGenerator();
+  pickupManager: PickupManager;
 
   async execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
+    this.pickupManager = new PickupManager(this.tilemapManager);
 
     this.spawnPickups();
 
@@ -179,6 +181,6 @@ export class BaseOnCreateCommand<
   }
 
   spawnPickups() {
-    spawnRandomPickups(this.tilemapManager, this.room);
+    this.pickupManager.spawnRandomPickups(this.room);
   }
 }

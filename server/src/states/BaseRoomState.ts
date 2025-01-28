@@ -13,7 +13,6 @@ export class BaseRoomState extends Schema {
 
   @type("boolean") teamScoring = false;
 
-
   @type({ map: Player }) players = new MapSchema<Player>();
   @type([Bullet]) bullets = new ArraySchema<Bullet>();
   @type([Pickup]) pickups = new ArraySchema<Pickup>();

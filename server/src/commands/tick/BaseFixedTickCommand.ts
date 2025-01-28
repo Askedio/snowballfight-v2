@@ -11,6 +11,7 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
 import { BotManager } from "../../classes/BotManager";
+import { Pathfinding } from "../../classes/Pathfinding";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
@@ -40,9 +41,14 @@ export class BaseTickCommand<
       if (player.type === "bot") {
         // Generate bot input dynamically
 
+        //const pathfinding = new Pathfinding(
+        //  this.tilemapManager,
+        //  this.collisionSystem
+        //);
+
         const botManager = new BotManager(
           this.room.state.players,
-          this.room.state.pickups
+          this.room.state.pickups,
         );
         input = botManager.generateBotInput(player);
       } else {

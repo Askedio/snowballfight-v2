@@ -2,7 +2,6 @@ import type { TilemapManager } from "../../classes/TilemapManager";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import type { CtfRoom } from "../../rooms/CtfRoom";
 import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";
-import { spawnPickupFromObjectLayer } from "../../lib/pickups.lib";
 
 export class CtfOnCreateCommand extends BaseTeamOnCreateCommand<
   CtfRoom,
@@ -13,8 +12,7 @@ export class CtfOnCreateCommand extends BaseTeamOnCreateCommand<
 
   spawnPickups() {
     // Spawn the red flag
-    spawnPickupFromObjectLayer(
-      this.tilemapManager,
+    this.pickupManager.spawnPickupFromObjectLayer(
       this.room,
       "flags",
       "redFlag",
@@ -22,8 +20,7 @@ export class CtfOnCreateCommand extends BaseTeamOnCreateCommand<
     );
 
     // Spawn the blue flag
-    spawnPickupFromObjectLayer(
-      this.tilemapManager,
+    this.pickupManager.spawnPickupFromObjectLayer(
       this.room,
       "flags",
       "blueFlag",
