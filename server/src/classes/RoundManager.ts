@@ -34,8 +34,8 @@ export class RoundManager<
     this.setPlayerEnabled(true);
 
     if (totalReadyPlayers <= 1) {
-      this.abortMatch();
-      return;
+      // this.abortMatch();
+      // return;
     }
 
     const timeLeft = this.getTimeLeft(this.command.room.state.roundEndsAt);
@@ -150,7 +150,7 @@ export class RoundManager<
   }
 
   private abortMatch() {
-    this.command.room.broadcast("match-aborted");
+   // this.command.room.broadcast("match-aborted");
     this.command.room.state.roundActive = false;
     this.command.room.state.waitingToStart = false;
     this.setPlayerUnready();

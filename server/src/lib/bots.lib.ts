@@ -144,9 +144,10 @@ export function getNearestPlayer(
 
   players.forEach((player) => {
     if (
-      player.sessionId !== bot.sessionId &&
-      !player.isDead &&
-      !player.isProtected
+      player.sessionId !== bot.sessionId && // Not the bot itself
+      !player.isDead && // Player is not dead
+      !player.isProtected && // Player is not protected
+      (!bot.team || player.team !== bot.team) // Either no team for the bot or the player's team is different
     ) {
       const distance = Math.hypot(bot.x - player.x, bot.y - player.y);
       if (distance < minDistance) {

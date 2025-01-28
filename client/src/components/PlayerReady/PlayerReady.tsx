@@ -27,8 +27,8 @@ export function PlayerReady() {
   const [showReadyButton, setShowReadyButton] = useState(false);
 
   useEffect(() => {
-    setShowReadyButton(requiresPlayerToReady);
-  }, [requiresPlayerToReady]);
+    setShowReadyButton(requiresPlayerToReady && !room.state.roundActive);
+  }, [requiresPlayerToReady, room]);
 
   useEffect(() => {
     if (!room) {
