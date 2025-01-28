@@ -10,6 +10,21 @@ import { FreeForAllRoom } from "./rooms/FreeForAllRoom";
 import { CtfRoom } from "./rooms/CtfRoom";
 import { TdmRoom } from "./rooms/TdmRoom";
 import { TsRoom } from "./rooms/TsRoom";
+import express from "express";
+import path from "node:path";
+
+import basicAuth from "express-basic-auth";
+
+const basicAuthMiddleware = basicAuth({
+  // list of users and passwords
+  users: {
+    gcphost: "tical",
+    chris: "isreallycool",
+  },
+  // sends WWW-Authenticate header, which will prompt the user to fill
+  // credentials in
+  challenge: true,
+});
 
 let gameServerRef: Server;
 
@@ -47,24 +62,14 @@ export default config({
   },
 
   initializeExpress: (app) => {
-    /**
-     * Bind your custom express routes here:
-     */
-    app.get("/", (req, res) => {
-      res.send("It's time to kick ass and chew bubblegum!");
+    app.use(express.static(path.join(__dirname, "../../client/dist")));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../../client/dist", "index.html"));
     });
 
-    /**
-     * Bind @colyseus/monitor
-     * It is recommended to protect this route with a password.
-     * Read more: https://docs.colyseus.io/tools/monitor/
-     */
-    app.use("/colyseus", monitor());
+    app.use("/colyseus", basicAuthMiddleware, monitor());
   },
 
-  beforeListen: () => {
-    /**
-     * Before before gameServer.listen() is called.
-     */
-  },
+  beforeListen: () => {},
 });
