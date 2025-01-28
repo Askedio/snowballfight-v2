@@ -276,7 +276,7 @@ export function SpawnScreen() {
           : "Change Room"}
       </button>
 
-      <p className="instructions">
+      <div className="instructions">
         <p className="text-white text-center">
           <strong>Tip:</strong> Use your respawn protection to reload your
           snowballs!
@@ -286,7 +286,7 @@ export function SpawnScreen() {
         Shoot: Space or Left Click
         <br />
         Reload: R or Right Click
-      </p>
+      </div>
 
       <p className="created-by">
         Created by{" "}
