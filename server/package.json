@@ -7,7 +7,7 @@
   "scripts": {
     "start": "tsx watch src/index.ts",
     "loadtest": "npx tsx loadtest/example.ts --room default_room --numClients 50 --endpoint ws://localhost:3002",
-    "build": "npm run clean && tsc && cd ../client/ && npm run build",
+    "build": "npm run clean && tsc && cd ../client/ && npm i &&  npm run build",
     "clean": "node node_modules/rimraf/bin lib",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000",
     "deploy": "npx @colyseus/cloud deploy"
