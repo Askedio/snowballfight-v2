@@ -523,6 +523,10 @@ export class BaseScene extends Phaser.Scene {
           containerItems.filter((_) => _)
         );
 
+        if (player.isDead) {
+          playerContainer.setVisible(false);
+        }
+
         playerContainer.setSize(playerSprite.width, playerSprite.height);
 
         playerContainer.setDepth(3);

@@ -11,7 +11,11 @@ export class SwordPickup extends Pickup {
   }
 
   onPlayerCollision(player: any): void {
-    player.applyTemporaryChange("bulletFireRate", 5, 10000);
+    player.previousAmmo = player.ammo;
+    player.applyTemporaryChange("bulletSpeed", player.bulletSpeed + 2, 5000); // Increase bullet speed for 5 seconds
+    player.applyTemporaryChange("bulletCooldown", 500, 5000); // Reduce cooldown for 5 seconds
+    player.applyTemporaryChange("ammoUnlimited", true, 5000); // Reduce cooldown for 5 seconds
+    player.applyTemporaryChange("ammo", player.ammo, 5000, player.previousAmmo); // Reduce cooldown for 5 seconds
   }
 
   onBulletCollision(): boolean {

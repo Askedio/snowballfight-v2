@@ -344,7 +344,7 @@ export class BaseTickCommand<
         bullet.dy = directionY * player.bulletSpeed;
         bullet.ownerId = player.sessionId;
 
-        if (!player.ammoUnlimited) {
+        if (!player.ammoUnlimited && player.ammo > 0) {
           player.ammo -= 1;
         }
 
