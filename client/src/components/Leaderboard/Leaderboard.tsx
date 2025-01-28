@@ -67,7 +67,7 @@ export function Leaderboard() {
   }
 
   return (
-    <div className="leaderboard-container">
+    <div className="leaderboard-container z-50">
       <h3 className="leaderboard-title">Leaderboard</h3>
       <table className="leaderboard-table">
         <thead>

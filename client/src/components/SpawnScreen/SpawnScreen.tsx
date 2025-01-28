@@ -210,12 +210,19 @@ export function SpawnScreen() {
 
   if (!connectionOpen) {
     return (
-      <div className="modal text-center"><h1 className="text-xl">Sorry, there is a problem with connecting to the servers.</h1><br/><br/>Try reloading your browser window.</div>
+      <div className="modal text-center">
+        <h1 className="text-xl">
+          Sorry, there is a problem with connecting to the servers.
+        </h1>
+        <br />
+        <br />
+        Try reloading your browser window.
+      </div>
     );
   }
 
   return (
-    <div className="modal">
+    <div className="modal z-30">
       {killedBy && <div className="killedBy">Killed by: {killedBy}</div>}
 
       <h2 className="text-2xl font-bold mb-4">{screenLanguage.title}</h2>
@@ -270,16 +277,22 @@ export function SpawnScreen() {
       </button>
 
       <p className="instructions">
-        <span className="text-white">
-          Tip: Use your respawn protection to reload your snowballs!
-        </span>
-        <br />
-        <br />
+        <p className="text-white text-center">
+          <strong>Tip:</strong> Use your respawn protection to reload your
+          snowballs!
+        </p>
         Move: WASD/Arrow keys in the direction of your mouse
         <br />
         Shoot: Space or Left Click
         <br />
         Reload: R or Right Click
+      </p>
+
+      <p className="created-by">
+        Created by{" "}
+        <a href="https://willbowman.dev" target="_blank" rel="noreferrer">
+          Will Bowman
+        </a>
       </p>
 
       {isRoomModalOpen && (

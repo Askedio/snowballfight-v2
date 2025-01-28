@@ -1,6 +1,6 @@
 /* Leaderboard Styles */
 .leaderboard-container {
-  @apply bg-gray-900/75 text-white rounded-lg p-4 shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30;
+  @apply bg-gray-900/75 text-white rounded-lg p-4 shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
 }
 
 .leaderboard-title {

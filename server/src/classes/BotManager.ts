@@ -162,7 +162,7 @@ export class BotManager {
     const distance = Math.hypot(dx, dy);
 
     const shouldReload = bot.ammo <= 4;
-    const canShoot = false //bot.ammo > 0 && distance < 300;
+    const canShoot = bot.ammo > 0 && distance < 300;
 
     // @ts-ignore
     return {
