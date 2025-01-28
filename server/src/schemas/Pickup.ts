@@ -45,7 +45,7 @@ export class Pickup extends Schema {
 
   // Redeploy
   @type("boolean") isRedeployable = true; // Can this pickup redeploy?
-  @type("number") redeployTimeout = 500; // Time in ms before redeploying
+  @type("number") redeployTimeout = 5000; // Time in ms before redeploying
 
   // Sounds
   @type("string") impactSound: ""; // The sound playing when impacted, not used here

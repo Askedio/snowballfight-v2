@@ -10,6 +10,7 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
 import { BotManager } from "../../classes/BotManager";
+import { SpatialPartitioningManager } from "../../classes/SpatialPartitioningManager";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
@@ -21,6 +22,7 @@ export class BaseTickCommand<
 > {
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
+  spatialManager = new SpatialPartitioningManager();
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
@@ -31,6 +33,15 @@ export class BaseTickCommand<
         player.isMoving = false;
         return;
       }
+
+      // Index bullets, pickups, and players
+      this.spatialManager.updateBulletsIndex(this.room.state.bullets);
+      this.spatialManager.updatePickupsIndex(this.room.state.pickups);
+      this.spatialManager.updatePlayersIndex(
+        Array.from(this.room.state.players.values()).filter(
+          (player) => !player.isDead && !player.respawnDisabled
+        )
+      );
 
       let input: InputData;
       let isCurrentlyMoving = false;
@@ -127,7 +138,14 @@ export class BaseTickCommand<
       }
 
       // Check for collisions with pickups
-      this.room.state.pickups.forEach((pickupSource) => {
+      const nearbyPickups = this.spatialManager.queryNearbyObjects(
+        player.x,
+        player.y,
+        player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
+        this.spatialManager.pickupIndex
+      );
+
+      nearbyPickups.forEach(({ pickup: pickupSource }) => {
         const pickup = PickupFactory.createPickup(
           pickupSource.type,
           pickupSource.x,
@@ -354,192 +372,189 @@ export class BaseTickCommand<
   }
 
   updateBullets() {
-    const mapBounds = {
-      width: this.room.state.mapWidth,
-      height: this.room.state.mapHeight,
-    };
-
     const bulletsToRemove: Bullet[] = [];
-    const bulletsChecked: Set<string> = new Set(); // Track already checked bullet pairs
+    const destroyedBullets: any[] = []; // Array to store destroyed bullet data
 
-    this.room.state.bullets.forEach((bullet, index) => {
+    this.room.state.bullets.forEach((bullet) => {
       // Update bullet position
       bullet.x += bullet.dx;
       bullet.y += bullet.dy;
       bullet.lifetime -= this.room.fixedTimeStep;
 
-      // Check if the bullet has expired
-      if (bullet.lifetime <= 0) {
-        bullet.colissionType = "timeout";
-        this.room.broadcast("bullet-destroyed", { bullet });
-
+      // Remove expired or out-of-bounds bullets
+      if (
+        bullet.lifetime <= 0 ||
+        bullet.x < 0 ||
+        bullet.x > this.room.state.mapWidth ||
+        bullet.y < 0 ||
+        bullet.y > this.room.state.mapHeight
+      ) {
+        destroyedBullets.push({
+          bullet,
+          colissionType: "timeout",
+        });
         bulletsToRemove.push(bullet);
         return;
       }
 
-      // Check if the bullet hits the collision layer
-      const bulletSize = 5; // Adjust if bullets have a specific size
       if (
         this.tilemapManager.isColliding(
-          bullet.x - bulletSize / 2,
-          bullet.y - bulletSize / 2,
-          bulletSize,
-          bulletSize
+          bullet.x - bullet.size / 2,
+          bullet.y - bullet.size / 2,
+          bullet.size,
+          bullet.size
         )
       ) {
-        bullet.colissionType = "colissionLayer";
-
-        this.room.broadcast("bullet-destroyed", { bullet });
+        destroyedBullets.push({
+          bullet,
+          colissionType: "timeout",
+        });
         bulletsToRemove.push(bullet);
         return;
       }
 
-      this.room.state.pickups.forEach((pickupSource, index) => {
-        const pickup = PickupFactory.createPickup(
-          pickupSource.type,
-          pickupSource.originalX,
-          pickupSource.originalY,
-          pickupSource
-        );
+      // Query nearby pickups
+      const nearbyPickups = this.spatialManager.queryNearbyObjects(
+        bullet.x,
+        bullet.y,
+        10, // Query radius
+        this.spatialManager.pickupIndex
+      );
 
-        if (!pickup) {
-          return;
-        }
+      for (const { pickup } of nearbyPickups) {
+        if (
+          this.collisionSystem.detectCollision(
+            {
+              type: pickup.collisionshape || "circle",
+              x: pickup.x + (pickup.colissionOffsetX || 0),
+              y: pickup.y + (pickup.colissionOffsetY || 0),
+              width: pickup.colissionWidth,
+              height: pickup.colissionHeight,
+              radius: pickup.radius,
+              rotation: pickup.rotation,
+            },
+            {
+              type: "circle",
+              x: bullet.x,
+              y: bullet.y,
+              radius: bullet.size, // Bullet radius
+            }
+          )
+        ) {
+          const pickupMethod = PickupFactory.createPickup(
+            pickup.type,
+            pickup.originalX,
+            pickup.originalY,
+            pickup
+          );
 
-        const isColliding = this.collisionSystem.detectCollision(
-          {
-            type: pickupSource.collisionshape || "circle",
-            x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
-            y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
-            width: pickupSource.colissionWidth,
-            height: pickupSource.colissionHeight,
-            radius: pickupSource.radius,
-            rotation: pickupSource.rotation,
-          },
-          {
-            type: "circle", // Shape type
-            x: bullet.x,
-            y: bullet.y,
-            radius: bulletSize,
+          if (!pickupMethod) {
+            return;
           }
-        );
 
-        if (isColliding) {
-          const onBulletCollision = pickup.onBulletCollision();
-          // Update main pickup with new properties after colission
+          const onBulletCollision = pickupMethod.onBulletCollision();
 
-          // not ideal for just 1 setting...
-          pickupSource.health = pickup.health;
+          pickup.health = pickupMethod.health;
 
           if (onBulletCollision) {
             this.room.state.pickups.splice(
-              this.room.state.pickups.indexOf(pickupSource),
+              this.room.state.pickups.indexOf(pickup),
               1
             ); // Remove pickup
           }
 
           if (pickup.destroyBulletOnCollision) {
-            bullet.colissionType = "pickup";
-            // to-do: get where it intersected with the item better!
-            // bullet.x = pickupSource.x;
-            // bullet.y = pickupSource.y;
-            this.room.broadcast("bullet-destroyed", {
+            destroyedBullets.push({
               bullet,
-              pickup: pickupSource,
+              colissionType: "pickup",
+              pickupId: pickup.id,
             });
 
             bulletsToRemove.push(bullet);
           }
-          return;
+          break;
         }
-      });
+      }
 
-      // Bullet vs Bullet Collision Detection
-      this.room.state.bullets.forEach((otherBullet) => {
+      // Query nearby players
+      const nearbyPlayers = this.spatialManager.queryNearbyObjects(
+        bullet.x,
+        bullet.y,
+        20, // Query radius
+        this.spatialManager.playerIndex
+      );
+
+      for (const { player } of nearbyPlayers) {
         if (
-          bullet === otherBullet ||
-          bulletsChecked.has(`${bullet.id}-${otherBullet.id}`)
+          this.collisionSystem.detectCollision(
+            {
+              type: "circle",
+              x: player.x,
+              y: player.y,
+              radius: player.hitRadius,
+            },
+            {
+              type: "circle",
+              x: bullet.x,
+              y: bullet.y,
+              radius: 5, // Bullet radius
+            }
+          )
         ) {
-          return;
+          const shooter = this.room.state.players.get(bullet.ownerId);
+          if (!shooter) return;
+
+          destroyedBullets.push({
+            bullet,
+            colissionType: "player",
+            playerId: player.sessionId,
+            shooterId: shooter.sessionId,
+          });
+
+          this.onBulletHit(player.sessionId, bullet, player, shooter);
+          bulletsToRemove.push(bullet);
+          break;
         }
+      }
+
+      // Query nearby bullets (bullet vs bullet collision)
+      const nearbyBullets = this.spatialManager.queryNearbyObjects(
+        bullet.x,
+        bullet.y,
+        10, // Query radius
+        this.spatialManager.bulletIndex
+      );
+
+      for (const { bullet: otherBullet } of nearbyBullets) {
+        if (bullet === otherBullet) continue;
 
         const dx = bullet.x - otherBullet.x;
         const dy = bullet.y - otherBullet.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < bulletSize) {
-          bullet.colissionType = "bullet";
-          otherBullet.colissionType = "bullet";
-
-          this.room.broadcast("bullet-destroyed", {
+        if (distance < 5) {
+          destroyedBullets.push({
             bullet,
-            collidedWith: otherBullet,
             colissionType: "bullet",
+            collidedWithId: otherBullet.id,
           });
-
           bulletsToRemove.push(bullet, otherBullet);
-
-          // Mark this pair as checked
-          bulletsChecked.add(`${bullet.id}-${otherBullet.id}`);
-          bulletsChecked.add(`${otherBullet.id}-${bullet.id}`);
-          return;
+          break;
         }
-      });
-
-      // Check collisions with players
-      for (const [sessionId, player] of this.room.state.players.entries()) {
-        if (player.isDead) {
-          continue; // Skip dead players
-        }
-
-        if (bullet.ownerId !== sessionId) {
-          const dx = bullet.x - player.x;
-          const dy = bullet.y - player.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < player.hitRadius) {
-            const shooter = this.room.state.players.get(bullet.ownerId);
-            if (!shooter) {
-              return;
-            }
-
-            bullet.colissionType = "player";
-
-            this.room.broadcast("bullet-destroyed", {
-              bullet,
-              player,
-              killer: shooter,
-            });
-
-            this.onBulletHit(sessionId, bullet, player, shooter);
-
-            bulletsToRemove.push(bullet);
-            return;
-          }
-        }
-      }
-
-      // Check if the bullet is out of bounds
-      if (
-        bullet.x < 0 ||
-        bullet.x > mapBounds.width ||
-        bullet.y < 0 ||
-        bullet.y > mapBounds.height
-      ) {
-        bullet.colissionType = "outofbounds";
-        this.room.broadcast("bullet-destroyed", { bullet });
-
-        bulletsToRemove.push(bullet);
       }
     });
 
-    // Remove bullets from ArraySchema
+    // Remove bullets and broadcast destroyed bullets
     bulletsToRemove.forEach((bullet) => {
       const index = this.room.state.bullets.indexOf(bullet);
       if (index !== -1) {
         this.room.state.bullets.splice(index, 1);
       }
     });
+
+    if (destroyedBullets.length > 0) {
+      this.room.broadcast("bullets-destroyed", destroyedBullets);
+    }
   }
 
   onBulletHit(
