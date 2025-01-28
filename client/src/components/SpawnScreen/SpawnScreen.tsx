@@ -225,7 +225,7 @@ export function SpawnScreen() {
     <div className="modal z-30">
       {killedBy && <div className="killedBy">Killed by: {killedBy}</div>}
 
-      <h2 className="text-2xl font-bold mb-4">{screenLanguage.title}</h2>
+      <h2>{screenLanguage.title}</h2>
       <p className="mb-4 border-b border-gray-600 w-full text-center pb-4">{screenLanguage.subTitle}</p>
 
       <input

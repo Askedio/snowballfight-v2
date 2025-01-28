@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { useColyseusRoom, useColyseusState } from "../../lib/colyseus";
+import {
+  stateStore,
+} from "../../lib/colyseus";
 import "./Leaderboard.css";
 
 interface Player {
@@ -11,35 +13,29 @@ interface Player {
 }
 
 export function Leaderboard() {
-  const clients = useColyseusState((state) => state.players);
-  const room = useColyseusRoom();
-  const state = useColyseusState(); // Get the entire room state
- 
   const [isLeaderboardVisible, setLeaderboardVisible] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
-
-  // Update players when roomState.players changes
-  useEffect(() => {
-    if (clients) {
-      const playersList = Array.from(clients.entries()).map(
-        ([sessionId, player]: any) => ({
-          sessionId,
-          name: player.name || "",
-          kills: player.kills || 0,
-          deaths: player.deaths || 0,
-          isDead: player.isDead || false,
-        })
-      );
-
-      setPlayers(playersList);
-    }
-  }, [clients]);
 
   // Handle Tab key to toggle leaderboard visibility
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Tab") {
         e.preventDefault();
+
+        const clients = stateStore.get().players;
+
+        const playersList = Array.from(clients.entries()).map(
+          ([sessionId, player]: any) => ({
+            sessionId,
+            name: player.name || "",
+            kills: player.kills || 0,
+            deaths: player.deaths || 0,
+            isDead: player.isDead || false,
+          })
+        );
+
+        setPlayers(playersList);
+
         setLeaderboardVisible(true);
       }
     };
