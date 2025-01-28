@@ -4,7 +4,6 @@ import type { Collision } from "../../classes/Collision";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import type { Player } from "../../schemas/Player";
 import type { Pickup } from "../../schemas/Pickup";
-import { spawnPickupFromObjectLayer } from "../../lib/pickups.lib";
 import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";
 
 export class CtfFixedTickCommand extends BaseTeamFixedTickCommand<
@@ -55,25 +54,5 @@ export class CtfFixedTickCommand extends BaseTeamFixedTickCommand<
     return {
       restorePickup: true,
     };
-  }
-
-  spawnPickups() {
-    // Spawn the red flag
-    spawnPickupFromObjectLayer(
-      this.tilemapManager,
-      this.room,
-      "flags",
-      "redFlag",
-      "redFlag"
-    );
-
-    // Spawn the blue flag
-    spawnPickupFromObjectLayer(
-      this.tilemapManager,
-      this.room,
-      "flags",
-      "blueFlag",
-      "blueFlag"
-    );
   }
 }
