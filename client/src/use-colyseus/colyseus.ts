@@ -76,6 +76,8 @@ export const colyseus = <S = Schema>(
     } catch (e) {
       console.error("Failed to connect to Colyseus!");
       console.log(e);
+
+      throw new Error("Failed to connect to Colyseus!");
     } finally {
       connecting = false;
     }

@@ -49,6 +49,7 @@ export function SpawnScreen() {
   const [lastGameMode, setLastGameMode] = useState<string>(spawnState.gameMode);
   const [respawnDelay, setRespawnDelay] = useState<number>(0); // Track respawn delay
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false); // Modal state
+  const [connectionOpen, setConnectionOpen] = useState(true); // Modal state
   const [screenLanguage, setScreenLanguage] = useState(defaultLanguage);
 
   useEffect(() => {
@@ -163,6 +164,10 @@ export function SpawnScreen() {
   const handleJoinButtonClick = async () => {
     setLastRoomName(spawnState.roomName);
 
+    if (!room.connection.isOpen) {
+      setConnectionOpen(false);
+    }
+
     room.send("respawn", {
       playerName: spawnState.playerName,
       roomName: spawnState.roomName,
@@ -201,6 +206,12 @@ export function SpawnScreen() {
 
   if (loading) {
     return null;
+  }
+
+  if (!connectionOpen) {
+    return (
+      <div className="modal text-center"><h1 className="text-xl">Sorry, there is a problem with connecting to the servers.</h1><br/><br/>Try reloading your browser window.</div>
+    );
   }
 
   return (

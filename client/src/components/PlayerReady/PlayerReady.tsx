@@ -33,14 +33,13 @@ export function PlayerReady() {
   useEffect(() => {
     if (!room) return;
 
-    console.log({ active: roundActive });
     if (roundActive) {
       setShowWaiting(true);
     }
   }, [room, roundActive]);
 
   useEffect(() => {
-    setShowReadyButton(requiresPlayerToReady && !room.state.roundActive);
+    setShowReadyButton(requiresPlayerToReady && !room?.state?.roundActive);
   }, [requiresPlayerToReady, room]);
 
   useEffect(() => {

@@ -56,6 +56,7 @@ export function App() {
   const location = useLocation();
 
   const [lastScene, setLastScene] = useState("");
+  const [failure, setFailure] = useState(false);
 
   useEffect(() => {
     if (!mode || lastScene === mode) {
@@ -99,12 +100,16 @@ export function App() {
       : "";
 
     (async () => {
-      await connectToColyseus(
-        `${customRoomName ? "user_" : ""}${gameMode}_room`,
-        {
-          customRoomName,
-        }
-      );
+      try {
+        await connectToColyseus(
+          `${customRoomName ? "user_" : ""}${gameMode}_room`,
+          {
+            customRoomName,
+          }
+        );
+      } catch (e: any) {
+        setFailure(true);
+      }
     })();
 
     return () => {
@@ -134,6 +139,16 @@ export function App() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  if (failure) {
+    return (
+      <div className="w-screen h-screen flex items-center">
+        <div className="text-center w-full text-xl text-black">
+          Sorry! The servers are currently offline.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

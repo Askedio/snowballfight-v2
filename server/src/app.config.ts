@@ -13,9 +13,11 @@ import { TsRoom } from "./rooms/TsRoom";
 
 let gameServerRef: Server;
 
+console.log(process.env.NODE_ENV);
+
 export default config({
   options: {
-    devMode: true,
+    devMode: process.env.NODE_ENV === "development",
   },
 
   initializeGameServer: (gameServer) => {
@@ -24,7 +26,9 @@ export default config({
      */
 
     gameServer.define("ffa_room", FreeForAllRoom);
-    gameServer.define("user_ffa_room", FreeForAllRoom).filterBy(["customRoomName"]);
+    gameServer
+      .define("user_ffa_room", FreeForAllRoom)
+      .filterBy(["customRoomName"]);
 
     gameServer.define("ctf_room", CtfRoom);
     gameServer.define("user_ctf_room", CtfRoom).filterBy(["customRoomName"]);
