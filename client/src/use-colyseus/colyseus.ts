@@ -69,10 +69,6 @@ export const colyseus = <S = Schema>(
 
         stateStore.set(copy);
       });
-
-      console.log(
-        `Succesfully connected to Colyseus room ${roomName} at ${endpoint}`
-      );
     } catch (e) {
       console.error("Failed to connect to Colyseus!");
       console.log(e);
