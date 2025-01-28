@@ -6,6 +6,7 @@ export class DevilPickup extends Pickup {
     Object.assign(this, config);
 
     this.asset = "devil";
+    
     this.destroyOnCollision = true;
     this.bulletKills = true;
 

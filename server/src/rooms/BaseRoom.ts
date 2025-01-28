@@ -1,11 +1,13 @@
 import type { Client } from "colyseus";
 import { Room } from "colyseus";
-import { TilemapManager } from "../TilemapManager";
+import { type TilemapLayersConfig, TilemapManager } from "../TilemapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
+
+
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -21,9 +23,9 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
 
   // Map configuration
   map: string;
-  layers = {
+  layers: TilemapLayersConfig = {
     base: "base",
-    colissions: "collisions",
+    collisions: "collisions",
     land: "Tile Layer 1",
     spawnLayer: "spawns",
   };
@@ -39,7 +41,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
 
     this.tilemapManager = new TilemapManager(
       this.map,
-      this.layers.colissions,
+      this.layers.collisions,
       this.layers.spawnLayer,
       this.state.players
     );

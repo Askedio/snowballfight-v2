@@ -136,7 +136,7 @@ export class BaseTickCommand<
 
         const isCollidingWithPickup = this.collisionSystem.detectCollision(
           {
-            type: pickupSource.colissionShape || "circle",
+            type: pickupSource.collisionshape || "circle",
             x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
             y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
             width: pickupSource.colissionWidth,
@@ -403,7 +403,7 @@ export class BaseTickCommand<
 
         const isColliding = this.collisionSystem.detectCollision(
           {
-            type: pickupSource.colissionShape || "circle",
+            type: pickupSource.collisionshape || "circle",
             x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
             y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
             width: pickupSource.colissionWidth,

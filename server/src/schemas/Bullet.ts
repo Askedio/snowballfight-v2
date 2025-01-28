@@ -30,7 +30,7 @@ export class Bullet extends Schema {
   @type("string") impactSound = "bullet1"; // Default sound
   @type("string") impactOnPlayerSound = "bullet1";
   @type("string") impactOnPickupSound = "bullet1";
-  @type("string") impactOnColissionSound = "bullet1";
+  @type("string") impactOncollisionsound = "bullet1";
   @type("string") impactOnTimeoutSound = "bullet1";
   @type("string") impactOnOutofboundsSound = "bullet1";
 }

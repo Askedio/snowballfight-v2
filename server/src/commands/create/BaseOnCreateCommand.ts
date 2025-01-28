@@ -1,12 +1,12 @@
 import { Command } from "@colyseus/command";
-import { matchMaker, type Client } from "colyseus";
+import type { Client } from "colyseus";
 import type { TilemapManager } from "../../TilemapManager";
 import { nanoid } from "nanoid";
 import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";
 import { Player } from "../../schemas/Player";
 import { RandomNameGenerator } from "../../RandomNameGenerator";
-import { assignRandomPosition, respawnPlayer } from "../../lib/player.lib";
+import { assignSpawn, respawnPlayer } from "../../lib/player.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
@@ -33,21 +33,6 @@ export class BaseOnCreateCommand<
     for (let i = 0; i < payload.maxBots; i++) {
       await this.createPlayer(null, null, "bot");
     }
-
-    /*
-    setInterval(async () => {
-      const stats = await matchMaker.query({ name: "ffa_room" });
-      console.log(stats);
-
-      const globalCCU = await matchMaker.stats.getGlobalCCU();
-      console.log(globalCCU);
-
-      const roomCount = matchMaker.stats.local.roomCount;
-      console.log(roomCount);
-
-      const rooms = await matchMaker.query({ name: "battle" });
-      console.log(rooms);
-    }, 1000);*/
 
     this.room.onMessage("chat", (client, { message }) => {
       const player = this.room.state.players.get(client.sessionId);
@@ -144,21 +129,12 @@ export class BaseOnCreateCommand<
     });
   }
 
-  onPlayerRespawn(player: Player) {}
-
-  spawnPickups() {
-    spawnRandomPickups(this.tilemapManager, this.room);
-  }
-
   async createPlayer(
     client: Client,
     skin: string,
     type: "human" | "bot" = "human"
   ) {
     const player = new Player();
-
-    // Assign a new random position
-    await assignRandomPosition(player, this.tilemapManager);
 
     player.type = type;
 
@@ -184,12 +160,25 @@ export class BaseOnCreateCommand<
       this.room.state.players.set(client.sessionId, player);
     }
 
+    // All game types to modify player before spawn, ie: add a team.
+    this.onCreatePlayer(player);
+
+    await assignSpawn(player, this.tilemapManager);
+
     return player;
   }
+
+  onCreatePlayer(player: Player) {}
+
+  onPlayerRespawn(player: Player) {}
 
   assignRandomSkin(): string {
     const availableSkins = ["playersa", "playersb", "playersc", "playersd"];
 
     return availableSkins[Math.floor(Math.random() * availableSkins.length)];
+  }
+
+  spawnPickups() {
+    spawnRandomPickups(this.tilemapManager, this.room);
   }
 }

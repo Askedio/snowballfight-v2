@@ -6,6 +6,7 @@ export class TreasurePickup extends Pickup {
     Object.assign(this, config);
   
     this.asset = "treasure";
+    
     this.destroyOnCollision = true;
   }
 

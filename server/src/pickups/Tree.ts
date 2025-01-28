@@ -8,10 +8,11 @@ export class TreePickup extends Pickup {
     this.asset = "tree";
     this.scale = 0.7;
     this.bringToTop = true;
-    this.blocking = true;
     this.colissionOffsetY = 47;
-
+   
+    this.blocking = true;
     this.health = config.health || 100;
+    this.destroyBulletOnCollision = true;
   }
 
   onPlayerCollision(player: any): void {

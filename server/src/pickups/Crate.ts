@@ -11,12 +11,13 @@ export class CratePickup extends Pickup {
     this.scale = 0.7;
     this.rotation = 6;
 
-    this.colissionShape = "box";
+    this.collisionshape = "box";
     this.colissionHeight = 80;
     this.colissionWidth = 80;
 
     this.blocking = true;
     this.health = config.health || 40;
+    this.destroyBulletOnCollision = true;
   }
 
   onPlayerCollision(player: any): void {

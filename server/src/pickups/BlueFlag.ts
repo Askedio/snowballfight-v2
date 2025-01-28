@@ -7,17 +7,14 @@ export class BlueFlagPickup extends Pickup {
     Object.assign(this, config);
 
     this.isSprite = true;
-
     this.scale = 0.7;
     this.scaleOnPlayer = 0.3;
-
     this.autoPlay = true;
     this.tint = "0x0000ff";
-
     this.asset = "flag";
+    
     this.destroyOnCollision = true;
     this.isRedeployable = false;
-
     this.dropOffLocation = "redFlag";
     this.showOnPlayer = true;
   }

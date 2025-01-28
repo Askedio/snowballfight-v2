@@ -6,14 +6,16 @@ export class SnowmanPickup extends Pickup {
     Object.assign(this, config);
 
     this.asset = "snowman";
-    this.bulletKills = true;
     this.scale = 0.4;
     this.colissionOffsetY = 14;
     this.colissionOffsetX = 1;
     this.bringToTop = true;
     this.radius = 24;
+
+    this.bulletKills = true;
     this.blocking = true;
     this.health = config.health || 40;
+    this.destroyBulletOnCollision = true;
   }
 
   onPlayerCollision(player: any): void {

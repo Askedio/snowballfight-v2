@@ -1,8 +1,8 @@
-import type { Client } from "colyseus";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { BaseOnCreateCommand } from "./BaseOnCreateCommand";
 import { assignTeam } from "../../lib/teams.lib";
+import type { Player } from "../../schemas/Player";
 
 export class BaseTeamOnCreateCommand<
   TRoom extends BaseRoom<TState>,
@@ -24,15 +24,9 @@ export class BaseTeamOnCreateCommand<
     );
   }
 
-  async createPlayer(
-    client: Client,
-    skin: string,
-    type: "human" | "bot" = "human"
+  onCreatePlayer(
+    player: Player,
   ) {
-    const player = await super.createPlayer(client, skin, type);
-
     assignTeam(player, this.room.state.players);
-
-    return player;
   }
 }

@@ -2,6 +2,13 @@ import * as fs from "node:fs";
 import type * as tiled from "@kayahr/tiled";
 import RBush from "rbush";
 
+export interface TilemapLayersConfig {
+  base: string;
+  collisions: string;
+  land: string;
+  spawnLayer: string | SpawnLayerConfig;
+}
+
 export interface TileBounds {
   x: number;
   y: number;
@@ -15,25 +22,32 @@ export interface CollisionTile {
   maxX: number;
   maxY: number;
 }
+export interface SpawnLayerConfig {
+  [team: string]: string;
+}
+
+export type SpawnLayers = string | SpawnLayerConfig;
 
 export class TilemapManager {
   collisionIndex: RBush<CollisionTile>;
-  spawnTiles: TileBounds[] = [];
+  spawnTiles: { [key: string]: TileBounds[] } = {}; // Stores tiles for each layer
   tileWidth: number;
   tileHeight: number;
   mapJson: any;
   private players: any;
   collisionLayerName: string;
+  spawnLayerName: string | { [team: string]: string };
 
   constructor(
     mapFilePath: string,
     collisionLayerName: string,
-    spawnLayerName: string,
+    spawnLayerName: string | { [team: string]: string },
     players: any
   ) {
     this.players = players;
     this.collisionIndex = new RBush<CollisionTile>();
     this.collisionLayerName = collisionLayerName;
+    this.spawnLayerName = spawnLayerName;
 
     // Load and parse the map JSON
     const mapJson = JSON.parse(
@@ -59,7 +73,6 @@ export class TilemapManager {
     const collisionTiles: CollisionTile[] = [];
     (collisionLayer.data as number[]).forEach((tileIndex, index) => {
       if (tileIndex !== 0) {
-        // Non-zero tile index indicates a collision tile
         const x = (index % mapJson.width) * this.tileWidth;
         const y = Math.floor(index / mapJson.width) * this.tileHeight;
         collisionTiles.push({
@@ -72,23 +85,38 @@ export class TilemapManager {
     });
     this.collisionIndex.load(collisionTiles);
 
-    // Extract spawn layer
-    const spawnLayer = mapJson.layers.find(
-      (layer) => layer.name === spawnLayerName
+    // Extract spawn layers
+    if (typeof this.spawnLayerName === "string") {
+      this.spawnTiles.default = this.extractSpawnTiles(this.spawnLayerName);
+    } else {
+      for (const [team, layerName] of Object.entries(this.spawnLayerName)) {
+        this.spawnTiles[team] = this.extractSpawnTiles(layerName);
+      }
+    }
+  }
+
+  /**
+   * Extracts spawn tiles from a given layer name.
+   * @param layerName The name of the layer to extract tiles from.
+   * @returns An array of TileBounds.
+   */
+  private extractSpawnTiles(layerName: string): TileBounds[] {
+    const spawnTiles: TileBounds[] = [];
+    const spawnLayer = this.mapJson.layers.find(
+      (layer: any) => layer.name === layerName
     );
+
     if (!spawnLayer || spawnLayer.type !== "tilelayer") {
       throw new Error(
-        `Spawn layer "${spawnLayerName}" not found or is not a tile layer!`
+        `Spawn layer "${layerName}" not found or is not a tile layer!`
       );
     }
 
-    // Parse spawn tiles
     (spawnLayer.data as number[]).forEach((tileIndex, index) => {
       if (tileIndex !== 0) {
-        // Non-zero tile index indicates a spawn tile
-        const x = (index % mapJson.width) * this.tileWidth;
-        const y = Math.floor(index / mapJson.width) * this.tileHeight;
-        this.spawnTiles.push({
+        const x = (index % this.mapJson.width) * this.tileWidth;
+        const y = Math.floor(index / this.mapJson.width) * this.tileHeight;
+        spawnTiles.push({
           x,
           y,
           width: this.tileWidth,
@@ -96,49 +124,49 @@ export class TilemapManager {
         });
       }
     });
+
+    return spawnTiles;
   }
 
   /**
-   * Returns a random spawn location from the spawn layer.
+   * Returns a random spawn location from the specified layer or team.
+   * @param team The team name or "default" for non-team-based spawns.
    * @returns An object containing x and y coordinates.
    */
-  async getRandomSpawn(): Promise<{ x: number; y: number }> {
-    if (this.spawnTiles.length === 0) {
-      throw new Error("No spawn tiles found!");
+  async getRandomSpawn(_team = "default"): Promise<{ x: number; y: number }> {
+    const team = _team || "default"
+    const spawnTiles = this.spawnTiles[team];
+
+    if (!spawnTiles || spawnTiles.length === 0) {
+      throw new Error(`No spawn tiles found for team "${team}"!`);
     }
 
-    // If there are no players, pick any random spawn tile
     if (this.players.size === 0) {
-      console.warn("No players, picking random spawn.");
       const randomTile =
-        this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+        spawnTiles[Math.floor(Math.random() * spawnTiles.length)];
       return {
         x: randomTile.x + this.tileWidth / 2,
         y: randomTile.y + this.tileHeight / 2,
       };
     }
 
-    const minDistance = this.tileWidth; // Minimum distance from other players (adjust as needed)
-    const maxIterations = 50; // Fallback after 50 iterations
+    const minDistance = this.tileWidth;
+    const maxIterations = 50;
     let iterations = 0;
 
     while (true) {
       const randomTile =
-        this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+        spawnTiles[Math.floor(Math.random() * spawnTiles.length)];
 
-      const spawnX = randomTile.x + this.tileWidth / 2; // Center the spawn
+      const spawnX = randomTile.x + this.tileWidth / 2;
       const spawnY = randomTile.y + this.tileHeight / 2;
 
-      // Check distance from all players
       const isFarEnough = Array.from(this.players.values()).every(
         (player: any) => {
-          const distance =
-            ((spawnX - player.x) ** 2 + (spawnY - player.y) ** 2) ** 0.5;
+          const distance = Math.hypot(spawnX - player.x, spawnY - player.y);
           return distance >= minDistance;
         }
       );
-
-      console.log("Finding spawn", isFarEnough);
 
       if (isFarEnough) {
         return { x: spawnX, y: spawnY };
@@ -146,18 +174,14 @@ export class TilemapManager {
 
       iterations++;
       if (iterations >= maxIterations) {
-        console.warn(
-          "Fallback spawn: Could not find a valid spawn after max iterations."
-        );
         const fallbackTile =
-          this.spawnTiles[Math.floor(Math.random() * this.spawnTiles.length)];
+          spawnTiles[Math.floor(Math.random() * spawnTiles.length)];
         return {
           x: fallbackTile.x + this.tileWidth / 2,
           y: fallbackTile.y + this.tileHeight / 2,
         };
       }
 
-      // Delay for 10ms to prevent blocking
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
   }

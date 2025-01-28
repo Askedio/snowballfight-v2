@@ -1,7 +1,7 @@
 import { BaseTickCommand } from "./BaseFixedTickCommand";
 import { getTotalReadyPlayers } from "../../lib/room.lib";
 import type { Player } from "../../schemas/Player";
-import { assignRandomPosition } from "../../lib/player.lib";
+import { assignSpawn } from "../../lib/player.lib";
 import type { Pickup } from "../../schemas/Pickup";
 import { removeAllPickups, spawnRandomPickups } from "../../lib/pickups.lib";
 import type { BaseRoom } from "../../rooms/BaseRoom";
@@ -46,7 +46,7 @@ export class BaseTeamFixedTickCommand<
         this.state.players.forEach(async (player) => {
           player.isDead = true;
 
-          await assignRandomPosition(player, this.tilemapManager); // Respawn at a new position
+          await assignSpawn(player, this.tilemapManager); // Respawn at a new position
 
           this.room.broadcast("client-respawned", {
             sessionId: player.sessionId,

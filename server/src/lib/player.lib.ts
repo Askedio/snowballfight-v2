@@ -3,9 +3,9 @@ import type { TilemapManager } from "../TilemapManager";
 
 export async function respawnPlayer(
   player: Player,
-  tilemapManager: TilemapManager
+  tilemapManager: TilemapManager,
 ) {
-  await assignRandomPosition(player, tilemapManager); // Respawn at a new position
+  await assignSpawn(player, tilemapManager); // Respawn at a new position
 
   player.respawn();
 
@@ -17,12 +17,12 @@ export async function respawnPlayer(
   }, player.protectionTime);
 }
 
-export async function assignRandomPosition(
+export async function assignSpawn(
   player: Player,
-  tilemapManager: TilemapManager
+  tilemapManager: TilemapManager,
 ) {
   try {
-    const spawn = await tilemapManager.getRandomSpawn();
+    const spawn = await tilemapManager.getRandomSpawn(player.team);
 
     player.x = spawn.x;
     player.y = spawn.y;

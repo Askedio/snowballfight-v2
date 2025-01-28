@@ -25,7 +25,7 @@ export class Pickup extends Schema {
   @type("number") height: number;
   @type("number") rotation: number;
   @type("number") radius = 12; // The size of the pickup collision zone
-  @type("string") colissionShape: string; // The following are used for colission detection
+  @type("string") collisionshape: string; // The following are used for colission detection
   @type("number") colissionOffsetX: number;
   @type("number") colissionOffsetY: number;
   @type("number") colissionWidth: number;
@@ -41,7 +41,7 @@ export class Pickup extends Schema {
   @type("boolean") blocking = false; // Does it block player movement?
   @type("boolean") bulletKills = false; // Can bullets destroy it?
   @type("boolean") destroyOnCollision = false; // Destroyed when a player collides
-  @type("boolean") destroyBulletOnCollision = true; // Bullet is destroyed on collision
+  @type("boolean") destroyBulletOnCollision = false; // Bullet is destroyed on collision
 
   // Redeploy
   @type("boolean") isRedeployable = true; // Can this pickup redeploy?

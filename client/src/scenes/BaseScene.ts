@@ -363,11 +363,11 @@ export class BaseScene extends Phaser.Scene {
 
           let debugBorder: Phaser.GameObjects.Graphics | null = null;
 
-          if (!pickup.colissionShape || pickup.colissionShape === "circle") {
+          if (!pickup.collisionshape || pickup.collisionshape === "circle") {
             debugBorder = this.add.graphics();
             debugBorder.lineStyle(2, 0xff0000);
             debugBorder.strokeCircle(offsetX, offsetY, pickup.radius);
-          } else if (pickup.colissionShape === "box") {
+          } else if (pickup.collisionshape === "box") {
             debugBorder = this.add.graphics();
             debugBorder.lineStyle(2, 0xff0000); // Red border with transparency
 
@@ -677,7 +677,7 @@ export class BaseScene extends Phaser.Scene {
 
             break;
           case "colissionLayer":
-            this.playSpatialSound(bullet, bullet.impactOnColissionSound);
+            this.playSpatialSound(bullet, bullet.impactOncollisionsound);
             this.playAnimation(
               bullet.impactOnColissionAnimation,
               bullet.x,

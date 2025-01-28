@@ -6,6 +6,7 @@ export class WingsPickup extends Pickup {
     Object.assign(this, config);
   
     this.asset = "wings";
+    
     this.destroyOnCollision = true;
   }
 

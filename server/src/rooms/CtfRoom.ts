@@ -1,6 +1,7 @@
 import { CtfOnCreateCommand } from "../commands/create/CtfOnCreateCommand";
 import { CtfFixedTickCommand } from "../commands/tick/CtfFixedTickCommand";
 import { CtfRoomState } from "../states/CtfRoomState";
+import type { TilemapLayersConfig } from "../TilemapManager";
 import { BaseRoom } from "./BaseRoom";
 
 export class CtfRoom extends BaseRoom<CtfRoomState> {
@@ -12,11 +13,11 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
 
   // Map configuration
   map = "../client/static/assets/maps/winter/map.json";
-  layers = {
+  layers: TilemapLayersConfig = {
     base: "base",
-    colissions: "collisions",
+    collisions: "collisions",
     land: "Tile Layer 1",
-    spawnLayer: "spawns",
+    spawnLayer: { red: "redspawns", blue: "bluespawns" },
   };
 
   async onCreate() {
@@ -25,7 +26,7 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
 
     this.dispatcher.dispatch(new CtfOnCreateCommand(), {
       tilemapManager: this.tilemapManager,
-      maxBots: this.maxBots
+      maxBots: this.maxBots,
     });
   }
 
