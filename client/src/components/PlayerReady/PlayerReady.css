@@ -10,3 +10,7 @@
 .player-ready-button.not-ready {
   @apply bg-green-900 hover:bg-blue-600;
 }
+
+.player-waiting {
+  @apply bg-gray-900/75 text-white border-white/75 p-3 rounded-lg
+}

@@ -8,11 +8,17 @@ export function PlayerReady() {
   const requiresPlayerToReady = useColyseusState(
     (state) => state.requiresPlayerToReady
   );
-  const [loading, setLoading] = useState(true);
+
+  const roundActive = useColyseusState((state) => state.roundActive);
 
   const player = useColyseusState((state) =>
     state?.players?.get(room?.sessionId)
   );
+
+  const [loading, setLoading] = useState(true);
+  const [showReadyButton, setShowReadyButton] = useState(false);
+  const [showWaiting, setShowWaiting] = useState(false);
+  const [isReady, setIsReady] = useState(false); // Track if the player is ready
 
   useEffect(() => {
     EventBus.on("scene-ready", () => {
@@ -24,7 +30,14 @@ export function PlayerReady() {
     };
   }, []);
 
-  const [showReadyButton, setShowReadyButton] = useState(false);
+  useEffect(() => {
+    if (!room) return;
+
+    console.log({ active: roundActive });
+    if (roundActive) {
+      setShowWaiting(true);
+    }
+  }, [room, roundActive]);
 
   useEffect(() => {
     setShowReadyButton(requiresPlayerToReady && !room.state.roundActive);
@@ -37,18 +50,15 @@ export function PlayerReady() {
 
     room.onMessage("round-started", () => {
       setShowReadyButton(false);
+      setShowWaiting(false);
     });
 
     room.onMessage("round-over", () => {
       setIsReady(false);
+      setShowWaiting(false);
       setShowReadyButton(true);
     });
   }, [room]);
-
-  // need more to check find in menu waitingToStart
-  const teamScoring = useColyseusState((state) => state.teamScoring);
-
-  const [isReady, setIsReady] = useState(false); // Track if the player is ready
 
   // Handle "player-ready" button click
   const handleReadyClick = (e: React.MouseEvent) => {
@@ -65,20 +75,30 @@ export function PlayerReady() {
     setIsReady(!isReady);
   };
 
-  if (!showReadyButton || loading || !player) {
+  if (loading || !player) {
     return;
   }
 
   return (
-    <div className="player-ready">
-      <button
-        type="button"
-        id="player-ready-button"
-        className={`player-ready-button ${isReady ? "" : "not-ready"}`}
-        onClick={handleReadyClick}
-      >
-        {isReady ? "Unready" : "Ready"}
-      </button>
-    </div>
+    <>
+      {showWaiting && !player.canJoin && (
+        <div className="player-ready">
+          <div className="player-waiting">Waiting for next round...</div>
+        </div>
+      )}
+
+      {showReadyButton && (
+        <div className="player-ready">
+          <button
+            type="button"
+            id="player-ready-button"
+            className={`player-ready-button ${isReady ? "" : "not-ready"}`}
+            onClick={handleReadyClick}
+          >
+            {isReady ? "Unready" : "Ready"}
+          </button>
+        </div>
+      )}
+    </>
   );
 }

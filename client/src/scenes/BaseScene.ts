@@ -573,8 +573,8 @@ export class BaseScene extends Phaser.Scene {
                 /*this.playSpatialSound(
                 player,
                 player.speed > player.defaultSpeed
-                  ? player.runningSound
-                  : player.walkingSound
+                  ? player.sounds.runningSound
+                  : player.sounds.walkingSound
               );*/
 
                 if (
@@ -636,7 +636,7 @@ export class BaseScene extends Phaser.Scene {
         }
       }
 
-      this.playSpatialSound(player, player.onKilledSound);
+      this.playSpatialSound(player, player.sounds.onKilledSound);
     });
 
     // Handle player removal

@@ -1,5 +1,6 @@
 import type { BaseTeamOnCreateCommand } from "../commands/create/BaseTeamOnCreateCommand";
 import type { BaseRoom } from "../rooms/BaseRoom";
+import type { Player } from "../schemas/Player";
 import type { TeamRoomState } from "../states/TeamRoomState";
 
 export class RoundManager<
@@ -110,8 +111,10 @@ export class RoundManager<
       blueScore: this.command.room.state.blueScore,
     });
 
-    this.command.room.state.players.forEach(async (player: any) => {
+    this.command.room.state.players.forEach(async (player: Player) => {
       player.isDead = true;
+      player.canJoin = true;
+
       await player.assignSpawn(this.command.room.tilemapManager);
       this.command.room.broadcast("client-respawned", {
         sessionId: player.sessionId,
@@ -128,7 +131,7 @@ export class RoundManager<
     this.command.room.state.redScore = 0;
     this.command.room.state.blueScore = 0;
 
-    this.command.room.state.players.forEach((player: any) => {
+    this.command.room.state.players.forEach((player: Player) => {
       player.reset();
     });
 
@@ -142,7 +145,7 @@ export class RoundManager<
   }
 
   private resetPlayers() {
-    this.command.room.state.players.forEach((player: any) => {
+    this.command.room.state.players.forEach((player: Player) => {
       player.isDead = false;
     });
   }

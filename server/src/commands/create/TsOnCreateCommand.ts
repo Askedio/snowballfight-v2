@@ -14,6 +14,7 @@ export class TsOnCreateCommand extends BaseTeamOnCreateCommand<
   onPlayerRespawn(player: Player) {
     if (this.state.roundActive) {
       player.isDead = true;
+      player.canJoin = false;
     }
   }
 }

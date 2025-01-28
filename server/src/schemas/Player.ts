@@ -4,6 +4,14 @@ import { Pickup } from "./Pickup";
 import type { MapSchema } from "@colyseus/schema";
 import type { TilemapManager } from "../classes/TilemapManager";
 
+class Sounds extends Schema {
+  @type("string") onKilledSound = "smash1";
+  @type("string") walkingSound = "footstep1";
+  @type("string") runningSound = "footstep1";
+  @type("string") rKeySound: string;
+  @type("string") eKeySound: string;
+}
+
 export class Player extends Schema {
   @type("string") sessionId = "";
   @type("string") type = "human";
@@ -35,6 +43,7 @@ export class Player extends Schema {
   @type("number") speed = 4; // The speed the player moves at
 
   @type("boolean") enabled = true;
+  @type("boolean") canJoin = true;
   @type("boolean") isMoving = false; // Track if the player is moving
 
   // Spawn Protection
@@ -66,11 +75,7 @@ export class Player extends Schema {
   @type("number") lastReloadTime = 0;
 
   // Sounds
-  @type("string") onKilledSound = "smash1";
-  @type("string") walkingSound = "footstep1";
-  @type("string") runningSound = "footstep1";
-  @type("string") rKeySound: string;
-  @type("string") eKeySound: string;
+  @type(Sounds) sounds: Sounds = new Sounds();
 
   // Animations
   @type("string") onKilledAnimation = "explosiongrey";
