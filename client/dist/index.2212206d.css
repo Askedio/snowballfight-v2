@@ -349,6 +349,15 @@ img, video {
   border-width: 1px;
 }
 
+.border-b {
+  border-bottom-width: 1px;
+}
+
+.border-gray-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
+}
+
 .px-3 {
   padding-left: .75rem;
   padding-right: .75rem;
@@ -356,6 +365,18 @@ img, video {
 
 .pl-3 {
   padding-left: .75rem;
+}
+
+.pb-3 {
+  padding-bottom: .75rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.pb-2 {
+  padding-bottom: .5rem;
 }
 
 .text-center {
@@ -607,9 +628,13 @@ input {
 }
 
 .instructions {
+  --tw-border-opacity: 1;
+  border-top-width: 1px;
+  border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity, 1));
-  margin-top: 2rem;
+  margin-top: 1rem;
+  padding-top: .75rem;
   font-size: .75rem;
   line-height: 1rem;
 }
@@ -617,9 +642,10 @@ input {
 .btn-plain {
   font-size: .75rem;
   line-height: 1rem;
+  text-decoration-line: underline;
 
   &:hover {
-    text-decoration-line: underline;
+    text-decoration-line: none;
   }
 }
 

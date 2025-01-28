@@ -21,7 +21,7 @@ interface SpawnState {
 
 const defaultLanguage = {
   title: "Welcome to Snowball Fight!",
-  subTitle: "Click Join Game to play!",
+  subTitle: "Click Join Game to start fighting",
   joinButton: "Join Game",
 };
 
@@ -226,7 +226,7 @@ export function SpawnScreen() {
       {killedBy && <div className="killedBy">Killed by: {killedBy}</div>}
 
       <h2 className="text-2xl font-bold mb-4">{screenLanguage.title}</h2>
-      <p className="mb-4">{screenLanguage.subTitle}</p>
+      <p className="mb-4 border-b border-gray-600 w-full text-center pb-4">{screenLanguage.subTitle}</p>
 
       <input
         name="playerName"
@@ -277,7 +277,7 @@ export function SpawnScreen() {
       </button>
 
       <div className="instructions">
-        <p className="text-white text-center">
+        <p className="text-white text-center w-full pb-3 border-b border-gray-600">
           <strong>Tip:</strong> Use your respawn protection to reload your
           snowballs!
         </p>
