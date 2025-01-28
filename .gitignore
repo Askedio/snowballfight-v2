@@ -7,3 +7,4 @@ client/dist/*.map
 .env.local
 
 server/.devmode.json
+server/lib
