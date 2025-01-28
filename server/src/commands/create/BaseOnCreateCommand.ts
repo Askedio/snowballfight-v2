@@ -123,6 +123,8 @@ export class BaseOnCreateCommand<
               sessionId: client.sessionId,
             });
           }
+
+          this.onPlayerRespawn(player);
         } else {
           console.warn(
             `Failed to create or fetch player for ${client.sessionId}`
@@ -141,6 +143,8 @@ export class BaseOnCreateCommand<
       }
     });
   }
+
+  onPlayerRespawn(player: Player) {}
 
   spawnPickups() {
     spawnRandomPickups(this.tilemapManager, this.room);

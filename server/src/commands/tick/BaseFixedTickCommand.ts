@@ -126,7 +126,8 @@ export class BaseTickCommand<
         const pickup = PickupFactory.createPickup(
           pickupSource.type,
           pickupSource.x,
-          pickupSource.y
+          pickupSource.y,
+          pickupSource
         );
 
         if (!pickup) {
@@ -170,8 +171,8 @@ export class BaseTickCommand<
                   this.room.state.pickups.push(
                     PickupFactory.createPickup(
                       playerPickup.type,
-                      playerPickup.x,
-                      playerPickup.y,
+                      playerPickup.originalX,
+                      playerPickup.originalY,
                       playerPickup
                     )
                   ); // Add it back
@@ -203,14 +204,15 @@ export class BaseTickCommand<
               setTimeout(() => {
                 const redeployedPickup = PickupFactory.createPickup(
                   pickup.type,
-                  pickup.x,
-                  pickup.y
+                  pickup.originalX,
+                  pickup.originalY,
+                  pickup
                 );
                 if (redeployedPickup) {
                   redeployedPickup.id = nanoid();
                   redeployedPickup.isRedeployable = pickup.isRedeployable;
                   redeployedPickup.redeployTimeout = pickup.redeployTimeout;
-
+               
                   this.room.state.pickups.push(redeployedPickup); // Add it back
                 }
               }, pickup.redeployTimeout);
@@ -375,8 +377,8 @@ export class BaseTickCommand<
       this.room.state.pickups.forEach((pickupSource, index) => {
         const pickup = PickupFactory.createPickup(
           pickupSource.type,
-          pickupSource.x,
-          pickupSource.y,
+          pickupSource.originalX,
+          pickupSource.originalY,
           pickupSource
         );
 
@@ -532,7 +534,6 @@ export class BaseTickCommand<
 
     player.isDead = true;
     player.deaths += 1;
-
     // Increment killer's kills count
     shooter.kills += 1;
 
@@ -543,7 +544,26 @@ export class BaseTickCommand<
       respawnDelay: player.respawnDelay,
     });
 
-    if (player.type === "bot") {
+    player.pickups.forEach((pickup) => {
+      const redeployedPickup = PickupFactory.createPickup(
+        pickup.type,
+        player.x,
+        player.y,
+        pickup
+      );
+      if (redeployedPickup) {
+
+        console.log("addin bak", player.x,
+          player.y,)
+        redeployedPickup.id = nanoid();
+        redeployedPickup.isRedeployable = pickup.isRedeployable;
+        redeployedPickup.redeployTimeout = pickup.redeployTimeout;
+
+        this.room.state.pickups.push(redeployedPickup); // Add it back
+      }
+    });
+
+    if (player.type === "bot" && !player.respawnDisabled) {
       setTimeout(async () => {
         await respawnPlayer(player, this.tilemapManager);
       }, player.respawnDelay * 1000);

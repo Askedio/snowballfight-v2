@@ -11,8 +11,19 @@ import { RedFlagPickup } from "./RedFlag";
 import { BlueFlagPickup } from "./BlueFlag";
 
 export class PickupFactory {
-  static createPickup(type: string, x: number, y: number, config: Partial<Pickup> = {}): Pickup | null {
-    const baseConfig = { type, x, y, ...config };
+  static createPickup(
+    type: string,
+    x: number,
+    y: number,
+    config: Partial<Pickup> = {}
+  ): Pickup | null {
+    const excludedKeys = ["x", "y"];
+
+    const filteredConfig = Object.fromEntries(
+      Object.entries(config).filter(([key]) => !excludedKeys.includes(key))
+    );
+
+    const baseConfig = { type, x, y, ...filteredConfig };
     switch (type) {
       case "crate":
         return new CratePickup(baseConfig);

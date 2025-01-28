@@ -16,7 +16,8 @@ export class TsFixedTickCommand extends BaseTeamFixedTickCommand<
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {
     super.onPlayerDeath(sessionId, player, shooter);
 
-    player.repsawnDisabled = true;
+    player.respawnDisabled = true;
+    shooter.score += 1;
 
     if (shooter.team === "red") {
       this.room.state.redScore += 1;

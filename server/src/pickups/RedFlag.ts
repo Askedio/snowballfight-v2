@@ -9,6 +9,7 @@ export class RedFlagPickup extends Pickup {
     this.isSprite = true;
 
     this.scale = 0.7;
+    this.scaleOnPlayer = 0.3;
     this.autoPlay = true;
     this.tint = "0xff0000";
 

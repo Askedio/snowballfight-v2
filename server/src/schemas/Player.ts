@@ -10,7 +10,7 @@ export class Player extends Schema {
   @type("string") team = ""; // red or blue
   @type("number") score = 0; // Used for team games, ie: ctf = how many flags they captured
   @type("boolean") isReady = false; // Track if the player is dead
-  @type("boolean") repsawnDisabled = false; // For TS
+  @type("boolean") respawnDisabled = false; // For TS
 
   // Position
   @type("number") x = 400;
@@ -99,7 +99,7 @@ export class Player extends Schema {
   inputQueue: InputData[] = [];
 
   canRespawn(): boolean {
-    if(this.repsawnDisabled) {
+    if(this.respawnDisabled) {
       return false;
     }
     
@@ -128,6 +128,7 @@ export class Player extends Schema {
     this.bulletFireRate = this.defaultBulletFireRate;
     this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
+    this.pickups = new ArraySchema<Pickup>();
   }
 
   respawn() {
@@ -141,6 +142,7 @@ export class Player extends Schema {
     this.bulletFireRate = this.defaultBulletFireRate;
     this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
+    this.pickups = new ArraySchema<Pickup>();
   }
 
   resetTimeouts: Map<string, NodeJS.Timeout> = new Map<

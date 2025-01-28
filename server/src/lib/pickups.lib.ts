@@ -96,10 +96,12 @@ export function spawnRandomPickups(
         pickupItemTypes[Math.floor(Math.random() * pickupItemTypes.length)];
 
       const pickup = PickupFactory.createPickup(randomType, tile.x, tile.y);
-
       if (!pickup) return;
 
       pickup.id = nanoid(); // Generate unique ID
+      pickup.originalX = tile.x;
+      pickup.originalY = tile.y;
+
       room.state.pickups.push(pickup);
 
       itemsSpawned++; // Increment the counter after spawning an item
@@ -143,12 +145,11 @@ export function spawnPickupFromObjectLayer(
 
   // Create the pickup
   const pickup = PickupFactory.createPickup(pickupType, x, y);
-
-  if (!pickup) {
-    throw new Error(`Failed to create pickup of type "${pickupType}"!`);
-  }
+  if (!pickup) return;
 
   pickup.id = nanoid(); // Generate unique ID for the pickup
+  pickup.originalX = x;
+  pickup.originalY = y;
 
   // Add the pickup to the room's state
   room.state.pickups.push(pickup);

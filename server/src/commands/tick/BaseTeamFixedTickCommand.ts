@@ -18,6 +18,8 @@ export class BaseTeamFixedTickCommand<
     super.execute(payload);
 
     const totalReadyPlayers = getTotalReadyPlayers(this.state.players);
+    //console.log({totalReadyPlayers})
+    //Math.round((this.room.clients.length + this.room.maxBots) / 2))
 
     // Round is active.
     if (this.state.roundActive) {

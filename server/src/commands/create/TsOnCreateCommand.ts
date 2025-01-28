@@ -4,6 +4,7 @@ import type { TilemapManager } from "../../TilemapManager";
 import type { Client } from "colyseus";
 import { assignTeam } from "../../lib/teams.lib";
 import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";
+import type { Player } from "../../schemas/Player";
 
 export class TsOnCreateCommand extends BaseTeamOnCreateCommand<
   TsRoom,
@@ -23,4 +24,11 @@ export class TsOnCreateCommand extends BaseTeamOnCreateCommand<
 
     return player;
   }
+
+  onPlayerRespawn(player: Player) {
+    if(this.state.roundActive) {
+      player.isDead = true;
+    }
+  }
+
 }

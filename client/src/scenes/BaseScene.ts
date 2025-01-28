@@ -467,6 +467,8 @@ export class BaseScene extends Phaser.Scene {
         ammoBar.fillStyle(0x0000ff, 1); // Blue bar
         ammoBar.fillRect(-25, -29, (player.ammo / 100) * 50, 2);
 
+        const pickupContainer = this.add.container(0, -20);
+
         const containerItems: any = [
           currentPlayerIndicator,
           playerSprite,
@@ -475,6 +477,7 @@ export class BaseScene extends Phaser.Scene {
           healthBar,
           ammoBarBg,
           ammoBar,
+          pickupContainer,
         ];
 
         let debugBorder: Phaser.GameObjects.Graphics | null = null;
@@ -513,6 +516,8 @@ export class BaseScene extends Phaser.Scene {
           ] as Phaser.GameObjects.Container;
 
           if (container) {
+            this.syncPlayerPickups(player, pickupContainer, this);
+
             container.setPosition(player.x, player.y);
 
             if (player.isDead) {
@@ -819,5 +824,38 @@ export class BaseScene extends Phaser.Scene {
 
     // Check if the coordinates are within the bounds
     return x >= left && x <= right && y >= top && y <= bottom;
+  }
+
+  syncPlayerPickups(
+    player: any,
+    pickupContainer: Phaser.GameObjects.Container,
+    scene: Phaser.Scene
+  ) {
+    // Clear the container before adding updated pickups
+    pickupContainer.removeAll(true); // `true` removes and destroys the current items in the container
+
+    // Loop through the player's pickups
+    player.pickups.forEach((pickup) => {
+      if (pickup.showOnPlayer) {
+        // Create a sprite for the pickup
+        const pickupSprite = scene.add.sprite(0, 0, pickup.asset);
+
+        // Optional: Set tint if provided
+        if (pickup.tint) {
+          pickupSprite.setTint(
+            Phaser.Display.Color.HexStringToColor(pickup.tint).color
+          );
+        }
+
+        // Scale the sprite if necessary
+        pickupSprite.setScale(pickup.scaleOnPlayer || 1);
+
+        // Position the sprite (relative to the container, adjust as needed)
+        pickupSprite.setPosition(0, -50); // Example: Position above the player
+
+        // Add the sprite to the pickup container
+        pickupContainer.add(pickupSprite);
+      }
+    });
   }
 }

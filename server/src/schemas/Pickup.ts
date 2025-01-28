@@ -17,7 +17,10 @@ export class Pickup extends Schema {
   // Position
   @type("number") x: number; // Spawn position X
   @type("number") y: number; // Spawn position Y
+  @type("number") originalX: number; // Spawn position X
+  @type("number") originalY: number; // Spawn position Y
   @type("number") scale = 0.08;
+  @type("number") scaleOnPlayer = 0.04;
   @type("number") width: number;
   @type("number") height: number;
   @type("number") rotation: number;
@@ -52,6 +55,7 @@ export class Pickup extends Schema {
 
   // Carry pickup
   @type("string") dropOffLocation: string; // The location where this item will be dropped off, ie: capture point
+
 
   constructor(type: string, x: number, y: number) {
     super();
