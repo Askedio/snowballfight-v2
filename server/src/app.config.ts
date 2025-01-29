@@ -62,13 +62,13 @@ export default config({
   },
 
   initializeExpress: (app) => {
+    app.use("/colyseus", basicAuthMiddleware, monitor());
+
     app.use(express.static(path.join(__dirname, "../../client/dist")));
 
     app.get("*", (req, res) => {
       res.sendFile(path.join(__dirname, "../../client/dist", "index.html"));
     });
-
-    app.use("/colyseus", basicAuthMiddleware, monitor());
   },
 
   beforeListen: () => {},

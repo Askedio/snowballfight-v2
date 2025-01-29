@@ -179,45 +179,8 @@ export class BaseTickCommand<
           isColliding = pickup.blocking;
           pickup.onPlayerCollision(player); // Trigger collision effect
 
-          const onColission = this.onPickupColission(player, pickup);
-          if (onColission?.restorePickup) {
-            const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-            this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
-
-            this.room.state.pickups.push(
-              PickupFactory.createPickup(
-                pickup.type,
-                pickup.originalX,
-                pickup.originalY,
-                pickup
-              )
-            ); // Add it back
-          }
-
-          if (player.pickups.length) {
-            for (let i = player.pickups.length - 1; i >= 0; i--) {
-              if (player.pickups[i].dropOffLocation === pickup.type) {
-                const playerPickup = { ...player.pickups[i] };
-                player.pickups.splice(i, 1); // Remove the item at index i
-                // Pickup is being dropped off!
-                const onDroppedOff = this.onPickupDroppedOff(
-                  player,
-                  playerPickup as Pickup
-                );
-
-                if (onDroppedOff?.restorePickup) {
-                  this.room.state.pickups.push(
-                    PickupFactory.createPickup(
-                      playerPickup.type,
-                      playerPickup.originalX,
-                      playerPickup.originalY,
-                      playerPickup
-                    )
-                  ); // Add it back
-                }
-              }
-            }
-          }
+          const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
+          this.onPickupColission(player, pickup, pickupIndex);
 
           if (
             pickup.canCarry(player) &&
@@ -611,17 +574,5 @@ export class BaseTickCommand<
     }
   }
 
-  onPickupDroppedOff(
-    player: Player,
-    pickup: Pickup
-  ): undefined | { restorePickup?: boolean } {
-    return undefined;
-  }
-
-  onPickupColission(
-    player: Player,
-    pickup: Pickup
-  ): undefined | { restorePickup?: boolean } {
-    return undefined;
-  }
+  onPickupColission(player: Player, pickup: Pickup, index: number) {}
 }
