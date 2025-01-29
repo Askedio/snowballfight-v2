@@ -1,5 +1,5 @@
 .dropdown {
-  @apply relative inline-block w-full;
+  @apply relative inline-block w-full z-40;
 }
 
 .dropdown-toggle {

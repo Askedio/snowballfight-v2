@@ -48,6 +48,7 @@ export function SpawnScreen() {
     gameMode,
   });
 
+  const [disabled, setDisabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [muteAudio, setMuteAudio] = useState(false);
   const [killedBy, setKilledBy] = useState<string>("");
@@ -116,6 +117,12 @@ export function SpawnScreen() {
 
           setLoading(false);
         }
+
+        setDisabled(true);
+
+        setTimeout(() => {
+          setDisabled(false);
+        }, 500);
       }
     );
   }, [room]);
@@ -236,6 +243,9 @@ export function SpawnScreen() {
 
   return (
     <div className="modal z-30">
+      {disabled && (
+        <div className="bg-black/20 z-50 rounded-lg absolute top-0 bottom-0 left-0 right-0" />
+      )}
       {killedBy && <div className="killedBy">Killed by: {killedBy}</div>}
 
       <h2>{screenLanguage.title}</h2>
