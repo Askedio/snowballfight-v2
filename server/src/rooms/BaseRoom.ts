@@ -45,7 +45,8 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
       this.map,
       this.layers.collisions,
       this.layers.spawnLayer,
-      this.state.players
+      this.state.players,
+      this.collisionSystem
     );
   }
 

@@ -57,7 +57,8 @@ export class BaseTickCommand<
 
         const botManager = new BotManager(
           this.room.state.players,
-          this.room.state.pickups
+          this.room.state.pickups,
+          this.spatialManager
         );
         input = botManager.generateBotInput(player);
       } else {

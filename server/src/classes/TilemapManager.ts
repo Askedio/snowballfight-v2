@@ -1,6 +1,9 @@
+import { ArraySchema } from "@colyseus/schema";
 import * as fs from "node:fs";
 import type * as tiled from "@kayahr/tiled";
 import RBush from "rbush";
+import { Collision } from "./Collision";
+import { Pickup } from "../schemas/Pickup";
 
 export interface TilemapLayersConfig {
   base: string;
@@ -37,17 +40,20 @@ export class TilemapManager {
   private players: any;
   collisionLayerName: string;
   spawnLayerName: string | { [team: string]: string };
+  collisionSystem: Collision;
 
   constructor(
     mapFilePath: string,
     collisionLayerName: string,
     spawnLayerName: string | { [team: string]: string },
-    players: any
+    players: any,
+    collisionSystem: Collision
   ) {
     this.players = players;
     this.collisionIndex = new RBush<CollisionTile>();
     this.collisionLayerName = collisionLayerName;
     this.spawnLayerName = spawnLayerName;
+    this.collisionSystem = collisionSystem;
 
     // Load and parse the map JSON
     const mapJson = JSON.parse(
@@ -134,7 +140,7 @@ export class TilemapManager {
    * @returns An object containing x and y coordinates.
    */
   async getRandomSpawn(_team = "default"): Promise<{ x: number; y: number }> {
-    const team = _team || "default"
+    const team = _team || "default";
     const spawnTiles = this.spawnTiles[team];
 
     if (!spawnTiles || spawnTiles.length === 0) {
@@ -258,6 +264,56 @@ export class TilemapManager {
       // 0 indicates a walkable tile, non-zero is a collision
       collisionGrid[y][x] = tileIndex !== 0 ? 1 : 0;
     });
+
+    return collisionGrid;
+  }
+
+  getUpdatedCollisionGridWithPickups(pickups: ArraySchema<Pickup>): number[][] {
+    const collisionGrid = this.getCollisionGrid().map((row) => [...row]);
+
+    const tileWidth = this.tileWidth;
+    const tileHeight = this.tileHeight;
+
+    // Loop through every tile in the grid
+    for (let y = 0; y < collisionGrid.length; y++) {
+      for (let x = 0; x < collisionGrid[0].length; x++) {
+        const tileCenterX = x * tileWidth + tileWidth / 2;
+        const tileCenterY = y * tileHeight + tileHeight / 2;
+
+        // Check if this tile collides with any blocking pickup
+        const isBlocked = pickups.some((pickup) => {
+          if (!pickup.blocking) return false;
+
+          const pickupShape = {
+            type: pickup.collisionshape || "circle",
+            x: pickup.x + (pickup.colissionOffsetX || 0),
+            y: pickup.y + (pickup.colissionOffsetY || 0),
+            width: pickup.colissionWidth || 64,
+            height: pickup.colissionHeight || 64,
+            radius: pickup.radius,
+            rotation: pickup.rotation,
+          };
+
+          const tileShape = {
+            type: "box",
+            x: tileCenterX,
+            y: tileCenterY,
+            width: tileWidth,
+            height: tileHeight,
+          };
+
+          if (pickup.type === "tree") {
+            console.log({ pickupShape, tileShape });
+          }
+
+          return this.collisionSystem.detectCollision(pickupShape, tileShape);
+        });
+
+        if (isBlocked) {
+          collisionGrid[y][x] = 1; // Mark as blocked
+        }
+      }
+    }
 
     return collisionGrid;
   }
