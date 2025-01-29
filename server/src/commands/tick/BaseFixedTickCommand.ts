@@ -316,11 +316,20 @@ export class BaseTickCommand<
         const directionX = dx / magnitude;
         const directionY = dy / magnitude;
 
+        // Calculate perpendicular vector (for right-hand offset)
+        const perpendicularX = -directionY; // Perpendicular to shooting direction
+        const perpendicularY = directionX;
+
+        // Offset the bullet start position by ~10px to the right
+        const offsetAmount = player.bulletOffset; // Adjust as needed
+        const bulletStartX = player.x + perpendicularX * offsetAmount;
+        const bulletStartY = player.y + perpendicularY * offsetAmount;
+
         // Create a new bullet
         const bullet = new Bullet();
         bullet.id = nanoid();
-        bullet.x = player.x + directionX * player.hitRadius; // Offset from the player's position
-        bullet.y = player.y + directionY * player.hitRadius;
+        bullet.x = bulletStartX + directionX * player.hitRadius; // Offset from the player's position
+        bullet.y = bulletStartY + directionY * player.hitRadius;
         bullet.dx = directionX * player.bulletSpeed;
         bullet.dy = directionY * player.bulletSpeed;
         bullet.ownerId = player.sessionId;

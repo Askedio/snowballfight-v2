@@ -29,6 +29,7 @@ export class Player extends Schema {
   @type("number") hitRadius = 26;
   @type("number") playerRadius = 26; // Player radius for their hitbox
   @type("number") playerSize = 32; // Player size for collisions
+  @type("number") bulletOffset = 10; // Offset of where the bullet launches
 
   // Stats
   @type("number") defaultHealth = 100;
