@@ -43,7 +43,7 @@ export class BaseOnCreateCommand<
         const botsToAdd = this.room.minPlayers - totalPlayers;
 
         for (let i = 0; i < botsToAdd; i++) {
-        //  await this.createPlayer(null, null, "bot");
+          //  await this.createPlayer(null, null, "bot");
         }
       }
 
@@ -82,7 +82,7 @@ export class BaseOnCreateCommand<
 
         const chatMessage = new ChatMessage();
         chatMessage.playerName = player.name || "Anonymous";
-        chatMessage.message = profanity.censor(message);
+        chatMessage.message = profanity.censor(message.trim().slice(0, 128));
         chatMessage.timestamp = Date.now();
 
         // Add the chat message to the state
@@ -129,7 +129,7 @@ export class BaseOnCreateCommand<
 
         if (player) {
           if (playerName !== "") {
-            player.name = profanity.censor(playerName);
+            player.name = profanity.censor(playerName.trim().slice(0, 32));
           } else {
             player.name =
               player.name || this.generator.generateRandomName().name; // Fallback to a default name if playerName is not provided
