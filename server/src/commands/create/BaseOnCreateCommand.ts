@@ -129,7 +129,7 @@ export class BaseOnCreateCommand<
 
         if (player) {
           if (playerName !== "") {
-            player.name = profanity.censor(playerName.trim().slice(0, 32));
+            player.name = profanity.censor(playerName.trim().slice(0, 20));
           } else {
             player.name =
               player.name || this.generator.generateRandomName().name; // Fallback to a default name if playerName is not provided

@@ -11,6 +11,7 @@ import { RoomModal } from "../RoomModal/RoomModal";
 import { gameModes } from "../../lib/gameModes";
 import { skins } from "../../lib/skins";
 import { useLocation } from "react-router";
+import { IoVolumeLow, IoVolumeMute } from "react-icons/io5";
 
 interface SpawnState {
   playerName: string;
@@ -44,6 +45,7 @@ export function SpawnScreen() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [muteAudio, setMuteAudio] = useState(false);
   const [killedBy, setKilledBy] = useState<string>("");
   const [lastRoomName, setLastRoomName] = useState<string>("");
   const [lastGameMode, setLastGameMode] = useState<string>(spawnState.gameMode);
@@ -197,7 +199,10 @@ export function SpawnScreen() {
   };
 
   const handleRoomChange = (newRoomName: string) => {
-    setSpawnState((prev) => ({ ...prev, roomName: newRoomName }));
+    setSpawnState((prev) => ({
+      ...prev,
+      roomName: newRoomName.trim().slice(0, 20),
+    }));
   };
 
   if (following) {
@@ -226,7 +231,9 @@ export function SpawnScreen() {
       {killedBy && <div className="killedBy">Killed by: {killedBy}</div>}
 
       <h2>{screenLanguage.title}</h2>
-      <p className="mb-4 border-b border-gray-600 w-full text-center pb-4">{screenLanguage.subTitle}</p>
+      <p className="mb-4 border-b border-gray-600 w-full text-center pb-4">
+        {screenLanguage.subTitle}
+      </p>
 
       <input
         name="playerName"
@@ -235,6 +242,7 @@ export function SpawnScreen() {
         className="input-field"
         value={spawnState.playerName}
         onChange={handleNameChange}
+        maxLength={20}
       />
 
       <div className="flex items-center gap-6 w-full mb-4">
@@ -266,15 +274,30 @@ export function SpawnScreen() {
           : screenLanguage.joinButton}
       </button>
 
-      <button
-        type="button"
-        className="mt-3 btn-plain"
-        onClick={() => setIsRoomModalOpen(true)} // Open modal
-      >
-        {spawnState.roomName
-          ? `Current Room: ${spawnState.roomName}`
-          : "Change Room"}
-      </button>
+      <div className="flex items-center justify-between w-full mt-3">
+        <button
+          type="button"
+          className="btn-plain"
+          onClick={() => setIsRoomModalOpen(true)} // Open modal
+        >
+          {spawnState.roomName
+            ? `Current Room: ${spawnState.roomName}`
+            : "Change Room"}
+        </button>
+
+        <button
+          type="button"
+          className="text-xl"
+          title={`${muteAudio ? "Un-mute Audio" : "Mute Audio"}`}
+          onClick={() => {
+            const muted = !muteAudio;
+            EventBus.emit("muteAudio", muted);
+            setMuteAudio(muted);
+          }}
+        >
+          {muteAudio ? <IoVolumeMute /> : <IoVolumeLow />}
+        </button>
+      </div>
 
       <div className="instructions">
         <p className="text-white text-center w-full pb-3 border-b border-gray-600">

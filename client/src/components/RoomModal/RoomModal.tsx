@@ -46,6 +46,7 @@ export function RoomModal({ currentRoom, onChangeRoom, onClose }: RoomModalProps
           value={newRoomName}
           onChange={(e) => setNewRoomName(e.target.value)}
           ref={inputRef}
+          maxLength={20}
         />
         <button type="button" className="btn-primary w-full" onClick={handleSubmit}>
           Change Room

@@ -19,6 +19,7 @@ import { RoundComplete } from "./components/RoundComplete/RoundComplete";
 import { useLocation } from "react-router";
 import { gameModes } from "./lib/gameModes";
 import VirtualJoystickPlugin from "phaser3-rex-plugins/plugins/virtualjoystick-plugin.js";
+import { EventBus } from "./lib/EventBus";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -139,6 +140,39 @@ export function App() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      if (!game) return;
+      game.sound.stopAll();
+      game.sound.mute = true;
+    };
+
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!game) return;
+      game.sound.mute = false;
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  EventBus.on("muteAudio", (muted) => {
+    if (!game) return;
+
+    game.sound.mute = muted;
+  });
 
   if (failure) {
     return (
