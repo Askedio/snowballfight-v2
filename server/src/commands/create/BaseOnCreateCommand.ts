@@ -43,7 +43,7 @@ export class BaseOnCreateCommand<
         const botsToAdd = this.room.minPlayers - totalPlayers;
 
         for (let i = 0; i < botsToAdd; i++) {
-          //  await this.createPlayer(null, null, "bot");
+          await this.createPlayer(null, null, "bot");
         }
       }
 

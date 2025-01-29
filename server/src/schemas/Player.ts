@@ -26,7 +26,7 @@ export class Player extends Schema {
   @type("number") x = 400;
   @type("number") y = 300;
   @type("number") rotation = 0; // Rotation in radians
-  @type("number") hitRadius = 15;
+  @type("number") hitRadius = 26;
   @type("number") playerRadius = 26; // Player radius for their hitbox
   @type("number") playerSize = 32; // Player size for collisions
 

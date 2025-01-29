@@ -39,7 +39,7 @@ export class BaseTickCommand<
       this.spatialManager.updatePickupsIndex(this.room.state.pickups);
       this.spatialManager.updatePlayersIndex(
         Array.from(this.room.state.players.values()).filter(
-          (player) => !player.isDead && !player.respawnDisabled
+          (player) => !player.isDead && !player.isProtected
         )
       );
 
@@ -356,8 +356,8 @@ export class BaseTickCommand<
         // Create a new bullet
         const bullet = new Bullet();
         bullet.id = nanoid();
-        bullet.x = player.x + directionX * 15; // Offset from the player's position
-        bullet.y = player.y + directionY * 15;
+        bullet.x = player.x + directionX * player.hitRadius; // Offset from the player's position
+        bullet.y = player.y + directionY * player.hitRadius;
         bullet.dx = directionX * player.bulletSpeed;
         bullet.dy = directionY * player.bulletSpeed;
         bullet.ownerId = player.sessionId;
