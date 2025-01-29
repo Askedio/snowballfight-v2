@@ -168,12 +168,18 @@ export function App() {
     };
   }, []);
 
-  EventBus.on("muteAudio", (muted) => {
-    if (!game) return;
+  useEffect(() => {
+    EventBus.on("mute-audio", (muted) => {
+      if (!game) return;
 
-    game.sound.mute = muted;
-  });
+      game.sound.mute = muted;
+    });
 
+    return () => {
+      EventBus.removeListener("mute-audio");
+    };
+  }, []);
+  
   if (failure) {
     return (
       <div className="w-screen h-screen flex items-center">

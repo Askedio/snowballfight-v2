@@ -291,7 +291,7 @@ export function SpawnScreen() {
           title={`${muteAudio ? "Un-mute Audio" : "Mute Audio"}`}
           onClick={() => {
             const muted = !muteAudio;
-            EventBus.emit("muteAudio", muted);
+            EventBus.emit("mute-audio", muted);
             setMuteAudio(muted);
           }}
         >
