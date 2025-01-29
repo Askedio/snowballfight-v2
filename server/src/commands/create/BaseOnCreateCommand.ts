@@ -1,3 +1,4 @@
+import type { ArraySchema } from "@colyseus/schema";
 import { Command } from "@colyseus/command";
 import type { Client } from "colyseus";
 import type { TilemapManager } from "../../classes/TilemapManager";
@@ -10,6 +11,8 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
 import { PickupManager } from "../../classes/PickupManager";
+import type { Pickup } from "../../schemas/Pickup";
+import { Pathfinding } from "../../classes/Pathfinding";
 
 const profanity = new Profanity({
   languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
@@ -233,5 +236,73 @@ export class BaseOnCreateCommand<
 
   spawnPickups() {
     this.pickupManager.spawnRandomPickups(this.room);
+
+    this.room.collisionGrid = this.getUpdatedCollisionGridWithPickups(
+      this.state.pickups
+    );
+
+    this.logCollisionGrid();
+
+    this.room.pathfinding = new Pathfinding(this.room.collisionGrid);
+  }
+
+  logCollisionGrid() {
+    console.log("🗺 Collision Grid:");
+    this.room.collisionGrid.forEach((row, y) => {
+      console.log(
+        `${row.map((cell) => (cell === 1 ? "██" : "  ")).join("")}  ${y}`
+      );
+    });
+  }
+
+  getUpdatedCollisionGridWithPickups(pickups: ArraySchema<Pickup>): number[][] {
+    const collisionGrid = this.tilemapManager
+      .getCollisionGrid()
+      .map((row) => [...row]);
+
+    const tileWidth = this.tilemapManager.tileWidth;
+    const tileHeight = this.tilemapManager.tileHeight;
+
+    // Loop through every tile in the grid
+    for (let y = 0; y < collisionGrid.length; y++) {
+      for (let x = 0; x < collisionGrid[0].length; x++) {
+        const tileCenterX = x * tileWidth + tileWidth / 2;
+        const tileCenterY = y * tileHeight + tileHeight / 2;
+
+        // Check if this tile collides with any blocking pickup
+        const isBlocked = pickups.some((pickup) => {
+          if (!pickup.blocking) return false;
+
+          const pickupShape = {
+            type: pickup.collisionshape || "circle",
+            x: pickup.x + (pickup.colissionOffsetX || 0),
+            y: pickup.y + (pickup.colissionOffsetY || 0),
+            width: pickup.colissionWidth,
+            height: pickup.colissionHeight,
+            radius: pickup.radius,
+            rotation: pickup.rotation,
+          };
+
+          const tileShape = {
+            type: "box",
+            x: tileCenterX,
+            y: tileCenterY,
+            width: tileWidth,
+            height: tileHeight,
+          };
+
+          return this.room.collisionSystem.detectCollision(
+            pickupShape,
+            tileShape
+          );
+        });
+
+        if (isBlocked) {
+          collisionGrid[y][x] = 1; // Mark as blocked
+        }
+      }
+    }
+
+    return collisionGrid;
   }
 }

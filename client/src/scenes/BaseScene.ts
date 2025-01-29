@@ -13,7 +13,7 @@ export class BaseScene extends Phaser.Scene {
 
   room: Room;
   skin: string;
-  debugging = false;
+  debugging = true;
 
   roomStateInterval: any;
   currentPlayerStateInterval: any;

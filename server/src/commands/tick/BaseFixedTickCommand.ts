@@ -11,6 +11,7 @@ import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
 import { BotManager } from "../../classes/BotManager";
 import { SpatialPartitioningManager } from "../../classes/SpatialPartitioningManager";
+import type { Pathfinding } from "../../classes/Pathfinding";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
@@ -23,10 +24,12 @@ export class BaseTickCommand<
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
   spatialManager = new SpatialPartitioningManager();
+  pathfinding: Pathfinding;
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
     this.collisionSystem = payload.collisionSystem;
+    this.pathfinding = this.room.pathfinding;
 
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
@@ -49,15 +52,12 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-
-        //const pathfinding = new Pathfinding(
-        //  this.tilemapManager,
-        //  this.collisionSystem
-        //);
-
+return
         const botManager = new BotManager(
           this.room.state.players,
-          this.room.state.pickups
+          this.room.state.pickups,
+          this.pathfinding,
+          this.spatialManager
         );
         input = botManager.generateBotInput(player);
       } else {
@@ -244,7 +244,12 @@ export class BaseTickCommand<
         );
 
         nearbyPlayers.forEach(({ player: otherPlayer }) => {
-          if (player === otherPlayer || otherPlayer.isDead || player.isDead || player.isProtected) {
+          if (
+            player === otherPlayer ||
+            otherPlayer.isDead ||
+            player.isDead ||
+            player.isProtected
+          ) {
             return;
           }
 
@@ -273,6 +278,8 @@ export class BaseTickCommand<
           }
         });
       }
+
+      isColliding = false
 
       if (isColliding || !player.enabled) {
         isCurrentlyMoving = false;
