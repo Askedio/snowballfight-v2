@@ -5,8 +5,12 @@ import { skins } from "../../lib/skins";
 
 export function RoundComplete() {
   const room = useColyseusRoom();
+
   const [showDialog, setShowDialog] = useState(false);
   const players = useColyseusState((state) => state.players);
+  const teamScoring = useColyseusState((state) => state.teamScoring);
+  const requiresReady = useColyseusState((state) => state.requiresReady);
+  const playerScoreType = useColyseusState((state) => state.playerScoreType);
 
   const [scores, setScores] = useState({ redScore: 0, blueScore: 0 });
   const [playerStats, setPlayerStats] = useState({
@@ -61,7 +65,7 @@ export function RoundComplete() {
     return {
       topScorer,
       topKiller,
-      topDeaths
+      topDeaths,
     };
   };
 
@@ -73,30 +77,35 @@ export function RoundComplete() {
     <div className="round-ended modal">
       <h1>This round is over!</h1>
 
-      {scores.redScore === scores.blueScore && <div>Draw</div>}
-      {scores.redScore > scores.blueScore && <div>Red Wins</div>}
-      {scores.redScore < scores.blueScore && <div>Blue Wins</div>}
-
-      <div className="stats">
-        <div className="round-ended-red">{scores.redScore}</div>
-        to
-        <div className="round-ended-blue">{scores.blueScore}</div>
-      </div>
+      {teamScoring && (
+        <>
+          {scores.redScore === scores.blueScore && <div>Draw</div>}
+          {scores.redScore > scores.blueScore && <div>Red Wins</div>}
+          {scores.redScore < scores.blueScore && <div>Blue Wins</div>}
+          <div className="stats">
+            <div className="round-ended-red">{scores.redScore}</div>
+            to
+            <div className="round-ended-blue">{scores.blueScore}</div>
+          </div>{" "}
+        </>
+      )}
 
       <div className="player-stats">
-        {playerStats.topScorer && (
-          <div>
-            <h3>Top Scorer</h3>
-            <img
-              src={getSkinImage(playerStats.topScorer.skin)}
-              alt={`${playerStats.topScorer.name}'s skin`}
-              className="player-skin"
-            />
+        {teamScoring &&
+          playerScoreType === "captures" &&
+          playerStats.topScorer && (
             <div>
-              {playerStats.topScorer.name} ({playerStats.topScorer.score})
+              <h3>Top Scorer</h3>
+              <img
+                src={getSkinImage(playerStats.topScorer.skin)}
+                alt={`${playerStats.topScorer.name}'s skin`}
+                className="player-skin"
+              />
+              <div>
+                {playerStats.topScorer.name} ({playerStats.topScorer.score})
+              </div>
             </div>
-          </div>
-        )}
+          )}
         {playerStats.topKiller && (
           <div>
             <h3>Most Kills</h3>
@@ -125,7 +134,11 @@ export function RoundComplete() {
         )}
       </div>
 
-      <p>Click ready to start the next round.</p>
+      <p>
+        {requiresReady
+          ? "Click ready to start the next round."
+          : "Waiting for next round to start."}
+      </p>
     </div>
   );
 }

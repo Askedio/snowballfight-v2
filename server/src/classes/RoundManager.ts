@@ -1,15 +1,15 @@
-import type { BaseTeamOnCreateCommand } from "../commands/create/BaseTeamOnCreateCommand";
+import type { BaseOnCreateCommand } from "../commands/create/BaseOnCreateCommand";
 import type { BaseRoom } from "../rooms/BaseRoom";
 import type { Player } from "../schemas/Player";
-import type { TeamRoomState } from "../states/TeamRoomState";
+import type { BaseRoomState } from "../states/BaseRoomState";
 
 export class RoundManager<
   TRoom extends BaseRoom<TState>,
-  TState extends TeamRoomState
+  TState extends BaseRoomState
 > {
-  private command: BaseTeamOnCreateCommand<TRoom, TState>;
+  private command: BaseOnCreateCommand<TRoom, TState>;
 
-  constructor(command: BaseTeamOnCreateCommand<TRoom, TState>) {
+  constructor(command: BaseOnCreateCommand<TRoom, TState>) {
     this.command = command;
   }
 
@@ -76,6 +76,10 @@ export class RoundManager<
    * Other helper methods remain unchanged
    */
   private getTotalReadyPlayers(): number {
+    if (!this.command.room.state.requiresReady) {
+      return Array.from(this.command.room.state.players.values()).length;
+    }
+
     return Array.from(this.command.room.state.players.values()).filter(
       (player) => player.isReady
     ).length;
@@ -88,6 +92,11 @@ export class RoundManager<
   }
 
   private setPlayerUnready() {
+    if (!this.command.room.state.requiresReady) {
+      this.command.room.state.waitingForPlayers = false;
+      return;
+    }
+
     this.command.room.state.players.forEach((player) => {
       if (player.type === "bot") return;
       player.isReady = false;
@@ -115,7 +124,6 @@ export class RoundManager<
       player.isDead = true;
       player.canJoin = true;
 
-      await player.assignSpawn(this.command.room.tilemapManager);
       this.command.room.broadcast("client-respawned", {
         sessionId: player.sessionId,
       });
@@ -124,7 +132,7 @@ export class RoundManager<
 
   private startRound() {
     this.command.pickupManager.removeAllPickups(this.command.room);
-    //this.command.pickupManager.spawnRandomPickups(this.command.room);
+    this.command.pickupManager.spawnRandomPickups(this.command.room);
 
     this.command.spawnPickups();
 
@@ -132,7 +140,7 @@ export class RoundManager<
     this.command.room.state.blueScore = 0;
 
     this.command.room.state.players.forEach((player: Player) => {
-      player.reset();
+      player.respawn(this.command.tilemapManager);
     });
 
     this.command.room.state.setRoundEndsAt();

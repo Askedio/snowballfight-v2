@@ -91,7 +91,7 @@ export function Menu() {
         <button
           type="button"
           title="Exit Game"
-          className="bg-gray-700 p-1 h-full text-lg"
+          className="bg-gray-700 p-1 h-full text-lg border border-gray-700 border-r-gray-500"
           onClick={() => EventBus.emit("exit-game")}
         >
           <IoClose />
@@ -126,10 +126,10 @@ export function Menu() {
               <span className="team-blue-stats">{blueScore}</span>
             </div>
           </div>
-
-          <div className="menu-round-time">{roundTime}</div>
         </>
       )}
+
+      <div className="menu-round-time">{roundTime}</div>
     </div>
   );
 }

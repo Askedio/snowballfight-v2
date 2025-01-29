@@ -32,7 +32,7 @@
 }
 
 .player-stats {
-  @apply flex items-center w-full gap-3 text-xs mt-8 mb-12 justify-between;
+  @apply flex items-center w-fit gap-6 text-xs mt-8 mb-12 mx-auto;
 
   img {
     @apply mx-auto animate-spin-slow;

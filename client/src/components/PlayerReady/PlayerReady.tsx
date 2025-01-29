@@ -5,9 +5,7 @@ import { EventBus } from "../../lib/EventBus";
 
 export function PlayerReady() {
   const room = useColyseusRoom();
-  const requiresPlayerToReady = useColyseusState(
-    (state) => state.requiresPlayerToReady
-  );
+  const requiresReady = useColyseusState((state) => state.requiresReady);
 
   const roundActive = useColyseusState((state) => state.roundActive);
 
@@ -39,8 +37,8 @@ export function PlayerReady() {
   }, [room, roundActive]);
 
   useEffect(() => {
-    setShowReadyButton(requiresPlayerToReady && !room?.state?.roundActive);
-  }, [requiresPlayerToReady, room]);
+    setShowReadyButton(requiresReady && !room?.state?.roundActive);
+  }, [requiresReady, room]);
 
   useEffect(() => {
     if (!room) {
@@ -86,7 +84,7 @@ export function PlayerReady() {
         </div>
       )}
 
-      {showReadyButton && (
+      {showReadyButton && requiresReady && (
         <div className="player-ready">
           <button
             type="button"

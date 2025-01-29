@@ -93,6 +93,7 @@ export function SpawnScreen() {
     });
 
     room.onMessage("player-exited", () => {
+      setScreenLanguage(defaultLanguage);
       setLoading(false);
     });
 
@@ -320,7 +321,7 @@ export function SpawnScreen() {
       <div className="instructions">
         <p className="text-white text-center w-full pb-3 border-b border-gray-600 flex items-center">
           <IoAlertCircleOutline className="text-3xl" /> Use your respawn
-          protection to reload your snowballs!
+          protection time to reload your snowballs!
         </p>
         Move: WASD/Arrow keys in the direction of your mouse
         <br />
