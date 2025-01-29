@@ -11,7 +11,11 @@ import { RoomModal } from "../RoomModal/RoomModal";
 import { gameModes } from "../../lib/gameModes";
 import { skins } from "../../lib/skins";
 import { useLocation } from "react-router";
-import { IoVolumeLow, IoVolumeMute } from "react-icons/io5";
+import {
+  IoAlertCircleOutline,
+  IoVolumeLow,
+  IoVolumeMute,
+} from "react-icons/io5";
 
 interface SpawnState {
   playerName: string;
@@ -304,9 +308,9 @@ export function SpawnScreen() {
       </div>
 
       <div className="instructions">
-        <p className="text-white text-center w-full pb-3 border-b border-gray-600">
-          <strong>Tip:</strong> Use your respawn protection to reload your
-          snowballs!
+        <p className="text-white text-center w-full pb-3 border-b border-gray-600 flex items-center">
+          <IoAlertCircleOutline className="text-3xl" /> Use your respawn
+          protection to reload your snowballs!
         </p>
         Move: WASD/Arrow keys in the direction of your mouse
         <br />
