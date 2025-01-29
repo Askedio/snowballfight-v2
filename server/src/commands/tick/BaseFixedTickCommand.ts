@@ -236,8 +236,15 @@ export class BaseTickCommand<
       }
 
       if (!isColliding) {
-        this.room.state.players.forEach((otherPlayer) => {
-          if (player === otherPlayer || otherPlayer.isDead || player.isDead) {
+        const nearbyPlayers = this.spatialManager.queryNearbyObjects(
+          player.x,
+          player.y,
+          40, // Query radius
+          this.spatialManager.playerIndex
+        );
+
+        nearbyPlayers.forEach(({ player: otherPlayer }) => {
+          if (player === otherPlayer || otherPlayer.isDead || player.isDead || player.isProtected) {
             return;
           }
 
