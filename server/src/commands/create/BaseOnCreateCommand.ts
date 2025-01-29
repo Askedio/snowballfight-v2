@@ -38,9 +38,20 @@ export class BaseOnCreateCommand<
       );
       const totalPlayers = humans.length + bots.length;
 
+      // If maxBots is 0, remove all bots and prevent adding new ones
+      if (this.room.maxBots === 0) {
+        if (bots.length > 0) {
+          bots.forEach((bot) => this.room.state.players.delete(bot.sessionId));
+        }
+        return;
+      }
+
       // If we don't have enough players, add bots
       if (totalPlayers < this.room.minPlayers) {
-        const botsToAdd = this.room.minPlayers - totalPlayers;
+        const botsToAdd = Math.min(
+          this.room.maxBots,
+          this.room.minPlayers - totalPlayers
+        );
 
         for (let i = 0; i < botsToAdd; i++) {
           await this.createPlayer(null, null, "bot");
