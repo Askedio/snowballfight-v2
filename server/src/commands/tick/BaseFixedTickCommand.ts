@@ -417,7 +417,7 @@ export class BaseTickCommand<
       const nearbyPickups = this.spatialManager.queryNearbyObjects(
         bullet.x,
         bullet.y,
-        10, // Query radius
+        50, // Query radius
         this.spatialManager.pickupIndex
       );
 
