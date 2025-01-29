@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useColyseusRoom, useColyseusState } from "../../lib/colyseus";
+import { IoClose } from "react-icons/io5";
 import "./Menu.css";
+import { EventBus } from "../../lib/EventBus";
 
 export function Menu() {
   const room = useColyseusRoom();
@@ -86,6 +88,15 @@ export function Menu() {
   return (
     <div className="menu">
       <div className={`menu-player-stats ${team}`}>
+        <button
+          type="button"
+          title="Exit Game"
+          className="bg-gray-700 p-1 h-full text-lg"
+          onClick={() => EventBus.emit("exit-game")}
+        >
+          <IoClose />
+        </button>
+
         {teamScoring && (
           <>
             <div className="player-team px-3">{team} team</div>

@@ -110,6 +110,14 @@ export class BaseOnCreateCommand<
       }
     });
 
+    this.room.onMessage("exit-game", (client) => {
+      this.room.state.players.delete(client.sessionId);
+
+      this.room.broadcast("player-exited", {
+        sessionId: client.sessionId,
+      });
+    });
+
     this.room.onMessage("input", (client, input: InputData) => {
       const player = this.room.state.players.get(client.sessionId);
       if (player && !player.isDead) {

@@ -87,6 +87,10 @@ export function SpawnScreen() {
       }
     });
 
+    room.onMessage("player-exited", () => {
+      setLoading(false);
+    });
+
     room.onMessage(
       "player-death",
       ({ sessionId, player, killer, respawnDelay }) => {

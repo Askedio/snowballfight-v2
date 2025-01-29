@@ -223,6 +223,10 @@ export class BaseScene extends Phaser.Scene {
         this.enableKeyboard = true;
       });
 
+      EventBus.on("exit-game", () => {
+        this.room?.send("exit-game");
+      });
+
       EventBus.on("change-room", () => {
         // Listeners are set on create, but user can change room in the same scene, so reset room and listeners here.
         console.log("Game change-room");
@@ -685,38 +689,60 @@ export class BaseScene extends Phaser.Scene {
         switch (bullet.colissionType) {
           case "pickup":
             if (!pickup?.disablePlayBulletImpactSound) {
-              this.playSpatialSound(bullet, pickup?.impactSound || bullet.impactOnPickupSound);
+              this.playSpatialSound(
+                bullet,
+                pickup?.impactSound || bullet.impactOnPickupSound
+              );
             }
-            this.playAnimation(bullet.impactOnPickupAnimation, bullet.x, bullet.y);
-            break; 
-    
+            this.playAnimation(
+              bullet.impactOnPickupAnimation,
+              bullet.x,
+              bullet.y
+            );
+            break;
+
           case "player":
             this.playSpatialSound(bullet, bullet.impactOnPlayerSound);
-            this.playAnimation(bullet.impactOnPlayerAnimation, bullet.x, bullet.y);
+            this.playAnimation(
+              bullet.impactOnPlayerAnimation,
+              bullet.x,
+              bullet.y
+            );
             break;
-    
+
           case "colissionLayer":
             this.playSpatialSound(bullet, bullet.impactOncollisionsound);
-            this.playAnimation(bullet.impactOnColissionAnimation, bullet.x, bullet.y);
+            this.playAnimation(
+              bullet.impactOnColissionAnimation,
+              bullet.x,
+              bullet.y
+            );
             break;
-    
+
           case "timeout":
             this.playSpatialSound(bullet, bullet.impactOnTimeoutSound);
-            this.playAnimation(bullet.impactOnTimeoutAnimation, bullet.x, bullet.y);
+            this.playAnimation(
+              bullet.impactOnTimeoutAnimation,
+              bullet.x,
+              bullet.y
+            );
             break;
-    
+
           case "outofbounds":
             this.playSpatialSound(bullet, bullet.impactOnOutofboundsSound);
-            this.playAnimation(bullet.impactOnOutofboundsAnimation, bullet.x, bullet.y);
+            this.playAnimation(
+              bullet.impactOnOutofboundsAnimation,
+              bullet.x,
+              bullet.y
+            );
             break;
-    
+
           default:
             this.playSpatialSound(bullet, bullet.impactSound);
             this.playAnimation(bullet.impactAnimation, bullet.x, bullet.y);
         }
       });
     });
-    
 
     // Remove bullets
     this.room.state.bullets.onRemove((bullet, bulletId) => {
