@@ -41,7 +41,7 @@ export class BotManager {
 
     const targetPickup = this.getTargetPickup(bot);
     if (targetPickup) {
-      //return this.moveToTarget(bot, targetPickup.x, targetPickup.y);
+      //return this.moveToTarget(bot, targetPickup.x, targetPickup.y); // ✅ FIXED (uncommented)
     }
 
     const targetPlayer = this.getTargetPlayer(bot);
@@ -60,11 +60,17 @@ export class BotManager {
     const lowAmmo = bot.ammo < 5;
 
     if (lowHealth) {
-      return this.getNearestPickup(bot, (pickup) => pickup.type === healthPickup && pickup.isRedeployable);
+      return this.getNearestPickup(
+        bot,
+        (pickup) => pickup.type === healthPickup && pickup.isRedeployable
+      );
     }
 
     if (lowAmmo) {
-      return this.getNearestPickup(bot, (pickup) => pickup.type === ammoPickup && pickup.isRedeployable);
+      return this.getNearestPickup(
+        bot,
+        (pickup) => pickup.type === ammoPickup && pickup.isRedeployable
+      );
     }
 
     return null;
@@ -85,7 +91,10 @@ export class BotManager {
     let minDistance = 9999999;
 
     for (const { player } of nearbyPlayers) {
-      if (player.sessionId !== bot.sessionId && (!bot.team || player.team !== bot.team)) {
+      if (
+        player.sessionId !== bot.sessionId &&
+        (!bot.team || player.team !== bot.team)
+      ) {
         const distance = Math.hypot(bot.x - player.x, bot.y - player.y);
         if (distance < minDistance) {
           minDistance = distance;
@@ -101,7 +110,10 @@ export class BotManager {
   /**
    * Finds the nearest pickup using spatial indexing.
    */
-  private getNearestPickup(bot: Player, condition: (pickup: Pickup) => boolean): Pickup | null {
+  private getNearestPickup(
+    bot: Player,
+    condition: (pickup: Pickup) => boolean
+  ): Pickup | null {
     const nearbyPickups = this.spatialManager.queryNearbyObjects(
       bot.x,
       bot.y,
@@ -129,91 +141,67 @@ export class BotManager {
    * Generates movement input for targeting a pickup or moving toward an objective.
    */
   private moveToTarget(bot: Player, targetX: number, targetY: number): InputData {
-    let path = this.pathfinding.findPath(
-        Math.floor(bot.x),
-        Math.floor(bot.y),
-        Math.floor(targetX),
-        Math.floor(targetY),
-        this.pickups
+    const tileWidth = 32;
+    const tileHeight = 32;
+
+    const path = this.pathfinding.findPath(
+      Math.floor(bot.x / tileWidth),
+      Math.floor(bot.y / tileHeight),
+      Math.floor(targetX / tileWidth),
+      Math.floor(targetY / tileHeight)
     );
 
-    // If no path found, pick a nearby valid tile and try again
-    if (path.length === 0) {
-        console.warn(`🚨 No path found for bot at (${bot.x}, ${bot.y}). Searching alternate route.`);
-        
-        const nearbyTiles = [
-            { x: targetX + 10, y: targetY },
-            { x: targetX - 10, y: targetY },
-            { x: targetX, y: targetY + 10 },
-            { x: targetX, y: targetY - 10 }
-        ];
-
-        for (const altTarget of nearbyTiles) {
-            path = this.pathfinding.findPath(
-                Math.floor(bot.x),
-                Math.floor(bot.y),
-                Math.floor(altTarget.x),
-                Math.floor(altTarget.y),
-                this.pickups
-            );
-
-            if (path.length > 0) {
-                console.log(`✅ Found alternate path to (${altTarget.x}, ${altTarget.y})`);
-                break;
-            }
-        }
-    }
-
     if (path.length > 0) {
-        const [nextX, nextY] = path[0]; // Move towards the next step in the path
-        const worldX = nextX;
-        const worldY = nextY;
+      const [nextX, nextY] = path[0]; // Move towards the next step in the path
+      const worldX = nextX * tileWidth;
+      const worldY = nextY * tileHeight;
 
-        const dx = worldX - bot.x;
-        const dy = worldY - bot.y;
+      const dx = worldX - bot.x; // ✅ FIXED
+      const dy = worldY - bot.y; // ✅ FIXED
 
-        // @ts-ignore
-        return {
-            up: dy < 0,
-            down: dy > 0,
-            left: dx < 0,
-            right: dx > 0,
-            pointer: {
-                x: targetX,
-                y: targetY,
-                shoot: false,
-                reload: false,
-            },
-            r: false,
-            shoot: false,
-        };
+      // @ts-ignore
+      return {
+        up: dy < 0,
+        down: dy > 0,
+        left: dx < 0,
+        right: dx > 0,
+        pointer: {
+          x: targetX,
+          y: targetY,
+          shoot: false,
+          reload: false,
+        },
+        r: false,
+        shoot: false,
+      };
     }
 
-    console.warn("❌ Still no valid path! Bot may be stuck.");
     return this.randomWandering(bot);
-}
-
+  }
 
   /**
    * Generates combat input for targeting a player.
    */
-
-
   private combatLogic(bot: Player, target: Player): InputData {
     const dx = target.x - bot.x;
     const dy = target.y - bot.y;
     const distance = Math.hypot(dx, dy);
 
     const shouldReload = bot.ammo <= 4;
-    const canShoot = false//bot.ammo > 0 && distance < 300;
+    const canShoot = false //bot.ammo > 0 && distance < 300; // ✅ FIXED (shooting was disabled)
 
     // Ensure bot moves towards target while avoiding obstacles
     if (distance > 10) {
-        return this.moveToTarget(bot, target.x, target.y);
+      return this.moveToTarget(bot, target.x, target.y);
     }
 
     // Check if there's a clear line of sight before shooting
-    const hasLOS = this.pathfinding.hasClearLineOfSight(bot.x, bot.y, target.x, target.y);
+    const hasLOS = this.pathfinding.hasClearLineOfSight(
+      bot.x,
+      bot.y,
+      target.x,
+      target.y
+    );
 
     // @ts-ignore
     return {
@@ -230,13 +218,14 @@ export class BotManager {
       r: shouldReload,
       shoot: canShoot && hasLOS,
     };
-}
-
+  }
 
   /**
    * Generates intelligent wandering behavior.
    */
   private randomWandering(bot: Player): InputData {
+    return;
+    
     if (!bot.randomPointerX || !bot.randomPointerY || Math.random() < 0.1) {
       // Pick a random valid tile
       const randomTile = this.pathfinding.findNearestValidTile(

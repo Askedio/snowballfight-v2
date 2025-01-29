@@ -52,7 +52,6 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         // Generate bot input dynamically
-return
         const botManager = new BotManager(
           this.room.state.players,
           this.room.state.pickups,

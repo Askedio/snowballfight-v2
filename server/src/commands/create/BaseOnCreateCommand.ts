@@ -250,7 +250,7 @@ export class BaseOnCreateCommand<
     console.log("🗺 Collision Grid:");
     this.room.collisionGrid.forEach((row, y) => {
       console.log(
-        `${row.map((cell) => (cell === 1 ? "██" : "  ")).join("")}  ${y}`
+        `${row.map((cell) => (cell === 1 ? "🟥" : "⬜")).join("")}  ${y}`
       );
     });
   }
@@ -277,8 +277,8 @@ export class BaseOnCreateCommand<
             type: pickup.collisionshape || "circle",
             x: pickup.x + (pickup.colissionOffsetX || 0),
             y: pickup.y + (pickup.colissionOffsetY || 0),
-            width: pickup.colissionWidth,
-            height: pickup.colissionHeight,
+            width: pickup.colissionWidth || 64,
+            height: pickup.colissionHeight || 64,
             radius: pickup.radius,
             rotation: pickup.rotation,
           };
@@ -290,6 +290,8 @@ export class BaseOnCreateCommand<
             width: tileWidth,
             height: tileHeight,
           };
+
+          if(pickup.type === "tree") {console.log({pickupShape, tileShape})}
 
           return this.room.collisionSystem.detectCollision(
             pickupShape,
