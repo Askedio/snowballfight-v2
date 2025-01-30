@@ -20,6 +20,7 @@ import { useLocation } from "react-router";
 import { gameModes } from "./lib/gameModes";
 import VirtualJoystickPlugin from "phaser3-rex-plugins/plugins/virtualjoystick-plugin.js";
 import { EventBus } from "./lib/EventBus";
+import { TestScene } from "./scenes/TestScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.WEBGL,
@@ -74,6 +75,9 @@ export function App() {
       case "ffa":
         !keys.ffa && game.scene.add("ffa", FreeForAllScene);
         break;
+      case "test":
+        !keys.test && game.scene.add("ftestfa", TestScene);
+        break;
       case "ctf":
         !keys.ctf && game.scene.add("ctf", CtfScene);
         break;
@@ -92,7 +96,7 @@ export function App() {
   useEffect(() => {
     const local = location.pathname.split("/")[1];
     let gameMode = local;
-    if (!gameModes.find((_) => _.value === local)) {
+    if (![...gameModes, { value: "test", label: "Test World" }].find((_) => _.value === local)) {
       gameMode = "ffa";
     }
 

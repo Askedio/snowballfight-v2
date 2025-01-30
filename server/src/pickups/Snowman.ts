@@ -14,7 +14,7 @@ export class SnowmanPickup extends Pickup {
 
     this.bulletKills = true;
     this.blocking = true;
-    this.health = config.health || 40;
+    this.health = config.health || 100;
     this.destroyBulletOnCollision = true;
   }
 

@@ -1,14 +1,14 @@
-import { FreeForAllOnCreateCommand } from "../commands/create/FreeForAllOnCreateCommand";
+import { TestRoomOnCreateCommand } from "../commands/create/TestRoomOnCreateCommand";
 import { FreeForAllFixedTickCommand } from "../commands/tick/FreeForAllFixedTickCommand";
 import { FreeForAllRoomState } from "../states/FreeForAllRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
+export class TestRoom extends BaseRoom<FreeForAllRoomState> {
   // Game configuration
   maxClients = 10;
-  maxBots = 1;
-  
-  mode = "ffa";
+  maxBots = 0;
+
+  mode = "test";
   scoring = "kills";
   teams = false;
 
@@ -25,9 +25,9 @@ export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
     this.setState(new FreeForAllRoomState());
     super.onCreate();
 
-    this.dispatcher.dispatch(new FreeForAllOnCreateCommand(), {
+    this.dispatcher.dispatch(new TestRoomOnCreateCommand(), {
       tilemapManager: this.tilemapManager,
-      maxBots: this.maxBots
+      maxBots: this.maxBots,
     });
   }
 

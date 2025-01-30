@@ -14,6 +14,7 @@ import express from "express";
 import path from "node:path";
 
 import basicAuth from "express-basic-auth";
+import { TestRoom } from "./rooms/TestRoom";
 
 const basicAuthMiddleware = basicAuth({
   // list of users and passwords
@@ -44,6 +45,11 @@ export default config({
     gameServer
       .define("user_ffa_room", FreeForAllRoom)
       .filterBy(["customRoomName"]);
+
+    gameServer.define("test_room", TestRoom);
+    gameServer.define("user_test_room", TestRoom).filterBy(["customRoomName"]);
+  
+
 
     gameServer.define("ctf_room", CtfRoom);
     gameServer.define("user_ctf_room", CtfRoom).filterBy(["customRoomName"]);

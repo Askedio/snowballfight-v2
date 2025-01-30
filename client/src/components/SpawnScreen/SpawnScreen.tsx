@@ -38,7 +38,7 @@ export function SpawnScreen() {
 
   const local = location.pathname.split("/")[1];
   let gameMode = local;
-  if (!gameModes.find((_) => _.value === local)) {
+  if (![...gameModes, { value: "test", label: "Test World" }].find((_) => _.value === local)) {
     gameMode = "ffa";
   }
 
