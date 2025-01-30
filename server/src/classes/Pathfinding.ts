@@ -1,30 +1,23 @@
-import { AStarFinder, DiagonalMovement, DijkstraFinder, Grid } from "pathfinding";
+import { AStarFinder } from 'astar-typescript';
 
 export class Pathfinding {
   private collisionGrid: number[][];
-  private finder: AStarFinder | DijkstraFinder;
-  private grid: Grid;
+  private finder: AStarFinder;
   private readonly TILE_SIZE = 32; // Adjust based on actual tile size
 
-  constructor(
-    collisionGrid: number[][],
-    algorithm: "AStar" | "Dijkstra" = "AStar"
-  ) {
+  constructor(collisionGrid: number[][]) {
     this.collisionGrid = collisionGrid;
-    this.grid = new Grid(this.collisionGrid);
 
-    // 🔀 Choose algorithm
-    switch (algorithm) {
-      case "Dijkstra":
-        this.finder = new DijkstraFinder();
-        break;
-      case "AStar":
-      default:
-        this.finder = new AStarFinder({      allowDiagonal: true, // ✅ Enable diagonal movement
-          diagonalMovement: DiagonalMovement.IfAtMostOneObstacle, // Prevents passing through corners
+    // Initialize AStarFinder
+    this.finder = new AStarFinder({
+      grid: {
+        matrix: this.collisionGrid,
+      },
+      diagonalAllowed: true, // Enable diagonal movement
+      includeStartNode: true, // Include the start node in the path
+      includeEndNode: true, // Include the end node in the pathm' weight: 0.7
+      
     });
-        break;
-    }
   }
 
   /**
@@ -39,30 +32,30 @@ export class Pathfinding {
     retries: number = 0,
     maxRetries: number = 15
   ): number[][] {
-    const clonedGrid = this.grid.clone();
-  
     // ✅ Validate start and target positions
     const startTile = this.findNearestValidTile(startX, startY, playerRadius);
     const targetTile = this.findNearestValidTile(targetX, targetY, playerRadius);
-  
+
     if (!startTile || !targetTile) {
       console.warn(`🚨 No valid start or target tile found!`);
       return [];
     }
-  
-    let path = this.finder.findPath(
-      startTile.x,
-      startTile.y,
-      targetTile.x,
-      targetTile.y,
-      clonedGrid
-    );
-  
-  
-    return path.filter(([x, y]) => this.isWalkable(x, y, playerRadius));
 
+    // Find the path using AStarFinder
+    const path = this.finder.findPath(
+      { x: startTile.x, y: startTile.y }, // Start position
+      { x: targetTile.x, y: targetTile.y } // Target position
+    );
+
+    path.forEach(([x, y]) => {
+      if (this.collisionGrid[y][x] !== 0) {
+        console.error(`Blocked tile in path: (${x}, ${y})`);
+      }
+    });
+
+    // Filter out unwalkable tiles (if any)
+    return path.filter(([x, y]) => this.isWalkable(x, y, playerRadius));
   }
-  
 
   /**
    * 🔄 Attempts to reroute the path by finding nearest valid tiles
@@ -109,7 +102,7 @@ export class Pathfinding {
 
     for (let dx = -checkRadius; dx <= checkRadius; dx++) {
       for (let dy = -checkRadius; dy <= checkRadius; dy++) {
-        if (this.collisionGrid[y + dy]?.[x + dx] === 1) {
+        if (this.collisionGrid[y + dy]?.[x + dx] !== 0) {
           return false; // 🚫 Blocked
         }
       }
@@ -162,7 +155,7 @@ export class Pathfinding {
     let y = fromY;
 
     while (x !== toX || y !== toY) {
-      if (this.collisionGrid[y]?.[x] === 1) {
+      if (this.collisionGrid[y]?.[x] !== 0) {
         return false; // Blocked
       }
 

@@ -187,25 +187,30 @@ export class BotManager {
 
     // **Recalculate path if the target moved significantly or path is empty**
     if (
-      Math.hypot(bot.lastTargetX - targetX, bot.lastTargetY - targetY) > tileWidth ||
+      Math.hypot(bot.lastTargetX - targetX, bot.lastTargetY - targetY) > 100 ||
       bot.path.length === 0
     ) {
       bot.lastTargetX = targetX;
       bot.lastTargetY = targetY;
-try {
-      const computedPath = this.room.pathfinding.findPath(
-        currentTileX,
-        currentTileY,
-        targetTileX,
-        targetTileY,
-        bot.playerRadius
-      );
 
-      bot.path.clear();
-      computedPath.forEach(([x, y]: any) => bot.path.push(new PathNode(x, y))); // ✅ Use PathNode Schema
-    } catch(e) {
-      console.log("Wtf")
-    }
+      try {
+        const computedPath = this.room.pathfinding.findPath(
+          currentTileX,
+          currentTileY,
+          targetTileX,
+          targetTileY,
+          bot.playerRadius
+        );
+
+      //  bot.path.clear();
+
+        // Convert number[][] to ArraySchema<PathNode>
+        computedPath.forEach(([x, y]) => {
+          bot.path.push(new PathNode(x, y));
+        });
+      } catch (e) {
+        console.error("Pathfinding error:", e);
+      }
     }
 
     if (bot.path.length > 0) {
@@ -238,11 +243,10 @@ try {
         bot.path.shift();
       }
 
-      // @ts-ignore
       return input;
     }
 
-    // @ts-ignore
+    // Default input if no path is available
     return {
       up: false,
       down: false,
@@ -252,6 +256,5 @@ try {
       r: false,
       shoot: false,
     };
-}
-
+  }
 }

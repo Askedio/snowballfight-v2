@@ -43,6 +43,7 @@
     "astar-typescript": "^1.2.7",
     "colyseus": "^0.15.57",
     "cors": "^2.8.5",
+    "easystarjs": "^0.4.4",
     "express": "^4.16.4",
     "express-basic-auth": "^1.2.1",
     "fantasy-name-generator": "^2.0.0",

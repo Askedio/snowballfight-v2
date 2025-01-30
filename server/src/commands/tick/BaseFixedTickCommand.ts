@@ -65,6 +65,9 @@ export class BaseTickCommand<
           r: false,
           shoot: false,
         }
+
+        if(player.path.length > 5) {
+        console.log(player.path.length)}
        
       } else {
         // Human player input from the queue
@@ -99,31 +102,28 @@ export class BaseTickCommand<
       }
 
       if (player.type === "bot") {
-        if(player.path.length > 0){
-          const nextStep = player.path.shift();
-
-          
-        if (nextStep) {
-          const worldX = nextStep.x * 32;
+        if (player.path.length > 0) {
+          const nextStep = player.path[0]; // Peek at the next step
+          const worldX = nextStep.x * 32; // Convert grid coordinates to world coordinates
           const worldY = nextStep.y * 32;
-
+        
           const dx = worldX - player.x;
           const dy = worldY - player.y;
-
+        
           const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 90) {
-            player.path.shift(); // ✅ Remove step once reached
-            isCurrentlyMoving = false;
-          } else {
-            newX += (dx / distance) * velocity;
-            newY += (dy / distance) * velocity;
-
-            player.x = newX;
-            player.y = newY
-            isCurrentlyMoving = true;
-          }
-        }} else {
+        
+          
+            // Move toward the next step, but don't overshoot it
+            const velocity = 5; // Adjust based on bot speed
+            const moveDistance = Math.min(velocity, distance); // Don't move farther than the remaining distance
+        
+            const newX = dx//player.x + (dx / distance) * moveDistance;
+            const newY = dy//player.y + (dy / distance) * moveDistance;
+        
+            player.x = worldX;
+           player.y = worldY;
+          
+        }else {
           isCurrentlyMoving = false;
         }
       } else {
@@ -317,6 +317,8 @@ export class BaseTickCommand<
           }
         });
       }
+
+      isColliding = false
 
       if(player.type !== "bot") {
       if (isColliding || !player.enabled) {
