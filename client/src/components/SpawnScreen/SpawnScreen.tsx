@@ -131,12 +131,12 @@ export function SpawnScreen() {
 
   useEffect(() => {
     connectToRoom();
-
+    
     window.history.pushState(
       null,
       "",
       `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}${
-        window.location.hash
+        window.location.hash ? window.location.hash.substring(1) : ""
       }`
     );
   }, [spawnState.gameMode]);
@@ -158,8 +158,8 @@ export function SpawnScreen() {
       window.history.pushState(
         null,
         "",
-        `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}#${
-          spawnState.roomName
+        `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}${
+          spawnState.roomName ? `#{spawnState.roomName}` : ""
         }`
       );
       EventBus.emit("change-room", { mode: spawnState.gameMode });
