@@ -35,7 +35,7 @@ const pickupHelpText = [
 
 const PickupHelper: React.FC = () => {
   return (
-    <div className="w-[200px] max-w-md mx-auto bg-gray-800/90 rounded-r-lg shadow-lg p-2 text-xs border border-gray-600 border-l-0">
+    <div className="w-[200px] mx-auto bg-gray-800/90 rounded-r-lg shadow-lg p-2 text-xs border border-gray-600 border-l-0">
       <ul className="">
         {pickupHelpText.map((pickup) => (
           <li
