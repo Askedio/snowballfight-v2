@@ -1,10 +1,10 @@
-import { ArraySchema } from '@colyseus/schema';
+import { ArraySchema } from "@colyseus/schema";
 import type { Room } from "colyseus";
 import type { TilemapManager } from "../classes/TilemapManager";
 import { pickupItemTypes } from "../pickups";
 import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
-import { Pickup } from '../schemas/Pickup';
+import { Pickup } from "../schemas/Pickup";
 
 export class PickupManager {
   private tilemapManager: TilemapManager;
@@ -168,39 +168,56 @@ export class PickupManager {
       console.warn(`🚨 No available spawn tiles found on layer: ${layer}`);
       return;
     }
-
+  
     const pickupTypes = Array.isArray(pickupType) ? pickupType : [pickupType];
-
-    if (useRegions) {
-      this.spawnPickupsInRegions(room, spawnTiles, pickupTypes, count);
-      return;
-    }
-
-    let availableTiles = spawnTiles.filter(
-      (tile) => !this.usedTiles.has(`${tile.x},${tile.y}`)
-    );
-
-    if (availableTiles.length < count) {
+  
+    if (count < pickupTypes.length) {
       console.warn(
-        `⚠️ Not enough unique tiles! Reducing spawn count to ${availableTiles.length}.`
+        `⚠️ Requested count (${count}) is less than the number of pickup types (${pickupTypes.length}). Adjusting count to match pickup types.`
       );
+      count = pickupTypes.length; // Ensure we can place at least one of each type
+    }
+  
+    let availableTiles = spawnTiles.filter((tile) => !this.usedTiles.has(`${tile.x},${tile.y}`));
+  
+    if (availableTiles.length < count) {
+      console.warn(`⚠️ Not enough unique tiles! Reducing spawn count to ${availableTiles.length}.`);
       count = availableTiles.length;
     }
-
+  
+    // 🔹 Step 1: Ensure at least one of each pickup type is placed
     let itemsSpawned = 0;
+    pickupTypes.forEach((type) => {
+      if (itemsSpawned >= count || availableTiles.length === 0) return;
+  
+      const tileIndex = Math.floor(Math.random() * availableTiles.length);
+      const tile = availableTiles.splice(tileIndex, 1)[0];
+  
+      this.createPickup(room, tile.x, tile.y, [type]);
+      itemsSpawned++;
+    });
+  
+    // 🔹 Step 2: Handle Regional Spawning (if enabled)
+    if (useRegions) {
+      this.spawnPickupsInRegions(room, availableTiles, pickupTypes, count - itemsSpawned);
+      return;
+    }
+  
+    // 🔹 Step 3: Fill remaining slots randomly (if no regions)
     while (itemsSpawned < count) {
       if (availableTiles.length === 0) {
         console.warn(`🚨 No more available tiles for spawning!`);
         break;
       }
-
+  
       const tileIndex = Math.floor(Math.random() * availableTiles.length);
       const tile = availableTiles.splice(tileIndex, 1)[0];
-
+  
       this.createPickup(room, tile.x, tile.y, pickupTypes);
       itemsSpawned++;
     }
   }
+  
 
   /**
    * Spawns a specific pickup at a location from an object layer.

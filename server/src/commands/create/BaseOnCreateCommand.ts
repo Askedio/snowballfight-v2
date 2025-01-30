@@ -229,14 +229,10 @@ export class BaseOnCreateCommand<
   }
 
   spawnPickups() {
-    console.log("A?")
-
     this.pickupManager.removeAllPickups(this.room)
 
-    this.pickupManager.spawnPickupsByType(this.room, 10, pickupItemTypes, "trees");
+    this.pickupManager.spawnPickupsByType(this.room, 6, pickupItemTypes);
     this.pickupManager.spawnPickupsByType(this.room, 10, "tree", "trees");
     this.pickupManager.spawnPickupsByType(this.room, 6, "crate", "crates");
-
-    console.log(this.room.state.pickups.length,'oo')
   }
 }

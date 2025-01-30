@@ -37,7 +37,6 @@ export class Pickup extends Schema {
   @type("number") damange = 20; // How much damage a bullet does to this item
 
   // Settings
-  @type("boolean") destroyable = true; // Can this pickup be destroyed?
   @type("boolean") blocking = false; // Does it block player movement?
   @type("boolean") bulletKills = false; // Can bullets destroy it?
   @type("boolean") destroyOnCollision = false; // Destroyed when a player collides

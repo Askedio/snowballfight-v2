@@ -16,6 +16,7 @@ import {
   IoVolumeLow,
   IoVolumeMute,
 } from "react-icons/io5";
+import PickupHelper from "../PickupHelper/PickupHelper";
 
 interface SpawnState {
   playerName: string;
@@ -152,7 +153,6 @@ export function SpawnScreen() {
   }, [respawnDelay]);
 
   useEffect(() => {
-    if (!spawnState.roomName) return;
     const connect = async () => {
       await connectToRoom();
       window.history.pushState(
@@ -244,6 +244,10 @@ export function SpawnScreen() {
 
   return (
     <div className="modal z-30">
+      <div className="hidden md:block absolute -right-[200px] top-32">
+        <PickupHelper />
+      </div>
+
       {disabled && (
         <div className="bg-black/20 z-50 rounded-lg absolute top-0 bottom-0 left-0 right-0" />
       )}

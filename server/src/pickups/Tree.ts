@@ -14,10 +14,7 @@ export class TreePickup extends Pickup {
     this.blocking = true;
     this.health = config.health || 100;
     this.destroyBulletOnCollision = true;
-
-    this.destroyable = false;
-
-    this.tint = "0xffffff"
+    this.tint = "0xffffff";
   }
 
   onPlayerCollision(player: any): void {
@@ -25,9 +22,8 @@ export class TreePickup extends Pickup {
   }
 
   onBulletCollision(): boolean {
-    return false;
-  //  this.health -= this.damange;
+    this.health -= this.damange;
 
-  //  return this.health <= 0;
+    return this.health <= 0;
   }
 }
