@@ -70,10 +70,11 @@ export class BaseTickCommand<
 
       const isReloading = input.r || input.pointer?.reload;
 
-      const velocity = isReloading
+      const velocity = (isReloading
         ? player.reloadPlayerSpeed
-        : player.speed || player.defaultSpeed;
+        : player.speed || player.defaultSpeed) + (input.shift ? 1 : 0);
 
+        
       const angle = player.rotation;
 
       let newX = player.x;

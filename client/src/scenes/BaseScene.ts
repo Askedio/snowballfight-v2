@@ -38,7 +38,9 @@ export class BaseScene extends Phaser.Scene {
     D: Phaser.Input.Keyboard.Key;
     R: Phaser.Input.Keyboard.Key;
     E: Phaser.Input.Keyboard.Key;
+    SHIFT: Phaser.Input.Keyboard.Key;
   };
+
   joystickKeys: {
     joystick: any;
     shoot: any;
@@ -55,6 +57,7 @@ export class BaseScene extends Phaser.Scene {
     r: false,
     pointer: undefined,
     tick: undefined,
+    shift: undefined,
   };
 
   elapsedTime = 0;
@@ -284,7 +287,7 @@ export class BaseScene extends Phaser.Scene {
         this.clearPickupEntities();
         this.clearPlayerEntities();
         this.clearBulletEntities();
-        
+
         this.room?.removeAllListeners();
         this.room = roomStore.get();
         this.setRoomListeners();
@@ -356,6 +359,7 @@ export class BaseScene extends Phaser.Scene {
         false
       ),
     };
+
     this.keyboardKeys = {
       W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
       A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
@@ -363,6 +367,10 @@ export class BaseScene extends Phaser.Scene {
       D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
       R: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
       E: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+      SHIFT: this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.SHIFT,
+        false
+      ),
     };
 
     // Space bar for shooting
@@ -392,6 +400,7 @@ export class BaseScene extends Phaser.Scene {
       this.cursorKeys.down.isDown || this.keyboardKeys.S.isDown;
     this.inputPayload.r = this.keyboardKeys.R.isDown;
     this.inputPayload.e = this.keyboardKeys.E.isDown;
+    this.inputPayload.shift = this.keyboardKeys.SHIFT.isDown;
 
     const pointer = this.input.activePointer;
 

@@ -8,4 +8,5 @@ export interface InputData {
   pointer: any;
   r: boolean;
   e: boolean;
+  shift: boolean;
 }

@@ -332,6 +332,8 @@ export function SpawnScreen() {
         Shoot: Space or Left Click
         <br />
         Reload: R or Right Click
+        <br/>
+        Sprint: Shift Key
       </div>
 
       <p className="created-by">

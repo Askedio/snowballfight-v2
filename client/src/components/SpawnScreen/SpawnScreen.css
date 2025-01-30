@@ -7,7 +7,7 @@
 }
 
 .instructions {
-  @apply mt-4 text-xs text-gray-400 border-t pt-3 border-gray-600;
+  @apply mt-4 text-xs text-gray-300 border-t pt-3 border-gray-600;
 }
 
 .btn-plain {
