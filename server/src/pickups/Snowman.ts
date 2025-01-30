@@ -7,7 +7,7 @@ export class SnowmanPickup extends Pickup {
 
     this.asset = "snowman";
     this.scale = 1;
-    this.colissionOffsetY = 14;
+    this.colissionOffsetY = 16;
     this.colissionOffsetX = 1;
     this.bringToTop = true;
     this.radius = 24;
