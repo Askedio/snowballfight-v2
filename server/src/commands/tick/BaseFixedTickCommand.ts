@@ -319,6 +319,7 @@ export class BaseTickCommand<
         const dx = pointer.x - player.x;
         const dy = pointer.y - player.y;
         const magnitude = Math.sqrt(dx * dx + dy * dy);
+        const angleToPointer = Math.atan2(dy, dx); // Angle in radians
 
         // Normalize the direction vector
         const directionX = dx / magnitude;
@@ -338,6 +339,7 @@ export class BaseTickCommand<
         bullet.id = nanoid();
         bullet.x = bulletStartX + directionX * player.hitRadius; // Offset from the player's position
         bullet.y = bulletStartY + directionY * player.hitRadius;
+        bullet.rotation = angleToPointer;
         bullet.dx = directionX * player.bulletSpeed;
         bullet.dy = directionY * player.bulletSpeed;
         bullet.ownerId = player.sessionId;

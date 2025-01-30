@@ -69,7 +69,7 @@ export class BaseScene extends Phaser.Scene {
   disableChat = false;
 
   preload() {
-    this.load.image("snowball", "/assets/images/weapons/snowball.png");
+    this.load.image("snowball0", "/assets/images/weapons/snowball.png");
 
     this.load.atlas(
       "players",
@@ -95,10 +95,13 @@ export class BaseScene extends Phaser.Scene {
       "/assets/sprites/health.json"
     );
 
+    this.load.image("tree", "/assets/images/city/tree.png");
+
     this.load.image(
-      "tree",
-      "/assets/maps/winter/png/128/objects/non-tileable/Tree.png"
+      "planter",
+      "/assets/images/city/planter.png"
     );
+
     this.load.image(
       "snowman",
       "/assets/maps/winter/png/128/objects/non-tileable/IceMan.png"
@@ -109,6 +112,12 @@ export class BaseScene extends Phaser.Scene {
       "kaboom",
       "/assets/sprites/explosion.png",
       "/assets/sprites/explosion.json"
+    );
+
+    this.load.atlas(
+      "snowball",
+      "/assets/sprites/weapons/snowball/snowball.png",
+      "/assets/sprites/weapons/snowball/snowball.json"
     );
 
     this.load.atlas(
@@ -373,12 +382,12 @@ export class BaseScene extends Phaser.Scene {
           if (pickup.autoPlay) {
             (pickupEntity as Phaser.GameObjects.Sprite).play(pickup.asset);
           }
-
-          if (pickup.tint) {
-            (pickupEntity as Phaser.GameObjects.Sprite).setTint(pickup.tint);
-          }
         } else {
           pickupEntity = this.add.image(0, 0, pickup.asset);
+        }
+
+        if (pickup.tint) {
+          pickupEntity.setTint(pickup.tint);
         }
 
         // Scale and rotate the sprite if needed
@@ -665,10 +674,15 @@ export class BaseScene extends Phaser.Scene {
       }
     });
 
-    // Handle bullet addition
+    // Handle bullet addition, add bullets
     this.room.state.bullets.onAdd((bullet, bulletId) => {
       try {
-        const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
+        //const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
+        const bulletEntity = this.add.sprite(bullet.x, bullet.y, bullet.skin);
+        bulletEntity.setScale(.07) //
+      bulletEntity.setRotation(bullet.rotation + Math.PI) //
+        bulletEntity.play(bullet.skin) //
+        
         bulletEntity.setOrigin(0.5, 0.5);
         bulletEntity.setDepth(3);
         this.bulletEntities[bulletId] = bulletEntity;
@@ -679,7 +693,7 @@ export class BaseScene extends Phaser.Scene {
           }
         });
       } catch (error: any) {
-        console.error("Failed to create bullets");
+        console.error("Failed to create bullets", error);
       }
     });
 
@@ -777,6 +791,19 @@ export class BaseScene extends Phaser.Scene {
     if (this.anims.exists("explosiongrey")) {
       return;
     }
+
+    this.anims.create({
+      key: "snowball",
+      frames: this.anims.generateFrameNames("snowball", {
+        start: 1,
+        end: 6,
+        prefix: "snowball_0",
+        suffix: ".png",
+      }),
+      frameRate: 4,
+      repeat: 1,
+      hideOnComplete: false,
+    });
 
     this.anims.create({
       key: "explosiongrey",

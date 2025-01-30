@@ -13,6 +13,7 @@ export class Bullet extends Schema {
   @type("number") y: number;
   @type("number") dx: number;
   @type("number") dy: number;
+  @type("number") rotation: number;
 
   // Stats
   @type("number") lifetime = 700; // Bullet lifetime in ms

@@ -17,14 +17,14 @@ export class FreeForAllOnCreateCommand extends BaseOnCreateCommand<
   constructor() {
     super();
 
-    this.roundManager = new RoundManager(this);
+    //this.roundManager = new RoundManager(this);
   }
 
   async execute(payload: this["payload"]) {
     super.execute(payload);
 
     this.room.clock.setInterval(() => {
-      this.roundManager.updateRoundState();
+      //this.roundManager.updateRoundState();
     }, 1000);
   }
 }

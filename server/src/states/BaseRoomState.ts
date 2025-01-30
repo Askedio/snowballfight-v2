@@ -7,7 +7,6 @@ import { ChatMessage } from "../schemas/ChatMessage";
 export class BaseRoomState extends Schema {
   @type("number") mapWidth = 2240;
   @type("number") mapHeight = 1600;
-  @type("number") minPlayers = 1;
   @type("boolean") requiresReady = false;
 
   @type("boolean") showRespawnScreenOnDeath = true;

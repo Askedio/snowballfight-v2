@@ -22,7 +22,7 @@ import VirtualJoystickPlugin from "phaser3-rex-plugins/plugins/virtualjoystick-p
 import { EventBus } from "./lib/EventBus";
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   fps: {
     target: 60,
     forceSetTimeOut: true,
@@ -166,7 +166,7 @@ export function App() {
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [game]);
 
   useEffect(() => {
     EventBus.on("mute-audio", (muted) => {
@@ -178,8 +178,8 @@ export function App() {
     return () => {
       EventBus.removeListener("mute-audio");
     };
-  }, []);
-  
+  }, [game]);
+
   if (failure) {
     return (
       <div className="w-screen h-screen flex items-center">

@@ -12,6 +12,7 @@ export class SnowmanPickup extends Pickup {
     this.bringToTop = true;
     this.radius = 24;
 
+   
     this.bulletKills = true;
     this.blocking = true;
     this.health = config.health || 40;

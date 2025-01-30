@@ -30,13 +30,13 @@ export class BaseOnCreateCommand<
     this.pickupManager = new PickupManager(this.tilemapManager);
 
     this.room.clock.setInterval(async () => {
+      // Get current players and bots
       const bots = Array.from(this.room.state.players.values()).filter(
         (player) => player.type === "bot"
       );
       const humans = Array.from(this.room.state.players.values()).filter(
         (player) => player.type === "human"
       );
-      const totalPlayers = humans.length + bots.length;
 
       // If maxBots is 0, remove all bots and prevent adding new ones
       if (this.room.maxBots === 0) {
@@ -46,28 +46,24 @@ export class BaseOnCreateCommand<
         return;
       }
 
-      // If we don't have enough players, add bots
-      if (totalPlayers < this.room.minPlayers) {
-        const botsToAdd = Math.min(
-          this.room.maxBots,
-          this.room.minPlayers - totalPlayers
-        );
+      // Calculate the desired number of bots
+      let desiredBots = 0;
+      if (humans.length === 1) {
+        desiredBots = 1; // Add 1 bot if there's only 1 human player
+      } else if (humans.length >= 2) {
+        desiredBots = 0; // Remove all bots if there are 2 or more human players
+      }
 
+      // Add or remove bots to match the desired count
+      if (bots.length < desiredBots) {
+        // Add bots
+        const botsToAdd = desiredBots - bots.length;
         for (let i = 0; i < botsToAdd; i++) {
           await this.createPlayer(null, null, "bot");
         }
-      }
-
-      // If there are too many bots, remove the extra ones
-      if (
-        humans.length >= this.room.minPlayers ||
-        bots.length > this.room.maxBots
-      ) {
-        const botsToRemove = Math.max(
-          0,
-          bots.length - Math.max(0, this.room.maxBots - humans.length)
-        );
-
+      } else if (bots.length > desiredBots) {
+        // Remove bots
+        const botsToRemove = bots.length - desiredBots;
         for (let i = 0; i < botsToRemove; i++) {
           const botToRemove = bots[i];
           if (botToRemove) {
@@ -75,7 +71,7 @@ export class BaseOnCreateCommand<
           }
         }
       }
-    }, 5000);
+    }, 2000);
 
     this.spawnPickups();
 

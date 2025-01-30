@@ -17,7 +17,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   // Game configuration
   maxClients: number;
   maxBots: number;
-  minPlayers = 2;
+  minPlayers = 1;
 
   mode: string;
   scoring: string;

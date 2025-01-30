@@ -55,7 +55,7 @@ export class Player extends Schema {
   @type("boolean") isRespawnable = false; // eh..
 
   // Firing rate/damage
-  @type("number") bulletSpeed = 10; // How fast the bullet moves
+  @type("number") bulletSpeed = 5; // How fast the bullet moves
   @type("number") bulletCooldown = 400; // Time between actually firing
   @type("number") bulletFireRate = 1; // Number of bullets to fire
   @type("number") bulletFireDelay = 100; // Time between bullet fires.
@@ -84,7 +84,7 @@ export class Player extends Schema {
 
   // Used for applyTemporaryChange
   @type("number") defaultSpeed = 4;
-  @type("number") defaultBulletSpeed = 10;
+  @type("number") defaultBulletSpeed = 5;
   @type("number") defaultBulletCooldown = 400;
   @type("number") defaultBulletFireRate = 1;
   @type("number") defaultBulletFireDelay = 100;

@@ -6,13 +6,18 @@ export class TreePickup extends Pickup {
     Object.assign(this, config);
 
     this.asset = "tree";
-    this.scale = 0.7;
+    this.scale = 0.2 + Math.random() * 0.08;
     this.bringToTop = true;
-    this.colissionOffsetY = 47;
-   
+    this.colissionOffsetY = 0;
+    this.radius = 10;
+    this.rotation = 6;
     this.blocking = true;
     this.health = config.health || 100;
     this.destroyBulletOnCollision = true;
+
+    this.destroyable = false;
+
+    this.tint = "0xffffff"
   }
 
   onPlayerCollision(player: any): void {
@@ -20,8 +25,9 @@ export class TreePickup extends Pickup {
   }
 
   onBulletCollision(): boolean {
-    this.health -= this.damange;
+    return false;
+  //  this.health -= this.damange;
 
-    return this.health <= 0;
+  //  return this.health <= 0;
   }
 }

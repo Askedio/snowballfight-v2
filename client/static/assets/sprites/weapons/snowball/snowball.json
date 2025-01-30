@@ -1,0 +1,146 @@
+{
+	"textures": [
+		{
+			"image": "snowball.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 922,
+				"h": 835
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "snowball_06.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 16,
+						"y": 57,
+						"w": 474,
+						"h": 286
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 474,
+						"h": 286
+					}
+				},
+				{
+					"filename": "snowball_05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 16,
+						"y": 60,
+						"w": 444,
+						"h": 281
+					},
+					"frame": {
+						"x": 477,
+						"y": 1,
+						"w": 444,
+						"h": 281
+					}
+				},
+				{
+					"filename": "snowball_04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 19,
+						"y": 67,
+						"w": 475,
+						"h": 265
+					},
+					"frame": {
+						"x": 1,
+						"y": 289,
+						"w": 475,
+						"h": 265
+					}
+				},
+				{
+					"filename": "snowball_02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 15,
+						"y": 63,
+						"w": 438,
+						"h": 278
+					},
+					"frame": {
+						"x": 1,
+						"y": 556,
+						"w": 438,
+						"h": 278
+					}
+				},
+				{
+					"filename": "snowball_01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 16,
+						"y": 59,
+						"w": 391,
+						"h": 282
+					},
+					"frame": {
+						"x": 478,
+						"y": 284,
+						"w": 391,
+						"h": 282
+					}
+				},
+				{
+					"filename": "snowball_03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 386
+					},
+					"spriteSourceSize": {
+						"x": 11,
+						"y": 81,
+						"w": 452,
+						"h": 243
+					},
+					"frame": {
+						"x": 441,
+						"y": 568,
+						"w": 452,
+						"h": 243
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:8706f6fa93bfe0a1b1824cb03604ba5b:9787ce9af8dbf8b04925dee25bf881f5:581d47231bb6ddc2a37a6b5c284478a9$"
+	}
+}
