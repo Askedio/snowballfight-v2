@@ -276,45 +276,48 @@ export class TilemapManager {
 
     // Loop through every tile in the grid
     for (let y = 0; y < collisionGrid.length; y++) {
-      for (let x = 0; x < collisionGrid[0].length; x++) {
-        const tileCenterX = x * tileWidth + tileWidth / 2;
-        const tileCenterY = y * tileHeight + tileHeight / 2;
+        for (let x = 0; x < collisionGrid[0].length; x++) {
+            const tileCenterX = x * tileWidth + tileWidth / 2;
+            const tileCenterY = y * tileHeight + tileHeight / 2;
 
-        // Check if this tile collides with any blocking pickup
-        const isBlocked = pickups.some((pickup) => {
-          if (!pickup.blocking) return false;
+            // Check if this tile collides with any blocking pickup
+            const isBlocked = pickups.some((pickup) => {
+                if (!pickup.blocking) return false;
 
-          const pickupShape = {
-            type: pickup.collisionshape || "circle",
-            x: pickup.x + (pickup.colissionOffsetX || 0),
-            y: pickup.y + (pickup.colissionOffsetY || 0),
-            width: pickup.colissionWidth || 64,
-            height: pickup.colissionHeight || 64,
-            radius: pickup.radius,
-            rotation: pickup.rotation,
-          };
+                const pickupWidth = pickup.colissionWidth || pickup.width || 32;
+                const pickupHeight = pickup.colissionHeight || pickup.height || 32;
+                const pickupX = pickup.x + (pickup.colissionOffsetX || 0);
+                const pickupY = pickup.y + (pickup.colissionOffsetY || 0);
 
-          const tileShape = {
-            type: "box",
-            x: tileCenterX,
-            y: tileCenterY,
-            width: tileWidth,
-            height: tileHeight,
-          };
+                // Correctly align bounding box (assuming pickup.x/y is center)
+                const pickupShape = {
+                    type: pickup.collisionshape || "circle",
+                    x: pickupX - pickupWidth / 2, // Adjust to top-left corner
+                    y: pickupY - pickupHeight / 2,
+                    width: pickupWidth,
+                    height: pickupHeight,
+                    radius: pickup.radius || Math.max(pickupWidth, pickupHeight) / 2,
+                    rotation: pickup.rotation || 0,
+                };
 
-          if (pickup.type === "tree") {
-            console.log({ pickupShape, tileShape });
-          }
+                const tileShape = {
+                    type: "box",
+                    x: tileCenterX - tileWidth / 2, // Adjust to top-left corner
+                    y: tileCenterY - tileHeight / 2,
+                    width: tileWidth,
+                    height: tileHeight,
+                };
 
-          return this.collisionSystem.detectCollision(pickupShape, tileShape);
-        });
+                return this.collisionSystem.detectCollision(pickupShape, tileShape);
+            });
 
-        if (isBlocked) {
-          collisionGrid[y][x] = 1; // Mark as blocked
+            if (isBlocked) {
+                collisionGrid[y][x] = 1; // Mark as blocked
+            }
         }
-      }
     }
 
     return collisionGrid;
-  }
+}
+
 }

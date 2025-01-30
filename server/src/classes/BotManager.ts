@@ -1,8 +1,9 @@
 import type { MapSchema, ArraySchema } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
-import type { Player } from "../schemas/Player";
+import { PathNode, type Player } from "../schemas/Player";
 import type { Pickup } from "../schemas/Pickup";
 import { SpatialPartitioningManager } from "./SpatialPartitioningManager";
+import type { BaseRoom } from "../rooms/BaseRoom";
 
 const healthPickup = "treasure";
 const ammoPickup = "devil";
@@ -18,25 +19,25 @@ export class BotManager {
   private players: MapSchema<Player, string>;
   private pickups: ArraySchema<Pickup>;
   private state: BotState = BotState.Wandering;
+  private room: any;
   spatialManager: SpatialPartitioningManager;
 
   constructor(
     players: MapSchema<Player, string>,
     pickups: ArraySchema<Pickup>,
-    spatialManager: SpatialPartitioningManager
+    spatialManager: SpatialPartitioningManager,
+    room: any
   ) {
     this.players = players;
     this.pickups = pickups;
     this.spatialManager = spatialManager;
+    this.room = room;
   }
 
   /**
    * Generates input for a bot to decide its next move.
-   * @param bot - The bot player
-   * @returns InputData - The bot's next move
    */
   generateBotInput(bot: Player): InputData {
-    // Update bot state based on conditions
     if (bot.health < 40) {
       this.state = BotState.Fleeing;
     } else if (this.getTargetPlayer(bot)) {
@@ -46,9 +47,7 @@ export class BotManager {
     } else {
       this.state = BotState.Wandering;
     }
-    
 
-    // Generate input based on the current state
     switch (this.state) {
       case BotState.Wandering:
         return this.randomWandering(bot);
@@ -71,15 +70,12 @@ export class BotManager {
     if (lowHealth) {
       return this.getNearestPickup(
         bot,
-        (pickup) => pickup.type === healthPickup && pickup.isRedeployable
+        (pickup) => pickup.type === healthPickup
       );
     }
 
     if (lowAmmo) {
-      return this.getNearestPickup(
-        bot,
-        (pickup) => pickup.type === ammoPickup && pickup.isRedeployable
-      );
+      return this.getNearestPickup(bot, (pickup) => pickup.type === ammoPickup);
     }
 
     return null;
@@ -100,9 +96,8 @@ export class BotManager {
         (!bot.team || player.team !== bot.team)
       ) {
         const distance = Math.hypot(bot.x - player.x, bot.y - player.y);
-        const healthScore = 100 - player.health; // Prioritize low-health players
-        const distanceScore = 200 - distance; // Prioritize closer players
-
+        const healthScore = 100 - player.health;
+        const distanceScore = 200 - distance;
         const totalScore = healthScore + distanceScore;
 
         if (totalScore > bestScore) {
@@ -112,8 +107,7 @@ export class BotManager {
       }
     });
 
-    bot.targetPlayer =
-      bestTarget && bestScore > 0 ? bestTarget.sessionId : null;
+    bot.targetPlayer = bestTarget ? bestTarget.sessionId : null;
     return bestTarget;
   }
 
@@ -125,7 +119,7 @@ export class BotManager {
     condition: (pickup: Pickup) => boolean
   ): Pickup | null {
     let nearestPickup: Pickup | null = null;
-    let minDistance = 999999;
+    let minDistance = Infinity;
 
     this.pickups.forEach((pickup) => {
       if (condition(pickup)) {
@@ -151,55 +145,20 @@ export class BotManager {
    * Generates combat input for targeting a player.
    */
   private combatLogic(bot: Player, target: Player): InputData {
-    const dx = target.x - bot.x;
-    const dy = target.y - bot.y;
-    const distance = Math.hypot(dx, dy);
-
-    const shouldReload = bot.ammo <= 4 && distance > 200; // Reload only when safe
-    const canShoot = bot.ammo > 0 && distance < 300;
-
-    // Kiting: Move away if too close, move closer if too far
-    const isTooClose = distance < 150;
-    const isTooFar = distance > 250;
-    // @ts-ignore
-    return {
-      up: isTooFar,
-      down: isTooClose,
-      left: Math.random() > 0.5,
-      right: Math.random() > 0.5,
-      pointer: {
-        x: target.x + (Math.random() - 0.5) * 20, // Add some randomness to aim
-        y: target.y + (Math.random() - 0.5) * 20,
-        shoot: canShoot,
-        reload: shouldReload,
-      },
-      r: shouldReload,
-      shoot: canShoot,
-    };
+    return this.steer(bot, target.x, target.y);
   }
 
   /**
    * Generates wandering behavior when no targets are available.
    */
   private randomWandering(bot: Player): InputData {
-    // Define inner bounds (playable area)
-    const innerBounds = {
-      minX: (2240 - 200) / 2, // Centered horizontally: (2240 - 800) / 2 = 720
-      maxX: (2240 + 200) / 2, // Centered horizontally: (2240 + 800) / 2 = 1520
-      minY: (1344 - 200) / 2, // Centered vertically: (1344 - 600) / 2 = 372
-      maxY: (1344 + 200) / 2, // Centered vertically: (1344 + 600) / 2 = 972
-    };
-  
-    // If the bot has no random target or is close to it, generate a new one within the inner bounds
     if (
       !bot.randomPointerX ||
       Math.hypot(bot.randomPointerX - bot.x, bot.randomPointerY - bot.y) < 50
     ) {
-      bot.randomPointerX = innerBounds.minX + Math.random() * (innerBounds.maxX - innerBounds.minX);
-      bot.randomPointerY = innerBounds.minY + Math.random() * (innerBounds.maxY - innerBounds.minY);
+      bot.randomPointerX = Math.random() * 2000;
+      bot.randomPointerY = Math.random() * 1000;
     }
-  
-    // Steer toward the random target
     return this.steer(bot, bot.randomPointerX, bot.randomPointerY);
   }
 
@@ -211,86 +170,88 @@ export class BotManager {
     if (!nearestPickup) {
       return this.randomWandering(bot);
     }
-
-    return this.steer(bot, nearestPickup.x, nearestPickup.y)
+    return this.steer(bot, nearestPickup.x, nearestPickup.y);
   }
 
   /**
-   * Steering logic for smooth movement and obstacle avoidance.
+   * Steering logic for smooth movement and pathfinding.
    */
   private steer(bot: Player, targetX: number, targetY: number): InputData {
-    const dx = targetX - bot.x;
-    const dy = targetY - bot.y;
-    const distance = Math.hypot(dx, dy);
+    const tileWidth = 32;
+    const tileHeight = 32;
 
-    // Normalize direction
-    const dirX = dx / distance || 0;
-    const dirY = dy / distance || 0;
+    const currentTileX = Math.floor(bot.x / tileWidth);
+    const currentTileY = Math.floor(bot.y / tileHeight);
+    const targetTileX = Math.floor(targetX / tileWidth);
+    const targetTileY = Math.floor(targetY / tileHeight);
 
-    // Avoid obstacles (e.g., walls or other players)
-    const avoidForce = this.avoidObstacles(bot, dirX, dirY);
-    const steerX = dirX + avoidForce.x;
-    const steerY = dirY + avoidForce.y;
+    // **Recalculate path if the target moved significantly or path is empty**
+    if (
+      Math.hypot(bot.lastTargetX - targetX, bot.lastTargetY - targetY) > tileWidth ||
+      bot.path.length === 0
+    ) {
+      bot.lastTargetX = targetX;
+      bot.lastTargetY = targetY;
+try {
+      const computedPath = this.room.pathfinding.findPath(
+        currentTileX,
+        currentTileY,
+        targetTileX,
+        targetTileY,
+        bot.playerRadius
+      );
 
-    // Generate input based on steering direction
+      bot.path.clear();
+      computedPath.forEach(([x, y]: any) => bot.path.push(new PathNode(x, y))); // ✅ Use PathNode Schema
+    } catch(e) {
+      console.log("Wtf")
+    }
+    }
+
+    if (bot.path.length > 0) {
+      const nextStep = bot.path[0];
+
+      const worldX = nextStep.x * tileWidth;
+      const worldY = nextStep.y * tileHeight;
+
+      const dx = worldX - bot.x;
+      const dy = worldY - bot.y;
+
+      // **Update input to follow the next step in the path**
+      const input = {
+        up: dy < 0,
+        down: dy > 0,
+        left: dx < 0,
+        right: dx > 0,
+        pointer: {
+          x: targetX,
+          y: targetY,
+          shoot: false,
+          reload: false,
+        },
+        r: false,
+        shoot: false,
+      };
+
+      // **Remove step if bot reaches it**
+      if (Math.hypot(bot.x - worldX, bot.y - worldY) < bot.playerRadius) {
+        bot.path.shift();
+      }
+
+      // @ts-ignore
+      return input;
+    }
+
     // @ts-ignore
     return {
-      up: steerY < 0,
-      down: steerY > 0,
-      left: steerX < 0,
-      right: steerX > 0,
-      pointer: {
-        x: targetX,
-        y: targetY,
-        shoot: false,
-        reload: false,
-      },
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      pointer: { x: targetX, y: targetY, shoot: false, reload: false },
       r: false,
       shoot: false,
     };
-  }
+}
 
-  /**
-   * Avoid obstacles by adjusting the bot's movement direction.
-   */
-  private avoidObstacles(
-    bot: Player,
-    dirX: number,
-    dirY: number
-  ): { x: number; y: number } {
-    const avoidForce = { x: 0, y: 0 };
-
-    // Query nearby pickups
-    const nearbyPickups = this.spatialManager.queryNearbyObjects(
-      bot.x,
-      bot.y,
-      100, // Query radius (adjust as needed)
-      this.spatialManager.pickupIndex
-    );
-
-    nearbyPickups.forEach(({ pickup }) => {
-      // Only avoid pickups that are blocking
-      if (pickup.blocking) {
-        const dx = bot.x - pickup.x;
-        const dy = bot.y - pickup.y;
-        const distance = Math.hypot(dx, dy);
-
-        // Define a "wide berth" radius (e.g., 2x the pickup's collision radius)
-        const wideBerthRadius = (pickup.radius || 20) * 4;
-
-        if (distance < wideBerthRadius) {
-          // Push away from the blocking pickup
-          const overlap = wideBerthRadius - distance;
-          const nx = dx / distance || 0;
-          const ny = dy / distance || 0;
-
-          // Adjust the strength of the avoidance force
-          avoidForce.x += nx * overlap * 0.5; // Increase multiplier for stronger avoidance
-          avoidForce.y += ny * overlap * 0.5;
-        }
-      }
-    });
-
-    return avoidForce;
-  }
 }

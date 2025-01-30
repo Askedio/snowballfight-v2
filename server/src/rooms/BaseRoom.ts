@@ -9,6 +9,7 @@ import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
+import { Pathfinding } from "../classes/Pathfinding";
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -18,10 +19,6 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   maxClients: number;
   maxBots: number;
   minPlayers = 1;
-
-  mode: string;
-  scoring: string;
-  teams: boolean;
 
   // Map configuration
   map: string;
@@ -37,7 +34,9 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
-
+  collisionGrid: number[][];
+  pathfinding: Pathfinding;
+  
   async onCreate() {
     this.collisionSystem = new Collision();
 

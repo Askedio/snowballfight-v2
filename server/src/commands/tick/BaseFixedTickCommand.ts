@@ -48,19 +48,24 @@ export class BaseTickCommand<
       let isColliding = false;
 
       if (player.type === "bot") {
-        // Generate bot input dynamically
-
-        //const pathfinding = new Pathfinding(
-        //  this.tilemapManager,
-        //  this.collisionSystem
-        //);
-
         const botManager = new BotManager(
           this.room.state.players,
           this.room.state.pickups,
-          this.spatialManager
+          this.spatialManager,
+          this.room
         );
-        input = botManager.generateBotInput(player);
+         const a = botManager.generateBotInput(player);
+         // @ts-ignore
+         input = {
+          up: false,
+          down: false,
+          left: false,
+          right: false,
+          pointer: a.pointer,
+          r: false,
+          shoot: false,
+        }
+       
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -70,11 +75,11 @@ export class BaseTickCommand<
 
       const isReloading = input.r || input.pointer?.reload;
 
-      const velocity = (isReloading
-        ? player.reloadPlayerSpeed
-        : player.speed || player.defaultSpeed) + (input.shift ? 1 : 0);
+      const velocity =
+        (isReloading
+          ? player.reloadPlayerSpeed
+          : player.speed || player.defaultSpeed) + (input.shift ? 1 : 0);
 
-        
       const angle = player.rotation;
 
       let newX = player.x;
@@ -93,27 +98,57 @@ export class BaseTickCommand<
         player.lastReloadTime = Date.now();
       }
 
-      // Movement logic
-      if (input.up) {
-        newX += Math.cos(angle) * velocity;
-        newY += Math.sin(angle) * velocity;
-        isCurrentlyMoving = true;
-      }
+      if (player.type === "bot") {
+        if(player.path.length > 0){
+          const nextStep = player.path.shift();
 
-      if (input.down) {
-        newX -= Math.cos(angle) * velocity * 0.5;
-        newY -= Math.sin(angle) * velocity * 0.5;
-        isCurrentlyMoving = true;
-      }
+          
+        if (nextStep) {
+          const worldX = nextStep.x * 32;
+          const worldY = nextStep.y * 32;
 
-      if (input.left) {
-        newX += Math.sin(angle) * velocity * 0.5;
-        newY -= Math.cos(angle) * velocity * 0.5;
-        isCurrentlyMoving = true;
-      } else if (input.right) {
-        newX -= Math.sin(angle) * velocity * 0.5;
-        newY += Math.cos(angle) * velocity * 0.5;
-        isCurrentlyMoving = true;
+          const dx = worldX - player.x;
+          const dy = worldY - player.y;
+
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 90) {
+            player.path.shift(); // ✅ Remove step once reached
+            isCurrentlyMoving = false;
+          } else {
+            newX += (dx / distance) * velocity;
+            newY += (dy / distance) * velocity;
+
+            player.x = newX;
+            player.y = newY
+            isCurrentlyMoving = true;
+          }
+        }} else {
+          isCurrentlyMoving = false;
+        }
+      } else {
+        // Movement logic
+        if (input.up) {
+          newX += Math.cos(angle) * velocity;
+          newY += Math.sin(angle) * velocity;
+          isCurrentlyMoving = true;
+        }
+
+        if (input.down) {
+          newX -= Math.cos(angle) * velocity * 0.5;
+          newY -= Math.sin(angle) * velocity * 0.5;
+          isCurrentlyMoving = true;
+        }
+
+        if (input.left) {
+          newX += Math.sin(angle) * velocity * 0.5;
+          newY -= Math.cos(angle) * velocity * 0.5;
+          isCurrentlyMoving = true;
+        } else if (input.right) {
+          newX -= Math.sin(angle) * velocity * 0.5;
+          newY += Math.cos(angle) * velocity * 0.5;
+          isCurrentlyMoving = true;
+        }
       }
 
       if (input.pointer) {
@@ -127,7 +162,7 @@ export class BaseTickCommand<
 
         player.rotation = player.smoothAngle(player.rotation, targetAngle, 0.1);
 
-        if (distance <= player.playerRadius) {
+        if (distance <= player.playerRadius && player.type !== "bot") {
           newX = player.x;
           newY = player.y;
           isCurrentlyMoving = false;
@@ -140,89 +175,91 @@ export class BaseTickCommand<
       }
 
       // Check for collisions with pickups
-      const nearbyPickups = this.spatialManager.queryNearbyObjects(
-        player.x,
-        player.y,
-        player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
-        this.spatialManager.pickupIndex
-      );
-
-      nearbyPickups.forEach(({ pickup: pickupSource }) => {
-        const pickup = PickupFactory.createPickup(
-          pickupSource.type,
-          pickupSource.x,
-          pickupSource.y,
-          pickupSource
+      if (player.type !== "bot") {
+        const nearbyPickups = this.spatialManager.queryNearbyObjects(
+          player.x,
+          player.y,
+          player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
+          this.spatialManager.pickupIndex
         );
 
-        if (!pickup) {
-          return;
-        }
+        nearbyPickups.forEach(({ pickup: pickupSource }) => {
+          const pickup = PickupFactory.createPickup(
+            pickupSource.type,
+            pickupSource.x,
+            pickupSource.y,
+            pickupSource
+          );
 
-        const isCollidingWithPickup = this.collisionSystem.detectCollision(
-          {
-            type: pickupSource.collisionshape || "circle",
-            x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
-            y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
-            width: pickupSource.colissionWidth,
-            height: pickupSource.colissionHeight,
-            radius: pickupSource.radius,
-            rotation: pickupSource.rotation,
-          },
-          {
-            type: "circle", // Shape type
-            x: newX,
-            y: newY,
-            radius: player.playerRadius,
-          }
-        );
-
-        if (isCollidingWithPickup) {
-          isColliding = pickup.blocking;
-          pickup.onPlayerCollision(player); // Trigger collision effect
-
-          const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-          this.onPickupColission(player, pickup, pickupIndex);
-
-          if (
-            pickup.canCarry(player) &&
-            !player.pickups.find((_) => _.type === pickup.type)
-          ) {
-            player.pickups.push(pickup);
+          if (!pickup) {
+            return;
           }
 
-          if (pickup.playAudioOnPickup && pickup.audioKey) {
-            this.room.broadcast("play-sound", {
-              item: pickup,
-              key: pickup.audioKey,
-            });
-          }
+          const isCollidingWithPickup = this.collisionSystem.detectCollision(
+            {
+              type: pickupSource.collisionshape || "circle",
+              x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
+              y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
+              width: pickupSource.colissionWidth,
+              height: pickupSource.colissionHeight,
+              radius: pickupSource.radius,
+              rotation: pickupSource.rotation,
+            },
+            {
+              type: "circle", // Shape type
+              x: newX,
+              y: newY,
+              radius: player.playerRadius,
+            }
+          );
 
-          // Handle pickup destruction and redeployment
-          if (pickup.destroyOnCollision) {
+          if (isCollidingWithPickup) {
+            isColliding = pickup.blocking;
+            pickup.onPlayerCollision(player); // Trigger collision effect
+
             const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-            this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+            this.onPickupColission(player, pickup, pickupIndex);
 
-            if (pickup.isRedeployable) {
-              setTimeout(() => {
-                const redeployedPickup = PickupFactory.createPickup(
-                  pickup.type,
-                  pickup.originalX,
-                  pickup.originalY,
-                  pickup
-                );
-                if (redeployedPickup) {
-                  redeployedPickup.id = nanoid();
-                  redeployedPickup.isRedeployable = pickup.isRedeployable;
-                  redeployedPickup.redeployTimeout = pickup.redeployTimeout;
+            if (
+              pickup.canCarry(player) &&
+              !player.pickups.find((_) => _.type === pickup.type)
+            ) {
+              player.pickups.push(pickup);
+            }
 
-                  this.room.state.pickups.push(redeployedPickup); // Add it back
-                }
-              }, pickup.redeployTimeout);
+            if (pickup.playAudioOnPickup && pickup.audioKey) {
+              this.room.broadcast("play-sound", {
+                item: pickup,
+                key: pickup.audioKey,
+              });
+            }
+
+            // Handle pickup destruction and redeployment
+            if (pickup.destroyOnCollision) {
+              const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
+              this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
+
+              if (pickup.isRedeployable) {
+                setTimeout(() => {
+                  const redeployedPickup = PickupFactory.createPickup(
+                    pickup.type,
+                    pickup.originalX,
+                    pickup.originalY,
+                    pickup
+                  );
+                  if (redeployedPickup) {
+                    redeployedPickup.id = nanoid();
+                    redeployedPickup.isRedeployable = pickup.isRedeployable;
+                    redeployedPickup.redeployTimeout = pickup.redeployTimeout;
+
+                    this.room.state.pickups.push(redeployedPickup); // Add it back
+                  }
+                }, pickup.redeployTimeout);
+              }
             }
           }
-        }
-      });
+        });
+      }
 
       if (!isColliding) {
         const isCollidingInTilemap = this.tilemapManager.isColliding(
@@ -246,7 +283,12 @@ export class BaseTickCommand<
         );
 
         nearbyPlayers.forEach(({ player: otherPlayer }) => {
-          if (player === otherPlayer || otherPlayer.isDead || player.isDead || player.isProtected) {
+          if (
+            player === otherPlayer ||
+            otherPlayer.isDead ||
+            player.isDead ||
+            player.isProtected
+          ) {
             return;
           }
 
@@ -264,24 +306,25 @@ export class BaseTickCommand<
             const ny = dy / distance || 0;
 
             // Push the moving player out of collision by adjusting the position
-            player.x += nx * overlap * 2; // Adjust based on direction
-            player.y += ny * overlap * 2;
+            // player.x += nx * overlap * 2; // Adjust based on direction
+            // player.y += ny * overlap * 2;
 
             // Optionally, push the other player too (for equal collision response)
-            otherPlayer.x -= nx * overlap * 0.5;
-            otherPlayer.y -= ny * overlap * 0.5;
+            // otherPlayer.x -= nx * overlap * 0.5;
+            // otherPlayer.y -= ny * overlap * 0.5;
 
-            isColliding = true; // Flag that a collision occurred
+            // isColliding = true; // Flag that a collision occurred
           }
         });
       }
 
+      if(player.type !== "bot") {
       if (isColliding || !player.enabled) {
         isCurrentlyMoving = false;
       } else {
         player.x = newX;
         player.y = newY;
-      }
+      }}
 
       player.tick = input.tick;
       player.isMoving = isCurrentlyMoving;

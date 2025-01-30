@@ -1,16 +1,12 @@
 import { TestRoomOnCreateCommand } from "../commands/create/TestRoomOnCreateCommand";
 import { FreeForAllFixedTickCommand } from "../commands/tick/FreeForAllFixedTickCommand";
-import { FreeForAllRoomState } from "../states/FreeForAllRoomState";
+import { TestRoomState } from "../states/TestRoomState";
 import { BaseRoom } from "./BaseRoom";
 
-export class TestRoom extends BaseRoom<FreeForAllRoomState> {
+export class TestRoom extends BaseRoom<TestRoomState> {
   // Game configuration
   maxClients = 10;
-  maxBots = 0;
-
-  mode = "test";
-  scoring = "kills";
-  teams = false;
+  maxBots = 1;
 
   // Map configuration
   map = "../client/static/assets/maps/winter/map.json";
@@ -22,7 +18,7 @@ export class TestRoom extends BaseRoom<FreeForAllRoomState> {
   };
 
   async onCreate() {
-    this.setState(new FreeForAllRoomState());
+    this.setState(new TestRoomState());
     super.onCreate();
 
     this.dispatcher.dispatch(new TestRoomOnCreateCommand(), {

@@ -4,6 +4,18 @@ import { Pickup } from "./Pickup";
 import type { MapSchema } from "@colyseus/schema";
 import type { TilemapManager } from "../classes/TilemapManager";
 
+export class PathNode extends Schema {
+  @type("number") x: number;
+  @type("number") y: number;
+
+  constructor(x: number, y: number) {
+      super();
+      this.x = x;
+      this.y = y;
+  }
+}
+
+
 class Sounds extends Schema {
   @type("string") onKilledSound = "smash1";
   @type("string") walkingSound = "footstep1";
@@ -106,6 +118,11 @@ export class Player extends Schema {
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
+
+  @type([PathNode]) path = new ArraySchema<PathNode>(); // ✅ Correct way to store path
+
+  @type("number") lastTargetX: number = 0;
+  @type("number") lastTargetY: number = 0;
 
   canRespawn(): boolean {
     if (this.respawnDisabled) {

@@ -1,94 +1,150 @@
-import type { ArraySchema } from "@colyseus/schema";
-import { AStarFinder, Grid } from "astar-typescript";
-import type { TilemapManager } from "./TilemapManager";
-import type { Collision } from "./Collision";
-import type { Pickup } from "../schemas/Pickup";
+import { AStarFinder, DiagonalMovement, DijkstraFinder, Grid } from "pathfinding";
 
 export class Pathfinding {
-  tilemapManager: TilemapManager;
-  collisionSystem: Collision;
+  private collisionGrid: number[][];
+  private finder: AStarFinder | DijkstraFinder;
+  private grid: Grid;
+  private readonly TILE_SIZE = 32; // Adjust based on actual tile size
 
-  constructor(tilemapManager: TilemapManager, collisionSystem: Collision) {
-    this.tilemapManager = tilemapManager;
-    this.collisionSystem = collisionSystem;
+  constructor(
+    collisionGrid: number[][],
+    algorithm: "AStar" | "Dijkstra" = "AStar"
+  ) {
+    this.collisionGrid = collisionGrid;
+    this.grid = new Grid(this.collisionGrid);
+
+    // 🔀 Choose algorithm
+    switch (algorithm) {
+      case "Dijkstra":
+        this.finder = new DijkstraFinder();
+        break;
+      case "AStar":
+      default:
+        this.finder = new AStarFinder({      allowDiagonal: true, // ✅ Enable diagonal movement
+          diagonalMovement: DiagonalMovement.IfAtMostOneObstacle, // Prevents passing through corners
+    });
+        break;
+    }
   }
 
   /**
-   * Generates a path from the bot's position to the target using A*.
-   * Includes pickups marked as blocking in the collision grid.
-   * @param startX Bot's current X position (tile index).
-   * @param startY Bot's current Y position (tile index).
-   * @param targetX Target's X position (tile index).
-   * @param targetY Target's Y position (tile index).
-   * @param pickups Array of pickups to consider for blocking.
-   * @returns An array of [x, y] positions for the path.
+   * 🔍 Finds a path from start to target, ensuring the bot/player fits
    */
   findPath(
     startX: number,
     startY: number,
     targetX: number,
     targetY: number,
-    pickups: ArraySchema<Pickup>
+    playerRadius: number, // ✅ Consider player size
+    retries: number = 0,
+    maxRetries: number = 15
   ): number[][] {
-    const collisionGrid = this.getUpdatedCollisionGridWithPickups(pickups);
-    const grid = new Grid({ matrix: collisionGrid });
-    const astar = new AStarFinder({ grid, diagonalAllowed: true });
+    const clonedGrid = this.grid.clone();
+  
+    // ✅ Validate start and target positions
+    const startTile = this.findNearestValidTile(startX, startY, playerRadius);
+    const targetTile = this.findNearestValidTile(targetX, targetY, playerRadius);
+  
+    if (!startTile || !targetTile) {
+      console.warn(`🚨 No valid start or target tile found!`);
+      return [];
+    }
+  
+    let path = this.finder.findPath(
+      startTile.x,
+      startTile.y,
+      targetTile.x,
+      targetTile.y,
+      clonedGrid
+    );
+  
+  
+    return path.filter(([x, y]) => this.isWalkable(x, y, playerRadius));
 
-  // Find nearest valid tile for start and target if needed
-  const startTile = collisionGrid[startY]?.[startX] === 0
-    ? { x: startX, y: startY }
-    : this.findNearestValidTile(collisionGrid, startX, startY);
+  }
+  
 
-  const targetTile = collisionGrid[targetY]?.[targetX] === 0
-    ? { x: targetX, y: targetY }
-    : this.findNearestValidTile(collisionGrid, targetX, targetY);
+  /**
+   * 🔄 Attempts to reroute the path by finding nearest valid tiles
+   */
+  private reroutePath(
+    startX: number,
+    startY: number,
+    targetX: number,
+    targetY: number,
+    playerRadius: number
+  ): number[][] {
+    const newStart = this.findNearestValidTile(startX, startY, playerRadius);
+    const newTarget = this.findNearestValidTile(targetX, targetY, playerRadius);
 
-  // If no valid start or target tile found, return an empty path
-  if (!startTile || !targetTile) {
-    console.warn("No valid start or target tile found!");
-    return [];
+    if (!newStart || !newTarget) {
+      console.warn(`❌ No valid alternative path found!`);
+      return [];
+    }
+
+    console.log(
+      `✅ Rerouting from (${newStart.x}, ${newStart.y}) → (${newTarget.x}, ${newTarget.y})`
+    );
+    return this.findPath(
+      newStart.x,
+      newStart.y,
+      newTarget.x,
+      newTarget.y,
+      playerRadius
+    );
   }
 
-  return astar.findPath(startTile, targetTile);  }
+  /**
+   * ✅ Checks if a given path contains blocked tiles
+   */
+  private isPathBlocked(path: number[][], playerRadius: number): boolean {
+    return path.some(([x, y]) => !this.isWalkable(x, y, playerRadius));
+  }
 
+  /**
+   * ✅ Checks if a tile is walkable, ensuring the player fits
+   */
+  private isWalkable(x: number, y: number, radius: number): boolean {
+    const checkRadius = Math.ceil(radius / this.TILE_SIZE); // Convert radius to tiles
 
-/**
- * Finds the nearest valid (walkable) tile within a certain radius.
- * @param grid - The collision grid.
- * @param x - The starting X position.
- * @param y - The starting Y position.
- * @returns An object with `x` and `y` coordinates of the nearest valid tile, or `null` if none found.
- */
-private findNearestValidTile(
-    grid: number[][],
+    for (let dx = -checkRadius; dx <= checkRadius; dx++) {
+      for (let dy = -checkRadius; dy <= checkRadius; dy++) {
+        if (this.collisionGrid[y + dy]?.[x + dx] === 1) {
+          return false; // 🚫 Blocked
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 🔄 Finds the nearest valid (walkable) tile within a search radius
+   */
+  findNearestValidTile(
     x: number,
-    y: number
+    y: number,
+    radius: number
   ): { x: number; y: number } | null {
-    const maxRadius = 3; // How far to search for a valid tile
-    for (let radius = 1; radius <= maxRadius; radius++) {
-      for (let dx = -radius; dx <= radius; dx++) {
-        for (let dy = -radius; dy <= radius; dy++) {
+    const maxRadius = 10; // Search radius
+
+    for (let searchRadius = 1; searchRadius <= maxRadius; searchRadius++) {
+      for (let dx = -searchRadius; dx <= searchRadius; dx++) {
+        for (let dy = -searchRadius; dy <= searchRadius; dy++) {
           const nx = x + dx;
           const ny = y + dy;
-          if (grid[ny] && grid[ny][nx] === 0) {
+          if (this.isWalkable(nx, ny, radius)) {
             return { x: nx, y: ny };
           }
         }
       }
     }
-    return null; // No valid tile found within the search radius
-  }
-  
 
+    console.warn(`🚨 No valid tile found near (${x}, ${y})`);
+    return null;
+  }
 
   /**
-   * Checks if there is a clear line of sight between two points.
-   * Useful for determining if the bot can shoot without obstruction.
-   * @param fromX Starting X position.
-   * @param fromY Starting Y position.
-   * @param toX Target X position.
-   * @param toY Target Y position.
-   * @returns True if there is a clear line of sight, false otherwise.
+   * 🔫 Checks if there's a clear line of sight between two points
    */
   hasClearLineOfSight(
     fromX: number,
@@ -96,55 +152,31 @@ private findNearestValidTile(
     toX: number,
     toY: number
   ): boolean {
-    const steps = Math.max(Math.abs(toX - fromX), Math.abs(toY - fromY));
-    const stepX = (toX - fromX) / steps;
-    const stepY = (toY - fromY) / steps;
+    const dx = Math.abs(toX - fromX);
+    const dy = Math.abs(toY - fromY);
+    const sx = fromX < toX ? 1 : -1;
+    const sy = fromY < toY ? 1 : -1;
+    let err = dx - dy;
 
-    for (let i = 0; i <= steps; i++) {
-      const checkX = fromX + stepX * i;
-      const checkY = fromY + stepY * i;
+    let x = fromX;
+    let y = fromY;
 
-      if (
-        this.collisionSystem.detectCollision(
-          { type: "circle", x: checkX, y: checkY, radius: 1 },
-          { type: "circle", x: checkX, y: checkY, radius: 1 }
-        )
-      ) {
-        return false;
+    while (x !== toX || y !== toY) {
+      if (this.collisionGrid[y]?.[x] === 1) {
+        return false; // Blocked
+      }
+
+      const e2 = err * 2;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
       }
     }
 
     return true;
-  }
-
-  /**
-   * Creates an updated collision grid with blocking pickups added as obstacles.
-   * @param pickups Array of pickups in the game.
-   * @returns A 2D array representing the updated collision grid.
-   */
-  private getUpdatedCollisionGridWithPickups(
-    pickups: ArraySchema<Pickup>
-  ): number[][] {
-    const collisionGrid = this.tilemapManager.getCollisionGrid().map(
-      (row) => [...row] // Create a copy of the grid to avoid mutating the original
-    );
-
-    pickups.forEach((pickup) => {
-      if (pickup.blocking) {
-        const tileX = Math.floor(pickup.x / this.tilemapManager.tileWidth);
-        const tileY = Math.floor(pickup.y / this.tilemapManager.tileHeight);
-
-        if (
-          tileX >= 0 &&
-          tileY >= 0 &&
-          tileY < collisionGrid.length &&
-          tileX < collisionGrid[0].length
-        ) {
-          collisionGrid[tileY][tileX] = 1; // Mark as blocked
-        }
-      }
-    });
-
-    return collisionGrid;
   }
 }

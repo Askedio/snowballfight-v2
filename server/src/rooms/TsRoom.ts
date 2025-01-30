@@ -6,8 +6,6 @@ import { BaseRoom } from "./BaseRoom";
 export class TsRoom extends BaseRoom<TsRoomState> {
   // Game configuration
   maxClients = 10;
-  mode = "ts";
-  scoring = "kills";
   maxBots = 1;
 
   // Map configuration

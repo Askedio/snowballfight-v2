@@ -1,4 +1,4 @@
-import { pickupItemTypes } from './../../pickups/index';
+import { pickupItemTypes } from "./../../pickups/index";
 import { Command } from "@colyseus/command";
 import type { Client } from "colyseus";
 import type { TilemapManager } from "../../classes/TilemapManager";
@@ -11,6 +11,7 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
 import { PickupManager } from "../../classes/PickupManager";
+import { Pathfinding } from "../../classes/Pathfinding";
 
 const profanity = new Profanity({
   languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
@@ -229,10 +230,33 @@ export class BaseOnCreateCommand<
   }
 
   spawnPickups() {
-    this.pickupManager.removeAllPickups(this.room)
+    this.pickupManager.removeAllPickups(this.room);
 
     this.pickupManager.spawnPickupsByType(this.room, 6, pickupItemTypes);
     this.pickupManager.spawnPickupsByType(this.room, 10, "tree", "trees");
-    this.pickupManager.spawnPickupsByType(this.room, 6, ["crate", "planterLong"], "crates");
+    this.pickupManager.spawnPickupsByType(
+      this.room,
+      6,
+      ["crate", "planterLong"],
+      "crates"
+    );
+
+    this.room.collisionGrid =
+      this.tilemapManager.getUpdatedCollisionGridWithPickups(
+        this.state.pickups
+      );
+
+    this.logCollisionGrid();
+
+    this.room.pathfinding = new Pathfinding(this.room.collisionGrid);
+  }
+
+  logCollisionGrid() {
+    console.log("🗺 Collision Grid:");
+    this.room.collisionGrid.forEach((row, y) => {
+      console.log(
+        `${row.map((cell) => (cell === 1 ? "🟥" : "⬜")).join("")}  ${y}`
+      );
+    });
   }
 }

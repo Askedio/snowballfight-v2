@@ -7,10 +7,7 @@ export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
   // Game configuration
   maxClients = 10;
   maxBots = 1;
-  
-  mode = "ffa";
-  scoring = "kills";
-  teams = false;
+
 
   // Map configuration
   map = "../client/static/assets/maps/winter/map.json";

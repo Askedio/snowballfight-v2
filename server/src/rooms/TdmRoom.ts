@@ -6,8 +6,6 @@ import { BaseRoom } from "./BaseRoom";
 export class TdmRoom extends BaseRoom<TdmRoomState> {
   // Game configuration
   maxClients = 10;
-  mode = "tdm";
-  scoring = "kills";
   maxBots = 1;
 
   // Map configuration
