@@ -800,7 +800,7 @@ export class BaseScene extends Phaser.Scene {
         prefix: "snowball_0",
         suffix: ".png",
       }),
-      frameRate: 4,
+      frameRate: 3,
       repeat: 1,
       hideOnComplete: false,
     });
