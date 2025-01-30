@@ -28,7 +28,7 @@ export class RedFlagPickup extends Pickup {
     this.destroyOnCollision = player.team !== "red";
   }
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     return this.bulletKills;
   }
 }

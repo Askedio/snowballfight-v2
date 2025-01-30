@@ -131,9 +131,6 @@ export class RoundManager<
   }
 
   private startRound() {
-    this.command.pickupManager.removeAllPickups(this.command.room);
-    this.command.pickupManager.spawnRandomPickups(this.command.room);
-
     this.command.spawnPickups();
 
     this.command.room.state.redScore = 0;

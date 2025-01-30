@@ -434,7 +434,9 @@ export class BaseTickCommand<
             return;
           }
 
-          const onBulletCollision = pickupMethod.onBulletCollision();
+          const shooter = this.room.state.players.get(bullet.ownerId);
+
+          const onBulletCollision = pickupMethod.onBulletCollision(shooter);
 
           pickup.health = pickupMethod.health;
 

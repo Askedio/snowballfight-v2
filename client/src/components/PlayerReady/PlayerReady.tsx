@@ -41,6 +41,10 @@ export function PlayerReady() {
   }, [requiresReady, room]);
 
   useEffect(() => {
+    setIsReady(player?.isReady || false);
+  }, [player?.isReady]);
+
+  useEffect(() => {
     if (!room) {
       return;
     }

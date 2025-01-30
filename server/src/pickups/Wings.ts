@@ -17,7 +17,7 @@ export class WingsPickup extends Pickup {
     player.applyTemporaryChange("speed", player.speed + 0.5, 10000);
   }
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     return this.bulletKills;
   }
 }

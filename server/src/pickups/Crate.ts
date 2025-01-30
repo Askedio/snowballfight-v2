@@ -26,7 +26,7 @@ export class CratePickup extends Pickup {
     //
   }
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     this.health -= this.damange;
 
     return this.health <= 0;

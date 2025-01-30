@@ -11,6 +11,8 @@ export class CtfOnCreateCommand extends BaseTeamOnCreateCommand<
   maxBots: number;
 
   spawnPickups() {
+    super.spawnPickups();
+    
     // Spawn the red flag
     this.pickupManager.spawnPickupFromObjectLayer(
       this.room,

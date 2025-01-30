@@ -70,7 +70,7 @@ export class Pickup extends Schema {
 
   onPlayerCollision(player: Player): void {}
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     return this.bulletKills;
   }
 }

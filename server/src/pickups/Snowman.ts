@@ -12,7 +12,6 @@ export class SnowmanPickup extends Pickup {
     this.bringToTop = true;
     this.radius = 24;
 
-   
     this.bulletKills = true;
     this.blocking = true;
     this.health = config.health || 40;
@@ -23,8 +22,13 @@ export class SnowmanPickup extends Pickup {
     //
   }
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     this.health -= this.damange;
+
+    if (this.health <= 0) {
+      shooter.health = shooter.defaultHealth;
+      shooter.ammo = shooter.maxAmmo;
+    }
 
     return this.health <= 0;
   }

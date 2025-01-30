@@ -19,7 +19,7 @@ export class SwordPickup extends Pickup {
     player.applyTemporaryChange("ammo", player.ammo, 5000, player.previousAmmo); // Reduce cooldown for 5 seconds
   }
 
-  onBulletCollision(): boolean {
+  onBulletCollision(shooter: any): boolean {
     return this.bulletKills;
   }
 }
