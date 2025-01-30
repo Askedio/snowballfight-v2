@@ -192,6 +192,7 @@ export class BaseScene extends Phaser.Scene {
 
     // load the PNG file
     this.load.image("Tileset", "/assets/maps/winter/map.png");
+    this.load.image("TilesetExtruded", "/assets/maps/winter/map-extruded.png");
 
     // load the JSON file
     this.load.tilemapTiledJSON("tilemap", "/assets/maps/winter/map.json");
