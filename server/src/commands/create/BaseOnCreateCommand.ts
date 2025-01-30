@@ -233,6 +233,6 @@ export class BaseOnCreateCommand<
 
     this.pickupManager.spawnPickupsByType(this.room, 6, pickupItemTypes);
     this.pickupManager.spawnPickupsByType(this.room, 10, "tree", "trees");
-    this.pickupManager.spawnPickupsByType(this.room, 6, "crate", "crates");
+    this.pickupManager.spawnPickupsByType(this.room, 6, ["crate", "planterLong"], "crates");
   }
 }

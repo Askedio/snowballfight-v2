@@ -35,17 +35,17 @@ const pickupHelpText = [
 
 const PickupHelper: React.FC = () => {
   return (
-    <div className="w-[200px] max-w-md mx-auto bg-gray-800/90 rounded-r-lg shadow-lg p-2 space-y-2 text-xs border border-gray-600 border-l-0">
-      <ul className="space-y-1">
+    <div className="w-[200px] max-w-md mx-auto bg-gray-800/90 rounded-r-lg shadow-lg p-2 text-xs border border-gray-600 border-l-0">
+      <ul className="">
         {pickupHelpText.map((pickup) => (
           <li
             key={pickup.type}
-            className="flex items-center gap-4 bg-regalblue p-1.5  hover:scale-105 transition-transform"
+            className="flex items-center gap-4 p-1.5  hover:scale-105 transition-transform"
           >
             <img
               src={pickup.image}
               alt={pickup.title}
-              className="w-8 h-8 object-contain"
+              className="h-8 object-contain"
             />
             <div>
               {pickup.description}

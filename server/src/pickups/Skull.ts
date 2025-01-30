@@ -6,7 +6,7 @@ export class SkullPickup extends Pickup {
     Object.assign(this, config);
 
     this.asset = "skull";
-    this.scale = .2;
+    this.scale = 1;
 
     this.destroyOnCollision = true;
   }

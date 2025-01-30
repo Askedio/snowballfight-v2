@@ -168,56 +168,71 @@ export class PickupManager {
       console.warn(`🚨 No available spawn tiles found on layer: ${layer}`);
       return;
     }
-  
+
     const pickupTypes = Array.isArray(pickupType) ? pickupType : [pickupType];
-  
+
     if (count < pickupTypes.length) {
       console.warn(
         `⚠️ Requested count (${count}) is less than the number of pickup types (${pickupTypes.length}). Adjusting count to match pickup types.`
       );
       count = pickupTypes.length; // Ensure we can place at least one of each type
     }
-  
-    let availableTiles = spawnTiles.filter((tile) => !this.usedTiles.has(`${tile.x},${tile.y}`));
-  
+
+    let availableTiles = spawnTiles.filter(
+      (tile) => !this.usedTiles.has(`${tile.x},${tile.y}`)
+    );
+
     if (availableTiles.length < count) {
-      console.warn(`⚠️ Not enough unique tiles! Reducing spawn count to ${availableTiles.length}.`);
+      console.warn(
+        `⚠️ Not enough unique tiles! Reducing spawn count to ${availableTiles.length}.`
+      );
       count = availableTiles.length;
     }
-  
-    // 🔹 Step 1: Ensure at least one of each pickup type is placed
+
     let itemsSpawned = 0;
+    const remainingPickups: string[] = [];
+
+    // 🔹 Step 1: Ensure at least one of each pickup type is placed
     pickupTypes.forEach((type) => {
       if (itemsSpawned >= count || availableTiles.length === 0) return;
-  
+
       const tileIndex = Math.floor(Math.random() * availableTiles.length);
       const tile = availableTiles.splice(tileIndex, 1)[0];
-  
+
       this.createPickup(room, tile.x, tile.y, [type]);
       itemsSpawned++;
     });
-  
-    // 🔹 Step 2: Handle Regional Spawning (if enabled)
+
+    // 🔹 Step 2: Evenly distribute the remaining pickups across available types
+    const remainingCount = count - itemsSpawned;
+    if (remainingCount > 0) {
+      for (let i = 0; i < remainingCount; i++) {
+        remainingPickups.push(pickupTypes[i % pickupTypes.length]); // Distribute evenly
+      }
+    }
+
+    // 🔹 Step 3: Handle Regional Spawning (if enabled)
     if (useRegions) {
-      this.spawnPickupsInRegions(room, availableTiles, pickupTypes, count - itemsSpawned);
+      this.spawnPickupsInRegions(
+        room,
+        availableTiles,
+        remainingPickups,
+        remainingCount
+      );
       return;
     }
-  
-    // 🔹 Step 3: Fill remaining slots randomly (if no regions)
-    while (itemsSpawned < count) {
-      if (availableTiles.length === 0) {
-        console.warn(`🚨 No more available tiles for spawning!`);
-        break;
-      }
-  
+
+    // 🔹 Step 4: Fill remaining slots randomly (if no regions)
+    remainingPickups.forEach((type) => {
+      if (availableTiles.length === 0) return;
+
       const tileIndex = Math.floor(Math.random() * availableTiles.length);
       const tile = availableTiles.splice(tileIndex, 1)[0];
-  
-      this.createPickup(room, tile.x, tile.y, pickupTypes);
+
+      this.createPickup(room, tile.x, tile.y, [type]);
       itemsSpawned++;
-    }
+    });
   }
-  
 
   /**
    * Spawns a specific pickup at a location from an object layer.

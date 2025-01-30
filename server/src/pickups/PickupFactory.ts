@@ -1,3 +1,4 @@
+import { PlanterLong } from "./PlanterLong";
 import type { Pickup } from "../schemas/Pickup";
 import { DevilPickup } from "./Devil";
 import { SkullPickup } from "./Skull";
@@ -27,6 +28,8 @@ export class PickupFactory {
     switch (type) {
       case "crate":
         return new CratePickup(baseConfig);
+      case "planterLong":
+        return new PlanterLong(baseConfig);
       case "snowman":
         return new SnowmanPickup(baseConfig);
       case "tree":

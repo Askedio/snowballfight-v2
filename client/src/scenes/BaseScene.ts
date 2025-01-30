@@ -101,10 +101,11 @@ export class BaseScene extends Phaser.Scene {
     this.load.image("tree", "/assets/images/city/tree.png");
 
     this.load.image("planter", "/assets/images/city/planter.png");
+    this.load.image("planter-long", "/assets/images/city/planter-long.png");
 
     this.load.image(
       "snowman",
-      "/assets/maps/winter/png/128/objects/non-tileable/IceMan.png"
+      "/assets/images/IceMan.png"
     );
     this.load.image("cannon", "/assets/images/weapons/snowballfire.png");
 
