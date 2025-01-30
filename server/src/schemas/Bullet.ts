@@ -6,7 +6,10 @@ export class Bullet extends Schema {
   @type("string") colissionType = "defult";
 
   // Display
+  @type("boolean") isSprite = true;
   @type("string") skin = "snowball";
+  @type("number") skinRotation = Math.PI;
+  @type("number") scale = 0.07;
 
   // Position
   @type("number") x: number;

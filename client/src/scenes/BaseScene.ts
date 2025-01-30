@@ -97,10 +97,7 @@ export class BaseScene extends Phaser.Scene {
 
     this.load.image("tree", "/assets/images/city/tree.png");
 
-    this.load.image(
-      "planter",
-      "/assets/images/city/planter.png"
-    );
+    this.load.image("planter", "/assets/images/city/planter.png");
 
     this.load.image(
       "snowman",
@@ -195,11 +192,26 @@ export class BaseScene extends Phaser.Scene {
     // load the JSON file
     this.load.tilemapTiledJSON("tilemap", "/assets/maps/winter/map.json");
 
-    this.load.image("devil", "/assets/images/pickups/devil.png");
-    this.load.image("skull", "/assets/images/pickups/skull.png");
-    this.load.image("sword", "/assets/images/pickups/sword.png");
-    this.load.image("treasure", "/assets/images/pickups/treasure.png");
-    this.load.image("wings", "/assets/images/pickups/wings.png");
+    this.load.image(
+      "devil",
+      "/assets/images/icons/candy_cane/blue_candy_cane.png"
+    );
+    this.load.image(
+      "skull",
+      "/assets/images/icons/candy_cane/purple_candy_cane.png"
+    );
+    this.load.image(
+      "sword",
+      "/assets/images/icons/candy_cane/green_candy_cane.png"
+    );
+    this.load.image(
+      "treasure",
+      "/assets/images/icons/candy_cane/red_candy_cane.png"
+    );
+    this.load.image(
+      "wings",
+      "/assets/images/icons/candy_cane/yellow_candy_cane.png"
+    );
   }
 
   initMap() {}
@@ -677,12 +689,19 @@ export class BaseScene extends Phaser.Scene {
     // Handle bullet addition, add bullets
     this.room.state.bullets.onAdd((bullet, bulletId) => {
       try {
-        //const bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
-        const bulletEntity = this.add.sprite(bullet.x, bullet.y, bullet.skin);
-        bulletEntity.setScale(.07) //
-      bulletEntity.setRotation(bullet.rotation + Math.PI) //
-        bulletEntity.play(bullet.skin) //
-        
+        let bulletEntity: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+        if (bullet.isSprite) {
+          bulletEntity = this.add.sprite(bullet.x, bullet.y, bullet.skin);
+        } else {
+          bulletEntity = this.add.image(bullet.x, bullet.y, bullet.skin);
+        }
+
+        bulletEntity.setScale(bullet.scale);
+        bulletEntity.setRotation(bullet.rotation + bullet.skinRotation);
+        if (bullet.isSprite) {
+          (bulletEntity as Phaser.GameObjects.Sprite).play(bullet.skin);
+        }
+
         bulletEntity.setOrigin(0.5, 0.5);
         bulletEntity.setDepth(3);
         this.bulletEntities[bulletId] = bulletEntity;

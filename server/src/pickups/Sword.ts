@@ -6,7 +6,8 @@ export class SwordPickup extends Pickup {
     Object.assign(this, config);
   
     this.asset = "sword";
-    
+    this.scale = .2;
+
     this.destroyOnCollision = true;
   }
 
