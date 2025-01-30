@@ -6,6 +6,7 @@
     "start": "parcel serve -p 3003 src/index.html",
     "build": "parcel build src/index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npx @colyseus/cloud deploy",
     "extruedTilemap": "npx tile-extruder --tileWidth 32 --tileHeight 32 --input ./static/assets/maps/winter/map.png --output ./static/assets/maps/winter/map-extruded.png"
   },
   "keywords": [
