@@ -131,7 +131,7 @@ export function SpawnScreen() {
 
   useEffect(() => {
     connectToRoom();
-    
+
     window.history.pushState(
       null,
       "",
@@ -159,7 +159,7 @@ export function SpawnScreen() {
         null,
         "",
         `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}${
-          spawnState.roomName ? `#{spawnState.roomName}` : ""
+          spawnState.roomName ? `#${spawnState.roomName}` : ""
         }`
       );
       EventBus.emit("change-room", { mode: spawnState.gameMode });
