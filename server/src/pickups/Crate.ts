@@ -12,7 +12,7 @@ export class CratePickup extends Pickup {
     // this.isSprite = true;
     //  this.spriteFrame = "Crate.png";
 
-    this.rotation = -4 + Math.random() * 8;
+    //this.rotation = -4 + Math.random() * 8;
     this.collisionshape = "box";
     this.colissionHeight = 100;
     this.colissionWidth = 100;

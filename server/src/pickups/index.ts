@@ -1,7 +1,7 @@
 export const pickupItemTypes = [
-  "crate",
+  //"crate",
   "snowman",
-  "tree",
+  //"tree",
   "devil",
   "skull",
   "sword",

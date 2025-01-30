@@ -1,3 +1,4 @@
+import { pickupItemTypes } from './../../pickups/index';
 import { Command } from "@colyseus/command";
 import type { Client } from "colyseus";
 import type { TilemapManager } from "../../classes/TilemapManager";
@@ -228,6 +229,14 @@ export class BaseOnCreateCommand<
   }
 
   spawnPickups() {
-    this.pickupManager.spawnRandomPickups(this.room);
+    console.log("A?")
+
+    this.pickupManager.removeAllPickups(this.room)
+
+    this.pickupManager.spawnPickupsByType(this.room, 10, pickupItemTypes, "trees");
+    this.pickupManager.spawnPickupsByType(this.room, 10, "tree", "trees");
+    this.pickupManager.spawnPickupsByType(this.room, 6, "crate", "crates");
+
+    console.log(this.room.state.pickups.length,'oo')
   }
 }

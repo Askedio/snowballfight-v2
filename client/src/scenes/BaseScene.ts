@@ -220,6 +220,36 @@ export class BaseScene extends Phaser.Scene {
     EventBus.emit("error", { error });
   }
 
+  clearPickupEntities() {
+    Object.keys(this.pickupEntities).forEach((pickupId) => {
+      const sprite = this.pickupEntities[pickupId];
+      if (sprite) {
+        sprite.destroy(); // Remove the sprite from the scene
+      }
+      delete this.pickupEntities[pickupId]; // Clean up the reference
+    });
+  }
+
+  clearBulletEntities() {
+    Object.keys(this.bulletEntities).forEach((bulletId) => {
+      const bulletEntity = this.bulletEntities[bulletId];
+      if (bulletEntity) {
+        bulletEntity.destroy(); // Remove bullet from the scene
+      }
+      delete this.bulletEntities[bulletId]; // Clean up reference
+    });
+  }
+
+  clearPlayerEntities() {
+    Object.keys(this.playerEntities).forEach((sessionId) => {
+      const container = this.playerEntities[sessionId];
+      if (container) {
+        container.destroy(); // Remove the container from the scene
+      }
+      delete this.playerEntities[sessionId]; // Clean up the reference
+    });
+  }
+
   async create() {
     try {
       this.events.once("shutdown", () => {
@@ -251,7 +281,10 @@ export class BaseScene extends Phaser.Scene {
       EventBus.on("change-room", () => {
         // Listeners are set on create, but user can change room in the same scene, so reset room and listeners here.
         console.log("Game change-room");
-
+        this.clearPickupEntities();
+        this.clearPlayerEntities();
+        this.clearBulletEntities();
+        
         this.room?.removeAllListeners();
         this.room = roomStore.get();
         this.setRoomListeners();

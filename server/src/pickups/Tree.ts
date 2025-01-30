@@ -6,7 +6,7 @@ export class TreePickup extends Pickup {
     Object.assign(this, config);
 
     this.asset = "tree";
-    this.scale = 0.2 + Math.random() * 0.08;
+    this.scale = 0.2 + Math.random() * 0.06;
     this.bringToTop = true;
     this.colissionOffsetY = 0;
     this.radius = 10;
