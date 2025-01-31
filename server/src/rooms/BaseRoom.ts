@@ -9,7 +9,6 @@ import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
-import { Pathfinding } from "../classes/Pathfinding";
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -34,7 +33,6 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
-  pathfinding: TilemapManager;
 
   async onCreate() {
     this.collisionSystem = new Collision();

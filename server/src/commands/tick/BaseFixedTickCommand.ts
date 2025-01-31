@@ -54,8 +54,7 @@ export class BaseTickCommand<
           this.spatialManager,
           this.room
         );
-         input = botManager.generateBotInput(player);
-        
+        input = botManager.generateBotInput(player);
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -88,12 +87,8 @@ export class BaseTickCommand<
         player.lastReloadTime = Date.now();
       }
 
-      if (player.type === "bot") {
-        if (player.path.length > 0) {
-        } else {
-          isCurrentlyMoving = false;
-        }
-      } else {
+      // Bots are moved in the bot manager.
+      if (player.type !== "bot") {
         // Movement logic
         if (input.up) {
           newX += Math.cos(angle) * velocity;
@@ -116,26 +111,29 @@ export class BaseTickCommand<
           newY += Math.cos(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
-      
 
-      if (input.pointer) {
-        const dx = input.pointer.x - player.x;
-        const dy = input.pointer.y - player.y;
+        if (input.pointer) {
+          const dx = input.pointer.x - player.x;
+          const dy = input.pointer.y - player.y;
 
-        // Calculate the distance between the pointer and the player
-        const distance = Math.sqrt(dx * dx + dy * dy);
+          // Calculate the distance between the pointer and the player
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-        const targetAngle = Math.atan2(dy, dx);
+          const targetAngle = Math.atan2(dy, dx);
 
-        player.rotation = player.smoothAngle(player.rotation, targetAngle, 0.1);
+          player.rotation = player.smoothAngle(
+            player.rotation,
+            targetAngle,
+            0.1
+          );
 
-        if (distance <= player.playerRadius && player.type !== "bot") {
-          newX = player.x;
-          newY = player.y;
-          isCurrentlyMoving = false;
+          if (distance <= player.playerRadius && player.type !== "bot") {
+            newX = player.x;
+            newY = player.y;
+            isCurrentlyMoving = false;
+          }
         }
       }
-    }
 
       // Handle shooting
       if (!isReloading && (input.shoot || input.pointer?.shoot)) {
@@ -143,91 +141,90 @@ export class BaseTickCommand<
       }
 
       // Check for collisions with pickups
-      if (player.type !== "bot") {
-        const nearbyPickups = this.spatialManager.queryNearbyObjects(
-          player.x,
-          player.y,
-          player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
-          this.spatialManager.pickupIndex
+
+      const nearbyPickups = this.spatialManager.queryNearbyObjects(
+        player.x,
+        player.y,
+        player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
+        this.spatialManager.pickupIndex
+      );
+
+      nearbyPickups.forEach(({ pickup: pickupSource }) => {
+        const pickup = PickupFactory.createPickup(
+          pickupSource.type,
+          pickupSource.x,
+          pickupSource.y,
+          pickupSource
         );
 
-        nearbyPickups.forEach(({ pickup: pickupSource }) => {
-          const pickup = PickupFactory.createPickup(
-            pickupSource.type,
-            pickupSource.x,
-            pickupSource.y,
-            pickupSource
-          );
+        if (!pickup) {
+          return;
+        }
 
-          if (!pickup) {
-            return;
+        const isCollidingWithPickup = this.collisionSystem.detectCollision(
+          {
+            type: pickupSource.collisionshape || "circle",
+            x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
+            y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
+            width: pickupSource.colissionWidth,
+            height: pickupSource.colissionHeight,
+            radius: pickupSource.radius,
+            rotation: pickupSource.rotation,
+          },
+          {
+            type: "circle", // Shape type
+            x: newX,
+            y: newY,
+            radius: player.playerRadius,
+          }
+        );
+
+        if (isCollidingWithPickup) {
+          isColliding = pickup.blocking;
+          pickup.onPlayerCollision(player); // Trigger collision effect
+
+          const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
+          this.onPickupColission(player, pickup, pickupIndex);
+
+          if (
+            pickup.canCarry(player) &&
+            !player.pickups.find((_) => _.type === pickup.type)
+          ) {
+            player.pickups.push(pickup);
           }
 
-          const isCollidingWithPickup = this.collisionSystem.detectCollision(
-            {
-              type: pickupSource.collisionshape || "circle",
-              x: pickupSource.x + (pickupSource.colissionOffsetX || 0),
-              y: pickupSource.y + (pickupSource.colissionOffsetY || 0),
-              width: pickupSource.colissionWidth,
-              height: pickupSource.colissionHeight,
-              radius: pickupSource.radius,
-              rotation: pickupSource.rotation,
-            },
-            {
-              type: "circle", // Shape type
-              x: newX,
-              y: newY,
-              radius: player.playerRadius,
-            }
-          );
+          if (pickup.playAudioOnPickup && pickup.audioKey) {
+            this.room.broadcast("play-sound", {
+              item: pickup,
+              key: pickup.audioKey,
+            });
+          }
 
-          if (isCollidingWithPickup) {
-            isColliding = pickup.blocking;
-            pickup.onPlayerCollision(player); // Trigger collision effect
-
+          // Handle pickup destruction and redeployment
+          if (pickup.destroyOnCollision) {
             const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-            this.onPickupColission(player, pickup, pickupIndex);
+            this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
 
-            if (
-              pickup.canCarry(player) &&
-              !player.pickups.find((_) => _.type === pickup.type)
-            ) {
-              player.pickups.push(pickup);
-            }
+            if (pickup.isRedeployable) {
+              setTimeout(() => {
+                const redeployedPickup = PickupFactory.createPickup(
+                  pickup.type,
+                  pickup.originalX,
+                  pickup.originalY,
+                  pickup
+                );
+                if (redeployedPickup) {
+                  redeployedPickup.id = nanoid();
+                  redeployedPickup.isRedeployable = pickup.isRedeployable;
+                  redeployedPickup.redeployTimeout = pickup.redeployTimeout;
 
-            if (pickup.playAudioOnPickup && pickup.audioKey) {
-              this.room.broadcast("play-sound", {
-                item: pickup,
-                key: pickup.audioKey,
-              });
-            }
-
-            // Handle pickup destruction and redeployment
-            if (pickup.destroyOnCollision) {
-              const pickupIndex = this.room.state.pickups.indexOf(pickupSource);
-              this.room.state.pickups.splice(pickupIndex, 1); // Remove the pickup
-
-              if (pickup.isRedeployable) {
-                setTimeout(() => {
-                  const redeployedPickup = PickupFactory.createPickup(
-                    pickup.type,
-                    pickup.originalX,
-                    pickup.originalY,
-                    pickup
-                  );
-                  if (redeployedPickup) {
-                    redeployedPickup.id = nanoid();
-                    redeployedPickup.isRedeployable = pickup.isRedeployable;
-                    redeployedPickup.redeployTimeout = pickup.redeployTimeout;
-
-                    this.room.state.pickups.push(redeployedPickup); // Add it back
-                  }
-                }, pickup.redeployTimeout);
-              }
+                  this.room.state.pickups.push(redeployedPickup); // Add it back
+                }
+              }, pickup.redeployTimeout);
             }
           }
-        });
-      }
+        }
+      });
 
       if (!isColliding) {
         const isCollidingInTilemap = this.tilemapManager.isColliding(
@@ -286,18 +283,16 @@ export class BaseTickCommand<
         });
       }
 
-      //isColliding = false;
-
+      // Bot colission blocking is done with pathfinding.
       if (player.type !== "bot") {
         if (isColliding || !player.enabled) {
           isCurrentlyMoving = false;
         } else {
           player.x = newX;
           player.y = newY;
-        }     
-        
-        player.isMoving = isCurrentlyMoving;
+        }
 
+        player.isMoving = isCurrentlyMoving;
       }
 
       player.tick = input.tick;

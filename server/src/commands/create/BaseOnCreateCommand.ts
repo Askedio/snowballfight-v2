@@ -11,7 +11,6 @@ import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import { Profanity } from "@2toad/profanity";
 import { PickupManager } from "../../classes/PickupManager";
-import { Pathfinding } from "../../classes/Pathfinding";
 
 const profanity = new Profanity({
   languages: ["ar", "zh", "en", "fr", "de", "hi", "ja", "ko", "pt", "ru", "es"],
@@ -246,7 +245,5 @@ export class BaseOnCreateCommand<
     this.tilemapManager.getPolygonMap(this.state.pickups);
 
     this.state.updateNavMesh(this.tilemapManager.polyGrid);
-
-    this.room.pathfinding = this.tilemapManager;
   }
 }

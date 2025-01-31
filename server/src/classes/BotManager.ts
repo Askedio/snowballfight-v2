@@ -224,7 +224,7 @@ export class BotManager {
       bot.lastTargetY = targetY;
 
       try {
-        const computedPath = this.room.pathfinding.findPath(
+        const computedPath = this.room.tilemapManager.findPath(
           currentX,
           currentY,
           targetX,
@@ -297,7 +297,7 @@ export class BotManager {
         down: dy > 0,
         left: dx < 0,
         right: dx > 0,
-        pointer: { x: targetX, y: targetY, shoot: isShooting, reload: false },
+        pointer: { x: targetX, y: targetY },
         r: false,
         shoot: isShooting,
       };
@@ -321,21 +321,9 @@ export class BotManager {
       pointer: {
         x: bot.lastTargetX,
         y: bot.lastTargetY,
-        shoot: false,
-        reload: false,
       },
       r: false,
       shoot: false,
     };
-  }
-
-  /**
-   * ✅ Smoothly interpolate between two angles.
-   */
-  private lerpAngle(from: number, to: number, amount: number): number {
-    let difference = to - from;
-    while (difference > Math.PI) difference -= Math.PI * 2;
-    while (difference < -Math.PI) difference += Math.PI * 2;
-    return from + difference * amount;
   }
 }
