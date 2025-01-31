@@ -34,12 +34,12 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
-  botPathManager: BotStateManager;
+  botStateManager: BotStateManager;
 
   async onCreate() {
     this.collisionSystem = new Collision();
 
-    this.botPathManager = new BotStateManager();
+    this.botStateManager = new BotStateManager();
 
     this.tilemapManager = new TilemapManager(
       this.map,

@@ -25,7 +25,11 @@ export class BotManager {
    * Generates input for a bot to decide its next move.
    */
   generateBotInput(bot: Player): InputData {
-    let state = this.room.botPathManager.getState(bot.sessionId);
+    let state = this.room.botStateManager.get(
+      bot.sessionId,
+      "state",
+      BotState.Wandering
+    );
 
     if (bot.health < 40) {
       state = BotState.Fleeing;
@@ -37,8 +41,7 @@ export class BotManager {
       state = BotState.Wandering;
     }
 
-    this.room.botPathManager.setState(bot.sessionId, state);
-
+    this.room.botStateManager.set(bot.sessionId, "state", state);
 
     switch (state) {
       case BotState.Wandering:
@@ -106,8 +109,9 @@ export class BotManager {
       }
     });
 
-    this.room.botPathManager.setTargetPlayer(
+    this.room.botStateManager.set(
       bot.sessionId,
+      "targetPlayer",
       bestTarget ? bestTarget.sessionId : null
     );
 
@@ -171,7 +175,7 @@ export class BotManager {
     const distance = Math.hypot(dx, dy);
 
     if (distance <= bot.playerRadius) {
-      this.room.botPathManager.setState(bot.sessionId, BotState.Fleeing);
+      this.room.botStateManager.set(bot.sessionId, "state", BotState.Fleeing);
 
       return this.flee(bot);
     }
@@ -224,17 +228,26 @@ export class BotManager {
     let isMoving = false;
 
     // ✅ Get bot's path from BotPathManager
-    let botPath = this.room.botPathManager.getPath(sessionId);
+    let botPath = this.room.botStateManager.get(sessionId, "path", []);
 
-    const lastTargetX = this.room.botPathManager.getLastTargetX(sessionId)
-    const lastTargetY = this.room.botPathManager.getLastTargetY(sessionId)
+    const lastTargetX = this.room.botStateManager.get(
+      sessionId,
+      "lastTargetX",
+      null
+    );
+    const lastTargetY = this.room.botStateManager.get(
+      sessionId,
+      "lastTargetY",
+      null
+    );
 
     // **Recalculate path if needed**
     if (
       Math.hypot(lastTargetX - targetX, lastTargetY - targetY) > 100 ||
       botPath.length === 0
     ) {
-      this.room.botPathManager.setLastTarget(bot.sessionId, targetX, targetY);
+      this.room.botStateManager.set(sessionId, "lastTargetX", targetX);
+      this.room.botStateManager.set(sessionId, "lastTargetY", targetY);
 
       try {
         const computedPath = this.room.tilemapManager.findPath(
@@ -244,13 +257,12 @@ export class BotManager {
           targetY
         );
 
-        this.room.botPathManager.setPath(sessionId, computedPath);
+        this.room.botStateManager.set(sessionId, "path", computedPath);
         botPath = computedPath; // Update botPath reference
       } catch (e) {
         console.error("Pathfinding error:", e);
       }
     }
-
 
     if (botPath.length > 0) {
       const nextStep = botPath[0];
@@ -260,7 +272,7 @@ export class BotManager {
         typeof nextStep.x !== "number" ||
         typeof nextStep.y !== "number"
       ) {
-        this.room.botPathManager.shiftPath(sessionId); // Remove invalid step
+        this.room.botStateManager.shiftPath(sessionId); // Remove invalid step
         return this.stopMoving(bot);
       }
 
@@ -268,9 +280,8 @@ export class BotManager {
       const dy = nextStep.y - bot.y;
       const distance = Math.hypot(dx, dy);
 
-
       if (isNaN(distance) || distance < bot.playerRadius * 0.5) {
-        this.room.botPathManager.shiftPath(sessionId);
+        this.room.botStateManager.shiftPath(sessionId);
         return this.stopMoving(bot);
       }
 
@@ -286,7 +297,7 @@ export class BotManager {
 
       bot.x += moveX;
       bot.y += moveY;
-      bot.isMoving = isMoving
+      bot.isMoving = isMoving;
 
       // ✅ Determine rotation
       let targetRotation = bot.rotation;
@@ -320,8 +331,16 @@ export class BotManager {
    * ✅ Stops the bot and ensures `isMoving` is false.
    */
   private stopMoving(bot: Player): InputData {
-    const lastTargetX = this.room.botPathManager.getLastTargetX(bot.sessionId)
-    const lastTargetY = this.room.botPathManager.getLastTargetY(bot.sessionId)
+    const lastTargetX = this.room.botStateManager.get(
+      bot.sessionId,
+      "lastTargetX",
+      null
+    );
+    const lastTargetY = this.room.botStateManager.get(
+      bot.sessionId,
+      "lastTargetY",
+      null
+    );
 
     bot.isMoving = false;
 
