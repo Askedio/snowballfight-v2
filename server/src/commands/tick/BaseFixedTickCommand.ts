@@ -28,6 +28,11 @@ export class BaseTickCommand<
     this.tilemapManager = payload.tilemapManager;
     this.collisionSystem = payload.collisionSystem;
 
+    const botManager = new BotManager(
+      this.spatialManager,
+      this.room
+    );
+
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
         player.isMoving = false;
@@ -48,12 +53,7 @@ export class BaseTickCommand<
       let isColliding = false;
 
       if (player.type === "bot") {
-        const botManager = new BotManager(
-          this.room.state.players,
-          this.room.state.pickups,
-          this.spatialManager,
-          this.room
-        );
+        
         input = botManager.generateBotInput(player);
       } else {
         // Human player input from the queue

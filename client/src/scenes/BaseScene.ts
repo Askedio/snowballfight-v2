@@ -1,4 +1,3 @@
-import { NavMesh } from "navmesh";
 import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import { EventBus } from "../lib/EventBus";
@@ -297,8 +296,6 @@ export class BaseScene extends Phaser.Scene {
 
   async create() {
     try {
-      this.graphics = this.add.graphics();
-
       this.events.once("shutdown", () => {
         console.info("Scene is shutting down!");
 
@@ -366,16 +363,6 @@ export class BaseScene extends Phaser.Scene {
         });*/
 
       this.room = roomStore.get();
-
-      if (this.debugging) {
-        this.room.state.listen("navMesh", (newValue, previousValue) => {
-          console.log(
-            "🔄 Received new NavMesh update:",
-            JSON.stringify(newValue, null, 2)
-          );
-          this.drawNavMesh();
-        });
-      }
 
       this.createAnimations();
 
@@ -471,9 +458,19 @@ export class BaseScene extends Phaser.Scene {
   }
 
   setRoomListeners() {
+    // Debug navmesh
+    if (this.debugging) {
+      this.room.state.listen("navMesh", (newValue, previousValue) => {
+        console.log(
+          "🔄 Received new NavMesh update:",
+          JSON.stringify(newValue, null, 2)
+        );
+        this.drawNavMesh();
+      });
+    }
+
     // Add pickups
     this.room.state.pickups.onAdd((pickup) => {
-      console.log("ad?", pickup);
       try {
         // Create a container to hold the pickup sprite and the debugging border
         const pickupContainer = this.add.container(pickup.x, pickup.y);

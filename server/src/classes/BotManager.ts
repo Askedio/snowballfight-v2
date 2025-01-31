@@ -1,35 +1,22 @@
-import type { MapSchema, ArraySchema } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
-import { PathNode, type Player } from "../schemas/Player";
+import { type Player } from "../schemas/Player";
 import type { Pickup } from "../schemas/Pickup";
 import { SpatialPartitioningManager } from "./SpatialPartitioningManager";
-import type { BaseRoom } from "../rooms/BaseRoom";
+import { BaseRoom } from "../rooms/BaseRoom";
+import { BaseRoomState } from "../states/BaseRoomState";
+import { BotState } from "./BotStateManager";
 
 const healthPickup = "treasure";
 const ammoPickup = "devil";
 
-enum BotState {
-  Wandering,
-  Chasing,
-  Combat,
-  Fleeing,
-}
-
 export class BotManager {
-  private players: MapSchema<Player, string>;
-  private pickups: ArraySchema<Pickup>;
-  private state: BotState = BotState.Wandering;
-  private room: any;
+  private room: BaseRoom<BaseRoomState>;
   spatialManager: SpatialPartitioningManager;
 
   constructor(
-    players: MapSchema<Player, string>,
-    pickups: ArraySchema<Pickup>,
     spatialManager: SpatialPartitioningManager,
-    room: any
+    room: BaseRoom<BaseRoomState>
   ) {
-    this.players = players;
-    this.pickups = pickups;
     this.spatialManager = spatialManager;
     this.room = room;
   }
@@ -38,17 +25,22 @@ export class BotManager {
    * Generates input for a bot to decide its next move.
    */
   generateBotInput(bot: Player): InputData {
+    let state = this.room.botPathManager.getState(bot.sessionId);
+
     if (bot.health < 40) {
-      this.state = BotState.Fleeing;
+      state = BotState.Fleeing;
     } else if (this.getTargetPlayer(bot)) {
-      this.state = BotState.Combat;
+      state = BotState.Combat;
     } else if (this.getTargetPickup(bot)) {
-      this.state = BotState.Chasing;
+      state = BotState.Chasing;
     } else {
-      this.state = BotState.Wandering;
+      state = BotState.Wandering;
     }
 
-    switch (this.state) {
+    this.room.botPathManager.setState(bot.sessionId, state);
+
+
+    switch (state) {
       case BotState.Wandering:
         return this.randomWandering(bot);
       case BotState.Chasing:
@@ -88,7 +80,14 @@ export class BotManager {
     let bestTarget: Player | null = null;
     let bestScore = -Infinity;
 
-    this.players.forEach((player) => {
+    const nearbyPlayers = this.spatialManager.queryNearbyObjects(
+      bot.x,
+      bot.y,
+      4000, // Query radius
+      this.spatialManager.playerIndex
+    );
+
+    nearbyPlayers.forEach(({ player }) => {
       if (
         player.sessionId !== bot.sessionId &&
         !player.isDead &&
@@ -107,7 +106,11 @@ export class BotManager {
       }
     });
 
-    bot.targetPlayer = bestTarget ? bestTarget.sessionId : null;
+    this.room.botPathManager.setTargetPlayer(
+      bot.sessionId,
+      bestTarget ? bestTarget.sessionId : null
+    );
+
     return bestTarget;
   }
 
@@ -119,15 +122,17 @@ export class BotManager {
     condition: (pickup: Pickup) => boolean
   ): Pickup | null {
     let nearestPickup: Pickup | null = null;
-    let minDistance = Infinity;
 
-    this.pickups.forEach((pickup) => {
+    const nearbyPickups = this.spatialManager.queryNearbyObjects(
+      bot.x,
+      bot.y,
+      5000, // Query radius (adjust based on pickup interaction range)
+      this.spatialManager.pickupIndex
+    );
+
+    nearbyPickups.forEach(({ pickup }) => {
       if (condition(pickup)) {
-        const distance = Math.hypot(bot.x - pickup.x, bot.y - pickup.y);
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearestPickup = pickup;
-        }
+        nearestPickup = pickup;
       }
     });
 
@@ -165,9 +170,11 @@ export class BotManager {
     const dy = bot.y - targetY;
     const distance = Math.hypot(dx, dy);
 
-    if (distance === 0)
-      // @ts-ignore
-      return { up: false, down: false, left: false, right: false };
+    if (distance <= bot.playerRadius) {
+      this.room.botPathManager.setState(bot.sessionId, BotState.Fleeing);
+
+      return this.flee(bot);
+    }
 
     // 🚀 Move to a position opposite of the target
     const escapeX = bot.x + (dx / distance) * 200; // Move 200px away
@@ -212,16 +219,22 @@ export class BotManager {
   ): InputData {
     const currentX = bot.x;
     const currentY = bot.y;
+    const sessionId = bot.sessionId;
 
-    bot.isMoving = false;
+    let isMoving = false;
+
+    // ✅ Get bot's path from BotPathManager
+    let botPath = this.room.botPathManager.getPath(sessionId);
+
+    const lastTargetX = this.room.botPathManager.getLastTargetX(sessionId)
+    const lastTargetY = this.room.botPathManager.getLastTargetY(sessionId)
 
     // **Recalculate path if needed**
     if (
-      Math.hypot(bot.lastTargetX - targetX, bot.lastTargetY - targetY) > 100 ||
-      bot.path.length === 0
+      Math.hypot(lastTargetX - targetX, lastTargetY - targetY) > 100 ||
+      botPath.length === 0
     ) {
-      bot.lastTargetX = targetX;
-      bot.lastTargetY = targetY;
+      this.room.botPathManager.setLastTarget(bot.sessionId, targetX, targetY);
 
       try {
         const computedPath = this.room.tilemapManager.findPath(
@@ -231,27 +244,23 @@ export class BotManager {
           targetY
         );
 
-        bot.path.clear();
-
-        if (computedPath.length > 0) {
-          computedPath.forEach(({ x, y }: any) =>
-            bot.path.push(new PathNode(x, y))
-          );
-        }
+        this.room.botPathManager.setPath(sessionId, computedPath);
+        botPath = computedPath; // Update botPath reference
       } catch (e) {
         console.error("Pathfinding error:", e);
       }
     }
 
-    if (bot.path.length > 0) {
-      const nextStep = bot.path[0];
+
+    if (botPath.length > 0) {
+      const nextStep = botPath[0];
 
       if (
         !nextStep ||
         typeof nextStep.x !== "number" ||
         typeof nextStep.y !== "number"
       ) {
-        bot.path.shift();
+        this.room.botPathManager.shiftPath(sessionId); // Remove invalid step
         return this.stopMoving(bot);
       }
 
@@ -259,31 +268,32 @@ export class BotManager {
       const dy = nextStep.y - bot.y;
       const distance = Math.hypot(dx, dy);
 
+
       if (isNaN(distance) || distance < bot.playerRadius * 0.5) {
-        bot.path.shift();
+        this.room.botPathManager.shiftPath(sessionId);
         return this.stopMoving(bot);
       }
 
       // ✅ Only mark as moving if there's significant movement
       if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-        bot.isMoving = true;
+        isMoving = true;
       }
 
       // ✅ Move bot
       const speed = bot.speed || 2;
       const moveX = (dx / distance) * speed;
       const moveY = (dy / distance) * speed;
+
       bot.x += moveX;
       bot.y += moveY;
+      bot.isMoving = isMoving
 
       // ✅ Determine rotation
-      let targetRotation = bot.rotation; // Default to current rotation
+      let targetRotation = bot.rotation;
 
       if (isShooting) {
         // **If shooting, face targetX, targetY**
-        const shootDx = targetX - bot.x;
-        const shootDy = targetY - bot.y;
-        targetRotation = Math.atan2(shootDy, shootDx);
+        targetRotation = Math.atan2(targetY - bot.y, targetX - bot.x);
       } else {
         // **If moving, face movement direction**
         targetRotation = Math.atan2(dy, dx);
@@ -299,7 +309,7 @@ export class BotManager {
         right: dx > 0,
         pointer: { x: targetX, y: targetY },
         r: false,
-        shoot: isShooting,
+        shoot: false, // Temporary shooting flag
       };
     }
 
@@ -310,6 +320,9 @@ export class BotManager {
    * ✅ Stops the bot and ensures `isMoving` is false.
    */
   private stopMoving(bot: Player): InputData {
+    const lastTargetX = this.room.botPathManager.getLastTargetX(bot.sessionId)
+    const lastTargetY = this.room.botPathManager.getLastTargetY(bot.sessionId)
+
     bot.isMoving = false;
 
     // @ts-ignore
@@ -319,8 +332,8 @@ export class BotManager {
       left: false,
       right: false,
       pointer: {
-        x: bot.lastTargetX,
-        y: bot.lastTargetY,
+        x: lastTargetX,
+        y: lastTargetY,
       },
       r: false,
       shoot: false,

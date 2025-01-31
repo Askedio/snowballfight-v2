@@ -9,6 +9,7 @@ import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
+import { BotStateManager } from "../classes/BotStateManager";
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -33,9 +34,12 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
+  botPathManager: BotStateManager;
 
   async onCreate() {
     this.collisionSystem = new Collision();
+
+    this.botPathManager = new BotStateManager();
 
     this.tilemapManager = new TilemapManager(
       this.map,
