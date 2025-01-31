@@ -54,21 +54,8 @@ export class BaseTickCommand<
           this.spatialManager,
           this.room
         );
-         const a = botManager.generateBotInput(player);
-         // @ts-ignore
-         input = {
-          up: false,
-          down: false,
-          left: false,
-          right: false,
-          pointer: a.pointer,
-          r: false,
-          shoot: false,
-        }
-
-        if(player.path.length > 5) {
-        console.log(player.path.length)}
-       
+         input = botManager.generateBotInput(player);
+        
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -103,27 +90,7 @@ export class BaseTickCommand<
 
       if (player.type === "bot") {
         if (player.path.length > 0) {
-          const nextStep = player.path[0]; // Peek at the next step
-          const worldX = nextStep.x * 32; // Convert grid coordinates to world coordinates
-          const worldY = nextStep.y * 32;
-        
-          const dx = worldX - player.x;
-          const dy = worldY - player.y;
-        
-          const distance = Math.sqrt(dx * dx + dy * dy);
-        
-          
-            // Move toward the next step, but don't overshoot it
-            const velocity = 5; // Adjust based on bot speed
-            const moveDistance = Math.min(velocity, distance); // Don't move farther than the remaining distance
-        
-            const newX = dx//player.x + (dx / distance) * moveDistance;
-            const newY = dy//player.y + (dy / distance) * moveDistance;
-        
-            player.x = worldX;
-           player.y = worldY;
-          
-        }else {
+        } else {
           isCurrentlyMoving = false;
         }
       } else {
@@ -149,7 +116,7 @@ export class BaseTickCommand<
           newY += Math.cos(angle) * velocity * 0.5;
           isCurrentlyMoving = true;
         }
-      }
+      
 
       if (input.pointer) {
         const dx = input.pointer.x - player.x;
@@ -168,6 +135,7 @@ export class BaseTickCommand<
           isCurrentlyMoving = false;
         }
       }
+    }
 
       // Handle shooting
       if (!isReloading && (input.shoot || input.pointer?.shoot)) {
@@ -318,18 +286,21 @@ export class BaseTickCommand<
         });
       }
 
-      isColliding = false
+      //isColliding = false;
 
-      if(player.type !== "bot") {
-      if (isColliding || !player.enabled) {
-        isCurrentlyMoving = false;
-      } else {
-        player.x = newX;
-        player.y = newY;
-      }}
+      if (player.type !== "bot") {
+        if (isColliding || !player.enabled) {
+          isCurrentlyMoving = false;
+        } else {
+          player.x = newX;
+          player.y = newY;
+        }     
+        
+        player.isMoving = isCurrentlyMoving;
+
+      }
 
       player.tick = input.tick;
-      player.isMoving = isCurrentlyMoving;
     });
 
     this.updateBullets();

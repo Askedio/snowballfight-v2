@@ -1,3 +1,4 @@
+import { NavMesh } from "navmesh";
 import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import { EventBus } from "../lib/EventBus";
@@ -14,6 +15,8 @@ export class BaseScene extends Phaser.Scene {
   room: Room;
   skin: string;
   debugging = false;
+
+  graphics: any;
 
   roomStateInterval: any;
   currentPlayerStateInterval: any;
@@ -103,10 +106,7 @@ export class BaseScene extends Phaser.Scene {
     this.load.image("planter", "/assets/images/city/planter.png");
     this.load.image("planter-long", "/assets/images/city/planter-long.png");
 
-    this.load.image(
-      "snowman",
-      "/assets/images/IceMan.png"
-    );
+    this.load.image("snowman", "/assets/images/IceMan.png");
     this.load.image("cannon", "/assets/images/weapons/snowballfire.png");
 
     this.load.atlas(
@@ -255,8 +255,50 @@ export class BaseScene extends Phaser.Scene {
     });
   }
 
+  drawNavMesh() {
+    if (!this.room) return;
+
+    if (!this.graphics) {
+      this.graphics = this.add.graphics(); // Ensure graphics object exists
+    }
+
+    this.graphics.clear();
+
+    this.graphics.setDepth(100); // Ensure graphics are above other objects
+    this.graphics.lineStyle(2, 0x00ff00, 1); // Green outline
+    this.graphics.fillStyle(0x0000ff, 0.3); // Blue fill with transparency
+
+    this.room.state.navMesh.forEach((polygon: any, index: number) => {
+      if (!polygon.points || polygon.points.length === 0) {
+        console.warn(`🚨 Polygon ${index} is missing points!`, polygon);
+        return;
+      }
+
+      const points = polygon.points.map(
+        (p: any) => new Phaser.Math.Vector2(p.x, p.y)
+      );
+
+      if (points.length > 2) {
+        console.log(`✏️ Drawing Polygon ${index} with points:`, points);
+
+        this.graphics.beginPath();
+        this.graphics.moveTo(points[0].x, points[0].y);
+
+        points.forEach((p) => this.graphics.lineTo(p.x, p.y));
+
+        this.graphics.closePath();
+        this.graphics.fillPath();
+        this.graphics.strokePath(); // ✅ Ensure path is actually drawn
+      }
+    });
+
+    console.log("🔷 Rendered NavMesh in Phaser");
+  }
+
   async create() {
     try {
+      this.graphics = this.add.graphics();
+
       this.events.once("shutdown", () => {
         console.info("Scene is shutting down!");
 
@@ -324,6 +366,16 @@ export class BaseScene extends Phaser.Scene {
         });*/
 
       this.room = roomStore.get();
+
+      if (this.debugging) {
+        this.room.state.listen("navMesh", (newValue, previousValue) => {
+          console.log(
+            "🔄 Received new NavMesh update:",
+            JSON.stringify(newValue, null, 2)
+          );
+          this.drawNavMesh();
+        });
+      }
 
       this.createAnimations();
 
@@ -421,6 +473,7 @@ export class BaseScene extends Phaser.Scene {
   setRoomListeners() {
     // Add pickups
     this.room.state.pickups.onAdd((pickup) => {
+      console.log("ad?", pickup);
       try {
         // Create a container to hold the pickup sprite and the debugging border
         const pickupContainer = this.add.container(pickup.x, pickup.y);

@@ -145,7 +145,35 @@ export class BotManager {
    * Generates combat input for targeting a player.
    */
   private combatLogic(bot: Player, target: Player): InputData {
-    return this.steer(bot, target.x, target.y);
+    const distance = Math.hypot(bot.x - target.x, bot.y - target.y);
+
+    if (distance < 100) {
+      // 🚨 If too close, move away
+      return this.moveAwayFromTarget(bot, target.x, target.y);
+    } else {
+      // 🚀 Otherwise, chase the player
+      return this.steer(bot, target.x, target.y, distance < 150);
+    }
+  }
+
+  private moveAwayFromTarget(
+    bot: Player,
+    targetX: number,
+    targetY: number
+  ): InputData {
+    const dx = bot.x - targetX;
+    const dy = bot.y - targetY;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance === 0)
+      // @ts-ignore
+      return { up: false, down: false, left: false, right: false };
+
+    // 🚀 Move to a position opposite of the target
+    const escapeX = bot.x + (dx / distance) * 200; // Move 200px away
+    const escapeY = bot.y + (dy / distance) * 200;
+
+    return this.steer(bot, escapeX, escapeY);
   }
 
   /**
@@ -176,16 +204,18 @@ export class BotManager {
   /**
    * Steering logic for smooth movement and pathfinding.
    */
-  private steer(bot: Player, targetX: number, targetY: number): InputData {
-    const tileWidth = 32;
-    const tileHeight = 32;
+  private steer(
+    bot: Player,
+    targetX: number,
+    targetY: number,
+    isShooting: boolean = false
+  ): InputData {
+    const currentX = bot.x;
+    const currentY = bot.y;
 
-    const currentTileX = Math.floor(bot.x / tileWidth);
-    const currentTileY = Math.floor(bot.y / tileHeight);
-    const targetTileX = Math.floor(targetX / tileWidth);
-    const targetTileY = Math.floor(targetY / tileHeight);
+    bot.isMoving = false;
 
-    // **Recalculate path if the target moved significantly or path is empty**
+    // **Recalculate path if needed**
     if (
       Math.hypot(bot.lastTargetX - targetX, bot.lastTargetY - targetY) > 100 ||
       bot.path.length === 0
@@ -195,19 +225,19 @@ export class BotManager {
 
       try {
         const computedPath = this.room.pathfinding.findPath(
-          currentTileX,
-          currentTileY,
-          targetTileX,
-          targetTileY,
-          bot.playerRadius
+          currentX,
+          currentY,
+          targetX,
+          targetY
         );
 
-      //  bot.path.clear();
+        bot.path.clear();
 
-        // Convert number[][] to ArraySchema<PathNode>
-        computedPath.forEach(([x, y]) => {
-          bot.path.push(new PathNode(x, y));
-        });
+        if (computedPath.length > 0) {
+          computedPath.forEach(({ x, y }: any) =>
+            bot.path.push(new PathNode(x, y))
+          );
+        }
       } catch (e) {
         console.error("Pathfinding error:", e);
       }
@@ -216,45 +246,96 @@ export class BotManager {
     if (bot.path.length > 0) {
       const nextStep = bot.path[0];
 
-      const worldX = nextStep.x * tileWidth;
-      const worldY = nextStep.y * tileHeight;
+      if (
+        !nextStep ||
+        typeof nextStep.x !== "number" ||
+        typeof nextStep.y !== "number"
+      ) {
+        bot.path.shift();
+        return this.stopMoving(bot);
+      }
 
-      const dx = worldX - bot.x;
-      const dy = worldY - bot.y;
+      const dx = nextStep.x - bot.x;
+      const dy = nextStep.y - bot.y;
+      const distance = Math.hypot(dx, dy);
 
-      // **Update input to follow the next step in the path**
-      const input = {
+      if (isNaN(distance) || distance < bot.playerRadius * 0.5) {
+        bot.path.shift();
+        return this.stopMoving(bot);
+      }
+
+      // ✅ Only mark as moving if there's significant movement
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        bot.isMoving = true;
+      }
+
+      // ✅ Move bot
+      const speed = bot.speed || 2;
+      const moveX = (dx / distance) * speed;
+      const moveY = (dy / distance) * speed;
+      bot.x += moveX;
+      bot.y += moveY;
+
+      // ✅ Determine rotation
+      let targetRotation = bot.rotation; // Default to current rotation
+
+      if (isShooting) {
+        // **If shooting, face targetX, targetY**
+        const shootDx = targetX - bot.x;
+        const shootDy = targetY - bot.y;
+        targetRotation = Math.atan2(shootDy, shootDx);
+      } else {
+        // **If moving, face movement direction**
+        targetRotation = Math.atan2(dy, dx);
+      }
+
+      bot.rotation = bot.smoothAngle(bot.rotation, targetRotation, 0.1);
+
+      // @ts-ignore
+      return {
         up: dy < 0,
         down: dy > 0,
         left: dx < 0,
         right: dx > 0,
-        pointer: {
-          x: targetX,
-          y: targetY,
-          shoot: false,
-          reload: false,
-        },
+        pointer: { x: targetX, y: targetY, shoot: isShooting, reload: false },
         r: false,
-        shoot: false,
+        shoot: isShooting,
       };
-
-      // **Remove step if bot reaches it**
-      if (Math.hypot(bot.x - worldX, bot.y - worldY) < bot.playerRadius) {
-        bot.path.shift();
-      }
-
-      return input;
     }
 
-    // Default input if no path is available
+    return this.stopMoving(bot);
+  }
+
+  /**
+   * ✅ Stops the bot and ensures `isMoving` is false.
+   */
+  private stopMoving(bot: Player): InputData {
+    bot.isMoving = false;
+
+    // @ts-ignore
     return {
       up: false,
       down: false,
       left: false,
       right: false,
-      pointer: { x: targetX, y: targetY, shoot: false, reload: false },
+      pointer: {
+        x: bot.lastTargetX,
+        y: bot.lastTargetY,
+        shoot: false,
+        reload: false,
+      },
       r: false,
       shoot: false,
     };
+  }
+
+  /**
+   * ✅ Smoothly interpolate between two angles.
+   */
+  private lerpAngle(from: number, to: number, amount: number): number {
+    let difference = to - from;
+    while (difference > Math.PI) difference -= Math.PI * 2;
+    while (difference < -Math.PI) difference += Math.PI * 2;
+    return from + difference * amount;
   }
 }

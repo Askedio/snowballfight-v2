@@ -8,7 +8,7 @@ export class TestScene extends BaseScene {
   mode = "test";
   scoring = "kills";
   teams = false;
-  debugging = true;
+  debugging = false;
 
   constructor() {
     super({ key: "test" });
@@ -33,8 +33,6 @@ export class TestScene extends BaseScene {
         // Get map size
         const mapWidth = map.widthInPixels;
         const mapHeight = map.heightInPixels;
-
-        console.log(mapWidth, mapHeight, tileHeight);
 
         // Create grid overlay
         const gridGraphics = this.add.graphics();

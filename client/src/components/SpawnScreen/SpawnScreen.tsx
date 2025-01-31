@@ -136,7 +136,7 @@ export function SpawnScreen() {
       null,
       "",
       `/${spawnState.gameMode === "ffa" ? "" : spawnState.gameMode}${
-        window.location.hash ? window.location.hash.substring(1) : ""
+        window.location.hash ? `#${window.location.hash.substring(1)}` : ""
       }`
     );
   }, [spawnState.gameMode]);

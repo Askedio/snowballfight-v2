@@ -78,7 +78,7 @@ export class BaseOnCreateCommand<
     this.spawnPickups();
 
     for (let i = 0; i < payload.maxBots; i++) {
-      await this.createPlayer(null, null, "bot");
+      //await this.createPlayer(null, null, "bot");
     }
 
     this.room.onMessage("chat", (client, { message }) => {
@@ -241,22 +241,12 @@ export class BaseOnCreateCommand<
       "crates"
     );
 
-    this.room.collisionGrid =
-      this.tilemapManager.getUpdatedCollisionGridWithPickups(
-        this.state.pickups
-      );
+    this.tilemapManager.getCollisionGrid();
 
-    this.logCollisionGrid();
+    this.tilemapManager.getPolygonMap(this.state.pickups);
 
-    this.room.pathfinding = new Pathfinding(this.room.collisionGrid);
-  }
+    this.state.updateNavMesh(this.tilemapManager.polyGrid);
 
-  logCollisionGrid() {
-    console.log("🗺 Collision Grid:");
-    this.room.collisionGrid.forEach((row, y) => {
-      console.log(
-        `${row.map((cell) => (cell === 1 ? "🟥" : "⬜")).join("")}  ${y}`
-      );
-    });
+    this.room.pathfinding = this.tilemapManager;
   }
 }

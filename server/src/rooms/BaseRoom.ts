@@ -34,9 +34,8 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
-  collisionGrid: number[][];
-  pathfinding: Pathfinding;
-  
+  pathfinding: TilemapManager;
+
   async onCreate() {
     this.collisionSystem = new Collision();
 
