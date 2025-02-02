@@ -76,9 +76,7 @@ export class BaseOnCreateCommand<
 
     this.spawnPickups();
 
-    for (let i = 0; i < payload.maxBots; i++) {
-      //await this.createPlayer(null, null, "bot");
-    }
+    this.updateMap();
 
     this.room.onMessage("chat", (client, { message }) => {
       const player = this.room.state.players.get(client.sessionId);
@@ -239,9 +237,10 @@ export class BaseOnCreateCommand<
       ["crate", "planterLong"],
       "crates"
     );
+  }
 
+  updateMap() {
     this.mapManager.getCollisionGrid();
-
     this.mapManager.getPolygonMap(this.state.pickups);
 
     this.state.updateNavMesh(this.mapManager.polyGrid);
