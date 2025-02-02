@@ -61,7 +61,7 @@ const authorizeDiscordUser = async () => {
     response_type: "code",
     state: "",
     prompt: "none",
-    scope: ["identify", "applications.commands"],
+    scope: ["identify","guilds", "applications.commands"],
   });
 
   // Retrieve an access_token from your application's server
