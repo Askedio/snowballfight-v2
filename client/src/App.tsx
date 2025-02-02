@@ -142,6 +142,7 @@ export function App() {
     window.addEventListener("resize", handleResize);
 
 const bla = async () => {
+  console.log("as", import.meta.env.VITE_CLIENT_ID)
   await initiateDiscordSDK();
   await authorizeDiscordUser();
 
