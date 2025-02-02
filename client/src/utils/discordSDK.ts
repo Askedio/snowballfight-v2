@@ -83,6 +83,7 @@ const authorizeDiscordUser = async () => {
 };
 
 const getUserName = () => {
+  console.log("a")
   if (!auth) {
     return "User";
   }
