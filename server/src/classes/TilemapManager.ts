@@ -4,20 +4,13 @@ import type * as tiled from "@kayahr/tiled";
 import RBush from "rbush";
 import { Collision } from "./Collision";
 import { Pickup } from "../schemas/Pickup";
-import NavMesh, { buildPolysFromGridMap, PolyPoints } from "navmesh";
+import NavMesh, { PolyPoints } from "navmesh";
 
 export interface TilemapLayersConfig {
   base: string;
   collisions: string;
   land: string;
   spawnLayer: string | SpawnLayerConfig;
-}
-
-export interface TileBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
 }
 
 export interface CollisionTile {
@@ -31,6 +24,13 @@ export interface SpawnLayerConfig {
 }
 
 export type SpawnLayers = string | SpawnLayerConfig;
+
+export interface TileBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export class TilemapManager {
   collisionIndex: RBush<CollisionTile>;
@@ -46,6 +46,7 @@ export class TilemapManager {
   polyGrid: PolyPoints[];
   private navMesh: NavMesh;
   private readonly TILE_SIZE = 32; // Adjust based on actual tile size
+  availableTiles: { x: number; y: number }[]
 
   constructor(
     mapFilePath: string,
@@ -104,7 +105,47 @@ export class TilemapManager {
         this.spawnTiles[team] = this.extractSpawnTiles(layerName);
       }
     }
+
+    this.availableTiles = this.getAvailableTiles()
   }
+
+  /**
+ * Returns an array of available (non‑collision) tile positions.
+ * A tile is considered “available” if its value is 0 in the collision layer.
+ */
+public getAvailableTiles(): { x: number; y: number }[] {
+  const availableTiles: { x: number; y: number }[] = [];
+
+  // Find the collision layer by name.
+  const collisionLayer = this.mapJson.layers.find(
+    (layer: any) => layer.name === this.collisionLayerName
+  );
+  if (!collisionLayer || collisionLayer.type !== "tilelayer") {
+    throw new Error(
+      `Collision layer "${this.collisionLayerName}" not found or is not a tile layer!`
+    );
+  }
+
+  // Use offsets if defined.
+  const offsetX = collisionLayer.offsetx || 0;
+  const offsetY = collisionLayer.offsety || 0;
+  const mapWidth = this.mapJson.width;
+
+  // Iterate over the data array.
+  (collisionLayer.data as number[]).forEach((tileIndex, index) => {
+    // If tileIndex is 0, there is no tile at this location.
+    if (tileIndex === 0) {
+      const col = index % mapWidth;
+      const row = Math.floor(index / mapWidth);
+      const x = col * this.tileWidth + offsetX;
+      const y = row * this.tileHeight + offsetY;
+      availableTiles.push({ x, y });
+    }
+  });
+
+  return availableTiles;
+}
+
 
   /**
    * Extracts spawn tiles from a given layer name.

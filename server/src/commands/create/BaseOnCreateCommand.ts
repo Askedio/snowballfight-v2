@@ -202,7 +202,7 @@ export class BaseOnCreateCommand<
       player.sessionId = `bot_${nanoid()}`; // Assign unique ID for bots
       this.room.state.players.set(player.sessionId, player);
 
-      player.name = this.generator.generateRandomName().name;
+      player.name = `🤖 ${this.generator.generateRandomName().name}`;
       player.isDead = false;
       player.isReady = true;
     } else {

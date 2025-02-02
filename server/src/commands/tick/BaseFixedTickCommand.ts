@@ -9,8 +9,6 @@ import { nanoid } from "nanoid";
 import type { BaseRoom } from "../../rooms/BaseRoom";
 import type { BaseRoomState } from "../../states/BaseRoomState";
 import type { Pickup } from "../../schemas/Pickup";
-import { BotManager } from "../../classes/BotManager";
-import { SpatialPartitioningManager } from "../../classes/SpatialPartitioningManager";
 
 // Updates per tick, base for all rooms.
 export class BaseTickCommand<
@@ -22,16 +20,10 @@ export class BaseTickCommand<
 > {
   tilemapManager: TilemapManager;
   collisionSystem: Collision;
-  spatialManager = new SpatialPartitioningManager();
 
   execute(payload: this["payload"]) {
     this.tilemapManager = payload.tilemapManager;
     this.collisionSystem = payload.collisionSystem;
-
-    const botManager = new BotManager(
-      this.spatialManager,
-      this.room
-    );
 
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
@@ -40,9 +32,9 @@ export class BaseTickCommand<
       }
 
       // Index bullets, pickups, and players
-      this.spatialManager.updateBulletsIndex(this.room.state.bullets);
-      this.spatialManager.updatePickupsIndex(this.room.state.pickups);
-      this.spatialManager.updatePlayersIndex(
+      this.room.spatialManager.updateBulletsIndex(this.room.state.bullets);
+      this.room.spatialManager.updatePickupsIndex(this.room.state.pickups);
+      this.room.spatialManager.updatePlayersIndex(
         Array.from(this.room.state.players.values()).filter(
           (player) => !player.isDead && !player.isProtected
         )
@@ -53,8 +45,9 @@ export class BaseTickCommand<
       let isColliding = false;
 
       if (player.type === "bot") {
-        
-        input = botManager.generateBotInput(player);
+        if (player.enabled) {
+          input = this.room.botManager.run(player);
+        }
       } else {
         // Human player input from the queue
         input = player.inputQueue.shift();
@@ -97,18 +90,18 @@ export class BaseTickCommand<
         }
 
         if (input.down) {
-          newX -= Math.cos(angle) * velocity * 0.5;
-          newY -= Math.sin(angle) * velocity * 0.5;
+          newX -= Math.cos(angle) * velocity;
+          newY -= Math.sin(angle) * velocity ;
           isCurrentlyMoving = true;
         }
 
         if (input.left) {
-          newX += Math.sin(angle) * velocity * 0.5;
-          newY -= Math.cos(angle) * velocity * 0.5;
+          newX += Math.sin(angle) * velocity * 0.8;
+          newY -= Math.cos(angle) * velocity * 0.8;
           isCurrentlyMoving = true;
         } else if (input.right) {
-          newX -= Math.sin(angle) * velocity * 0.5;
-          newY += Math.cos(angle) * velocity * 0.5;
+          newX -= Math.sin(angle) * velocity * 0.8;
+          newY += Math.cos(angle) * velocity * 0.8;
           isCurrentlyMoving = true;
         }
 
@@ -142,11 +135,11 @@ export class BaseTickCommand<
 
       // Check for collisions with pickups
 
-      const nearbyPickups = this.spatialManager.queryNearbyObjects(
+      const nearbyPickups = this.room.spatialManager.queryNearbyObjects(
         player.x,
         player.y,
         player.playerRadius + 50, // Query radius (adjust based on pickup interaction range)
-        this.spatialManager.pickupIndex
+        this.room.spatialManager.pickupIndex
       );
 
       nearbyPickups.forEach(({ pickup: pickupSource }) => {
@@ -240,11 +233,11 @@ export class BaseTickCommand<
       }
 
       if (!isColliding) {
-        const nearbyPlayers = this.spatialManager.queryNearbyObjects(
+        const nearbyPlayers = this.room.spatialManager.queryNearbyObjects(
           player.x,
           player.y,
           40, // Query radius
-          this.spatialManager.playerIndex
+          this.room.spatialManager.playerIndex
         );
 
         nearbyPlayers.forEach(({ player: otherPlayer }) => {
@@ -408,11 +401,11 @@ export class BaseTickCommand<
       }
 
       // Query nearby pickups
-      const nearbyPickups = this.spatialManager.queryNearbyObjects(
+      const nearbyPickups = this.room.spatialManager.queryNearbyObjects(
         bullet.x,
         bullet.y,
         50, // Query radius
-        this.spatialManager.pickupIndex
+        this.room.spatialManager.pickupIndex
       );
 
       for (const { pickup } of nearbyPickups) {
@@ -473,11 +466,11 @@ export class BaseTickCommand<
       }
 
       // Query nearby players
-      const nearbyPlayers = this.spatialManager.queryNearbyObjects(
+      const nearbyPlayers = this.room.spatialManager.queryNearbyObjects(
         bullet.x,
         bullet.y,
         20, // Query radius
-        this.spatialManager.playerIndex
+        this.room.spatialManager.playerIndex
       );
 
       for (const { player } of nearbyPlayers) {
@@ -507,6 +500,8 @@ export class BaseTickCommand<
             shooterId: shooter.sessionId,
           });
 
+          player.shotBy = shooter.sessionId;
+
           this.onBulletHit(player.sessionId, bullet, player, shooter);
           bulletsToRemove.push(bullet);
           break;
@@ -514,11 +509,11 @@ export class BaseTickCommand<
       }
 
       // Query nearby bullets (bullet vs bullet collision)
-      const nearbyBullets = this.spatialManager.queryNearbyObjects(
+      const nearbyBullets = this.room.spatialManager.queryNearbyObjects(
         bullet.x,
         bullet.y,
         10, // Query radius
-        this.spatialManager.bulletIndex
+        this.room.spatialManager.bulletIndex
       );
 
       for (const { bullet: otherBullet } of nearbyBullets) {

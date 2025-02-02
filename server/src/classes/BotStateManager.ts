@@ -1,23 +1,39 @@
+import { Pickup } from "../schemas/Pickup";
+import { Player } from "../schemas/Player";
+
 export enum BotState {
   Wandering,
-  Chasing,
   Combat,
   Fleeing,
+  TargetingPickup,
+  Stopped,
 }
+
+export type WanderState = {
+  x: number;
+  y: number;
+  angle: number;
+  lastUpdate: number;
+};
+export type XY = { x: number; y: number };
+
+export type TargetType = null | Pickup | Player | WanderState | XY;
 
 type BotStateData = {
   path: { x: number; y: number }[];
   state: BotState;
-  targetPlayer: string | null;
+  lastState?: BotState;
   isMoving: boolean;
-  lastTargetX: number;
-  lastTargetY: number;
   lastUpdate: number;
   combatTimer?: number;
+  wanderState?: WanderState;
+  target?: TargetType;
+  lastTarget?: XY;
+  lastPlayerTarget?: Player;
 };
 
 export class BotStateManager {
-  private botState: Map<string, BotStateData>;
+  public botState: Map<string, BotStateData>;
 
   constructor() {
     this.botState = new Map();
@@ -29,10 +45,8 @@ export class BotStateManager {
       this.botState.set(sessionId, {
         path: [],
         state: BotState.Wandering,
-        targetPlayer: null,
         isMoving: false,
-        lastTargetX: 0,
-        lastTargetY: 0,
+        lastTarget: { x: 0, y: 0 },
         lastUpdate: Date.now(),
       });
     }

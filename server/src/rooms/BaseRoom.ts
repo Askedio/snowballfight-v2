@@ -10,6 +10,8 @@ import { OnLeaveCommand } from "../commands/OnLeaveCommand";
 import { Collision } from "../classes/Collision";
 import type { BaseRoomState } from "../states/BaseRoomState";
 import { BotStateManager } from "../classes/BotStateManager";
+import { SpatialPartitioningManager } from "../classes/SpatialPartitioningManager";
+import { BotManager } from "../classes/BotManager";
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
@@ -35,6 +37,8 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   fixedTimeStep = 1000 / 60;
   collisionSystem: Collision;
   botStateManager: BotStateManager;
+  spatialManager = new SpatialPartitioningManager();
+  botManager: BotManager;
 
   async onCreate() {
     this.collisionSystem = new Collision();
@@ -48,6 +52,8 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
       this.state.players,
       this.collisionSystem
     );
+
+    this.botManager = new BotManager(this.spatialManager, this);
   }
 
   fixedTick() {}

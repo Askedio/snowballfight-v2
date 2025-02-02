@@ -4,8 +4,6 @@ import { Pickup } from "./Pickup";
 import type { MapSchema } from "@colyseus/schema";
 import type { TilemapManager } from "../classes/TilemapManager";
 
-
-
 class Sounds extends Schema {
   @type("string") onKilledSound = "smash1";
   @type("string") walkingSound = "footstep1";
@@ -29,7 +27,7 @@ export class Player extends Schema {
   @type("number") y = 300;
   @type("number") rotation = 0; // Rotation in radians
   @type("number") hitRadius = 26;
-  
+
   @type("number") playerRadius = 26; // Player radius for their hitbox
   @type("number") playerSize = 32; // Player size for collisions
   @type("number") bulletOffset = 10; // Offset of where the bullet launches
@@ -98,6 +96,7 @@ export class Player extends Schema {
   @type("number") randomPointerX = 0;
   @type("number") randomPointerY = 0;
   @type("string") targetPlayer: string;
+  @type("string") shotBy: string;
   @type("number") lastPickupTime = 0; // Track last time bot targeted a pickup
   @type("number") state = 0;
 
@@ -110,7 +109,6 @@ export class Player extends Schema {
 
   lastBulletTime = 0; // Track the last time a bullet was fired
   inputQueue: InputData[] = [];
-
 
   @type("number") lastTargetX: number = 0;
   @type("number") lastTargetY: number = 0;
@@ -126,6 +124,10 @@ export class Player extends Schema {
 
     const now = Date.now(); // Current time
     return now - this.lastKilledAt >= this.respawnDelay;
+  }
+
+  canBeAttacked() {
+    return !this.isDead && !this.isProtected && this.enabled;
   }
 
   /**
@@ -146,6 +148,7 @@ export class Player extends Schema {
     this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
     this.pickups = new ArraySchema<Pickup>();
+    this.shotBy = null;
   }
 
   async respawn(tilemapManager: TilemapManager) {
@@ -160,6 +163,7 @@ export class Player extends Schema {
     this.bulletFireDelay = this.defaultBulletFireDelay;
     this.ammoUnlimited = this.defaultAmmoUnlimited;
     this.pickups = new ArraySchema<Pickup>();
+    this.shotBy = null;
 
     // Respawn protection.
     this.isProtected = true;
