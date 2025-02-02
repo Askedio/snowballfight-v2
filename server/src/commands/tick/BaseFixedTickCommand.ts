@@ -60,11 +60,8 @@ export class BaseTickCommand<
       let isColliding = false;
 
       if (player.type === "bot") {
-        if (player.enabled) {
-          input = this.room.botManager.run(player);
-        }
+        input = this.room.botManager.run(player);
       } else {
-        // Human player input from the queue
         input = player.inputQueue.shift();
       }
 

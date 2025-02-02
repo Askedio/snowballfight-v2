@@ -60,7 +60,11 @@ export class BaseOnCreateCommand<
         // Add bots
         const botsToAdd = desiredBots - bots.length;
         for (let i = 0; i < botsToAdd; i++) {
-          await this.createPlayer(null, null, "bot");
+          const player = await this.createPlayer(null, null, "bot");
+
+          if(this.room.state.requiresReady) {
+            player.enabled = false;
+          }
         }
       } else if (bots.length > desiredBots) {
         // Remove bots
@@ -203,6 +207,11 @@ export class BaseOnCreateCommand<
       player.name = `🤖 ${this.generator.generateRandomName().name}`;
       player.isDead = false;
       player.isReady = true;
+      player.isProtected = true;
+
+      setTimeout(() => {
+        player.isProtected = false;
+      }, player.protectionTime);
     } else {
       player.sessionId = client.sessionId;
       this.room.state.players.set(client.sessionId, player);

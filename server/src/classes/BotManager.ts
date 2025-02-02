@@ -76,6 +76,20 @@ export class BotManager {
         break;
     }
 
+    if(!this.bot.enabled) {
+      this.bot.isMoving = false;
+      console.log("not read")
+      return {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+        pointer: { x: 0, y: 0 },
+        r: false,
+        shoot: false,
+      };
+    }
+
     // Finally, steer using the unified target.
     return this.steer();
   }
@@ -267,8 +281,7 @@ export class BotManager {
     nearby.forEach(({ player }) => {
       if (
         player.sessionId !== this.bot.sessionId &&
-        !player.isDead &&
-        !player.isProtected
+        player.canBeAttacked()
       ) {
         const d = Math.hypot(this.bot.x - player.x, this.bot.y - player.y);
         const score = 100 - player.health + (200 - d);
