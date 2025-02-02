@@ -22,14 +22,14 @@ export class TestRoom extends BaseRoom<TestRoomState> {
     super.onCreate();
 
     this.dispatcher.dispatch(new TestRoomOnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       maxBots: this.maxBots,
     });
   }
 
   fixedTick() {
     this.dispatcher.dispatch(new FreeForAllFixedTickCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       collisionSystem: this.collisionSystem,
     });
   }

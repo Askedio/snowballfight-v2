@@ -32,7 +32,7 @@ export interface TileBounds {
   height: number;
 }
 
-export class TilemapManager {
+export class MapManager {
   collisionIndex: RBush<CollisionTile>;
   spawnTiles: { [key: string]: TileBounds[] } = {}; // Stores tiles for each layer
   tileWidth: number;
@@ -650,7 +650,7 @@ public getAvailableTiles(): { x: number; y: number }[] {
   }
 
   logPolygonMap() {
-    const polygons = this.polyGrid; // Get polygon map from TilemapManager
+    const polygons = this.polyGrid; // Get polygon map from MapManager
     if (!polygons || polygons.length === 0) {
       console.warn("🚨 No polygons found in polyGrid!");
       return;

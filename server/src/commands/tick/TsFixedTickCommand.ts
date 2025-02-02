@@ -1,7 +1,7 @@
 import type { MapSchema } from "@colyseus/schema";
 import type { TsRoomState } from "./../../states/TsRoomState";
 import type { TsRoom } from "./../../rooms/TsRoom";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import type { Collision } from "../../classes/Collision";
 import type { Player } from "../../schemas/Player";
 import { BaseTeamFixedTickCommand } from "./BaseTeamFixedTickCommand";
@@ -10,7 +10,7 @@ export class TsFixedTickCommand extends BaseTeamFixedTickCommand<
   TsRoom,
   TsRoomState
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   collisionSystem: Collision;
 
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {

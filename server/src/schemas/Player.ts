@@ -2,7 +2,7 @@ import { Schema, ArraySchema, type } from "@colyseus/schema";
 import type { InputData } from "../interfaces/InputData";
 import { Pickup } from "./Pickup";
 import type { MapSchema } from "@colyseus/schema";
-import type { TilemapManager } from "../classes/TilemapManager";
+import type { MapManager } from "../classes/MapManager";
 
 class Sounds extends Schema {
   @type("string") onKilledSound = "smash1";
@@ -151,7 +151,7 @@ export class Player extends Schema {
     this.shotBy = null;
   }
 
-  async respawn(tilemapManager: TilemapManager) {
+  async respawn(mapManager: MapManager) {
     this.ammo = this.defaultAmmo;
     this.speed = this.defaultSpeed;
     this.health = this.defaultHealth;
@@ -168,15 +168,15 @@ export class Player extends Schema {
     // Respawn protection.
     this.isProtected = true;
 
-    this.assignSpawn(tilemapManager);
+    this.assignSpawn(mapManager);
 
     setTimeout(() => {
       this.isProtected = false;
     }, this.protectionTime);
   }
 
-  async assignSpawn(tilemapManager: TilemapManager) {
-    const spawn = await tilemapManager.getRandomSpawn(this.team);
+  async assignSpawn(mapManager: MapManager) {
+    const spawn = await mapManager.getRandomSpawn(this.team);
 
     this.x = spawn.x;
     this.y = spawn.y;

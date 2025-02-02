@@ -23,14 +23,14 @@ export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
     super.onCreate();
 
     this.dispatcher.dispatch(new FreeForAllOnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       maxBots: this.maxBots
     });
   }
 
   fixedTick() {
     this.dispatcher.dispatch(new FreeForAllFixedTickCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       collisionSystem: this.collisionSystem,
     });
   }

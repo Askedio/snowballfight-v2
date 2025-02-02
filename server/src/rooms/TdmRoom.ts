@@ -22,14 +22,14 @@ export class TdmRoom extends BaseRoom<TdmRoomState> {
     super.onCreate();
 
     this.dispatcher.dispatch(new TdmOnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       maxBots: this.maxBots
     });
   }
 
   fixedTick() {
     this.dispatcher.dispatch(new TdmFixedTickCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       collisionSystem: this.collisionSystem,
     });
   }

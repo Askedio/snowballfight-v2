@@ -1,4 +1,4 @@
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import type { Collision } from "../../classes/Collision";
 import type { TdmRoom } from "../../rooms/TdmRoom";
 import type { Player } from "../../schemas/Player";
@@ -9,7 +9,7 @@ export class TdmFixedTickCommand extends BaseTeamFixedTickCommand<
   TdmRoom,
   TdmRoomState
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   collisionSystem: Collision;
 
   onPlayerDeath(sessionId: string, player: Player, shooter: Player) {

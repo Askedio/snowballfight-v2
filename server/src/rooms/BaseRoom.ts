@@ -2,8 +2,8 @@ import type { Client } from "colyseus";
 import { Room } from "colyseus";
 import {
   type TilemapLayersConfig,
-  TilemapManager,
-} from "../classes/TilemapManager";
+  MapManager,
+} from "../classes/MapManager";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "../commands/OnJoinCommand";
 import { OnLeaveCommand } from "../commands/OnLeaveCommand";
@@ -15,7 +15,7 @@ import { BotManager } from "../classes/BotManager";
 
 export class BaseRoom<TState extends BaseRoomState> extends Room<
   TState,
-  { tilemapManager: TilemapManager; collisionSystem: Collision }
+  { mapManager: MapManager; collisionSystem: Collision }
 > {
   // Game configuration
   maxClients: number;
@@ -31,7 +31,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
     spawnLayer: "spawns",
   };
 
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   dispatcher = new Dispatcher(this);
   customRoomName: string;
   fixedTimeStep = 1000 / 60;
@@ -45,7 +45,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
 
     this.botStateManager = new BotStateManager();
 
-    this.tilemapManager = new TilemapManager(
+    this.mapManager = new MapManager(
       this.map,
       this.layers.collisions,
       this.layers.spawnLayer,

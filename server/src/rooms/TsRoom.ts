@@ -22,14 +22,14 @@ export class TsRoom extends BaseRoom<TsRoomState> {
     super.onCreate();
 
     this.dispatcher.dispatch(new TsOnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       maxBots: this.maxBots
     });
   }
 
   fixedTick() {
     this.dispatcher.dispatch(new TsFixedTickCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       collisionSystem: this.collisionSystem,
     });
   }

@@ -1,7 +1,7 @@
 import { CtfOnCreateCommand } from "../commands/create/CtfOnCreateCommand";
 import { CtfFixedTickCommand } from "../commands/tick/CtfFixedTickCommand";
 import { CtfRoomState } from "../states/CtfRoomState";
-import type { TilemapLayersConfig } from "../classes/TilemapManager";
+import type { TilemapLayersConfig } from "../classes/MapManager";
 import { BaseRoom } from "./BaseRoom";
 
 export class CtfRoom extends BaseRoom<CtfRoomState> {
@@ -25,14 +25,14 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
     super.onCreate();
 
     this.dispatcher.dispatch(new CtfOnCreateCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       maxBots: this.maxBots,
     });
   }
 
   fixedTick() {
     this.dispatcher.dispatch(new CtfFixedTickCommand(), {
-      tilemapManager: this.tilemapManager,
+      mapManager: this.mapManager,
       collisionSystem: this.collisionSystem,
     });
   }

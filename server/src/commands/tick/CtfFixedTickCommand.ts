@@ -1,6 +1,6 @@
 import { ArraySchema } from "@colyseus/schema";
 import type { CtfRoom } from "./../../rooms/CtfRoom";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import type { Collision } from "../../classes/Collision";
 import type { CtfRoomState } from "../../states/CtfRoomState";
 import type { Player } from "../../schemas/Player";
@@ -12,7 +12,7 @@ export class CtfFixedTickCommand extends BaseTeamFixedTickCommand<
   CtfRoom,
   CtfRoomState
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   collisionSystem: Collision;
 
   onPickupColission(player: Player, pickup: Pickup, index: number) {

@@ -1,6 +1,6 @@
 import type { FreeForAllRoomState } from "./../../states/FreeForAllRoomState";
 import type { FreeForAllRoom } from "./../../rooms/FreeForAllRoom";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import { BaseOnCreateCommand } from "./BaseOnCreateCommand";
 import { RoundManager } from "../../classes/RoundManager";
 import type { Delayed } from "colyseus";
@@ -9,7 +9,7 @@ export class FreeForAllOnCreateCommand extends BaseOnCreateCommand<
   FreeForAllRoom,
   FreeForAllRoomState
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   maxBots: number;
   private roundManager: RoundManager<FreeForAllRoom, FreeForAllRoomState>;
   public delayedInterval!: Delayed;

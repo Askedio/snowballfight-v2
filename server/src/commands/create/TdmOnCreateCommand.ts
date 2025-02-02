@@ -1,12 +1,12 @@
 import type { TdmRoomState } from "./../../states/TdmRoomState";
 import type { TdmRoom } from "./../../rooms/TdmRoom";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import { BaseTeamOnCreateCommand } from "./BaseTeamOnCreateCommand";
 
 export class TdmOnCreateCommand extends BaseTeamOnCreateCommand<
   TdmRoom,
   TdmRoomState
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   maxBots: number;
 }

@@ -137,7 +137,7 @@ export class RoundManager<
     this.command.room.state.blueScore = 0;
 
     this.command.room.state.players.forEach((player: Player) => {
-      player.respawn(this.command.tilemapManager);
+      player.respawn(this.command.mapManager);
     });
 
     this.command.room.state.setRoundEndsAt();

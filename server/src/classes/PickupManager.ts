@@ -1,18 +1,18 @@
 import { ArraySchema } from "@colyseus/schema";
 import type { Room } from "colyseus";
-import type { TilemapManager } from "../classes/TilemapManager";
+import type { MapManager } from "./MapManager";
 import { pickupItemTypes } from "../pickups";
 import { PickupFactory } from "../pickups/PickupFactory";
 import { nanoid } from "nanoid";
 import { Pickup } from "../schemas/Pickup";
 
 export class PickupManager {
-  private tilemapManager: TilemapManager;
+  private mapManager: MapManager;
   private readonly maxItems = 40;
   private usedTiles = new Set<string>(); // Track used tiles to prevent duplicate pickups
 
-  constructor(tilemapManager: TilemapManager) {
-    this.tilemapManager = tilemapManager;
+  constructor(mapManager: MapManager) {
+    this.mapManager = mapManager;
   }
 
   /**
@@ -163,7 +163,7 @@ export class PickupManager {
     layer = "itemspawns",
     useRegions = true
   ) {
-    const spawnTiles = this.tilemapManager.getItemSpawnTiles(layer);
+    const spawnTiles = this.mapManager.getItemSpawnTiles(layer);
     if (spawnTiles.length === 0) {
       console.warn(`🚨 No available spawn tiles found on layer: ${layer}`);
       return;
@@ -247,7 +247,7 @@ export class PickupManager {
     objectName: string,
     pickupType: string
   ) {
-    const objectLayer = this.tilemapManager.mapJson.layers.find(
+    const objectLayer = this.mapManager.mapJson.layers.find(
       (layer: any) =>
         layer.name === objectLayerName && layer.type === "objectgroup"
     );

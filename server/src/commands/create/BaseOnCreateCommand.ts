@@ -1,7 +1,7 @@
 import { pickupItemTypes } from "./../../pickups/index";
 import { Command } from "@colyseus/command";
 import type { Client } from "colyseus";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import { nanoid } from "nanoid";
 import { ChatMessage } from "../../schemas/ChatMessage";
 import type { InputData } from "../../interfaces/InputData";
@@ -20,15 +20,15 @@ const profanity = new Profanity({
 export class BaseOnCreateCommand<
   TRoom extends BaseRoom<TState>,
   TState extends BaseRoomState
-> extends Command<TRoom, { tilemapManager: TilemapManager; maxBots: number }> {
-  tilemapManager: TilemapManager;
+> extends Command<TRoom, { mapManager: MapManager; maxBots: number }> {
+  mapManager: MapManager;
   fixedTimeStep = 1000 / 60;
   generator = new RandomNameGenerator();
   pickupManager: PickupManager;
 
   async execute(payload: this["payload"]) {
-    this.tilemapManager = payload.tilemapManager;
-    this.pickupManager = new PickupManager(this.tilemapManager);
+    this.mapManager = payload.mapManager;
+    this.pickupManager = new PickupManager(this.mapManager);
 
     this.room.clock.setInterval(async () => {
       // Get current players and bots
@@ -156,7 +156,7 @@ export class BaseOnCreateCommand<
           }
 
           if (player.canRespawn()) {
-            await player.respawn(this.tilemapManager);
+            await player.respawn(this.mapManager);
 
             this.room.broadcast("client-respawned", {
               sessionId: client.sessionId,
@@ -213,7 +213,7 @@ export class BaseOnCreateCommand<
     // All game types to modify player before spawn, ie: add a team.
     this.onCreatePlayer(player);
 
-    await player.assignSpawn(this.tilemapManager);
+    await player.assignSpawn(this.mapManager);
 
     return player;
   }
@@ -240,10 +240,10 @@ export class BaseOnCreateCommand<
       "crates"
     );
 
-    this.tilemapManager.getCollisionGrid();
+    this.mapManager.getCollisionGrid();
 
-    this.tilemapManager.getPolygonMap(this.state.pickups);
+    this.mapManager.getPolygonMap(this.state.pickups);
 
-    this.state.updateNavMesh(this.tilemapManager.polyGrid);
+    this.state.updateNavMesh(this.mapManager.polyGrid);
   }
 }

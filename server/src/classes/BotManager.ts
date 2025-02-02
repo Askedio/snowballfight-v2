@@ -312,7 +312,7 @@ export class BotManager {
     chosenTile: { x: number; y: number } | null;
     computedPath: { x: number; y: number }[];
   } {
-    const availableTiles = this.room.tilemapManager.availableTiles;
+    const availableTiles = this.room.mapManager.availableTiles;
     if (!availableTiles || availableTiles.length === 0) {
       console.warn("No available tiles found!");
       return { chosenTile: null, computedPath: [] };
@@ -333,7 +333,7 @@ export class BotManager {
           continue;
         }
       }
-      computedPath = this.room.tilemapManager.findPath(
+      computedPath = this.room.mapManager.findPath(
         this.bot.x,
         this.bot.y,
         chosenTile.x,
@@ -443,7 +443,7 @@ export class BotManager {
         y: targetY,
       });
       try {
-        const computedPath = this.room.tilemapManager.findPath(
+        const computedPath = this.room.mapManager.findPath(
           currentX,
           currentY,
           targetX,

@@ -3,7 +3,7 @@ import { PickupFactory } from "../../pickups/PickupFactory";
 import type { InputData } from "../../interfaces/InputData";
 import { Bullet } from "../../schemas/Bullet";
 import type { Player } from "../../schemas/Player";
-import type { TilemapManager } from "../../classes/TilemapManager";
+import type { MapManager } from "../../classes/MapManager";
 import type { Collision } from "../../classes/Collision";
 import { nanoid } from "nanoid";
 import type { BaseRoom } from "../../rooms/BaseRoom";
@@ -16,13 +16,13 @@ export class BaseTickCommand<
   TState extends BaseRoomState
 > extends Command<
   TRoom,
-  { tilemapManager: TilemapManager; collisionSystem: Collision }
+  { mapManager: MapManager; collisionSystem: Collision }
 > {
-  tilemapManager: TilemapManager;
+  mapManager: MapManager;
   collisionSystem: Collision;
 
   execute(payload: this["payload"]) {
-    this.tilemapManager = payload.tilemapManager;
+    this.mapManager = payload.mapManager;
     this.collisionSystem = payload.collisionSystem;
 
     // need setting for this
@@ -234,7 +234,7 @@ export class BaseTickCommand<
       });
 
       if (!isColliding) {
-        const isCollidingInTilemap = this.tilemapManager.isColliding(
+        const isCollidingInTilemap = this.mapManager.isColliding(
           newX,
           newY,
           player.playerSize,
@@ -399,7 +399,7 @@ export class BaseTickCommand<
       }
 
       if (
-        this.tilemapManager.isColliding(
+        this.mapManager.isColliding(
           bullet.x - bullet.size / 2,
           bullet.y - bullet.size / 2,
           bullet.size,
@@ -611,7 +611,7 @@ export class BaseTickCommand<
 
     if (player.type === "bot" && !player.respawnDisabled) {
       setTimeout(async () => {
-        await player.respawn(this.tilemapManager);
+        await player.respawn(this.mapManager);
       }, player.respawnDelay * 1000);
     }
   }
