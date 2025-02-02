@@ -83,7 +83,7 @@ const authorizeDiscordUser = async () => {
 };
 
 const getUserName = () => {
-  console.log("a")
+  console.log("as", import.meta.env.VITE_CLIENT_ID)
   if (!auth) {
     return "User";
   }
