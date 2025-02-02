@@ -30,7 +30,6 @@ const basicAuthMiddleware = basicAuth({
 
 let gameServerRef: Server;
 
-console.log(process.env.NODE_ENV);
 
 export default config({
   options: {
@@ -69,6 +68,9 @@ export default config({
   initializeExpress: (app) => {
     app.use(express.json());
     app.use(router);
+
+    console.log(process.env.VITE_CLIENT_ID);
+
 
     app.use("/colyseus", basicAuthMiddleware, monitor());
 
