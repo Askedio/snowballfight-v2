@@ -83,7 +83,7 @@ const authorizeDiscordUser = async () => {
 };
 
 const getUserName = () => {
-  console.log("as", "1335694934350495845")
+  console.log("as", "1335694934350495845", discordSdk.channelId)
   if (!auth) {
     return "User";
   }
