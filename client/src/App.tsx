@@ -1,4 +1,4 @@
-import { initiateDiscordSDK } from "./utils/discordSDK";
+import { authorizeDiscordUser, initiateDiscordSDK } from "./utils/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
@@ -125,7 +125,6 @@ export function App() {
   }, [location.pathname]);
 
   useLayoutEffect(() => {
-    initiateDiscordSDK();
     
     const _game = new Phaser.Game(config);
     setGame(_game);
@@ -142,10 +141,21 @@ export function App() {
     // Attach resize event listener
     window.addEventListener("resize", handleResize);
 
+const bla = async () => {
+  await initiateDiscordSDK();
+  await authorizeDiscordUser();
+}
+
+bla()
+
+
+
     // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener("resize", handleResize);
     };
+
+
   }, []);
 
   useEffect(() => {

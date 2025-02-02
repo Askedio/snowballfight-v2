@@ -32,10 +32,13 @@ export class CtfScene extends BaseScene {
   preload() {
     super.preload();
 
+    this.load.setPath("/.proxy/assets");
+
+
     this.load.atlas(
       "flag",
-      "/assets/sprites/flag/flag.png",
-      "/assets/sprites/flag/flag.json"
+      "/sprites/flag/flag.png",
+      "/sprites/flag/flag.json"
     );
   }
 
