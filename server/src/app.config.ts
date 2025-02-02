@@ -66,6 +66,12 @@ export default config({
   },
 
   initializeExpress: (app) => {
+
+    app.use((req, res, next) => {
+      res.setHeader('Content-Security-Policy', "connect-src 'self' https://1335694934350495845.discordsays.com");
+      next();
+    });
+
     app.use("/colyseus", basicAuthMiddleware, monitor());
 
     app.post("/api/token", async (req, res) => {
