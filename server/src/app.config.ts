@@ -48,8 +48,6 @@ export default config({
 
     gameServer.define("test_room", TestRoom);
     gameServer.define("user_test_room", TestRoom).filterBy(["customRoomName"]);
-  
-
 
     gameServer.define("ctf_room", CtfRoom);
     gameServer.define("user_ctf_room", CtfRoom).filterBy(["customRoomName"]);
@@ -69,6 +67,34 @@ export default config({
 
   initializeExpress: (app) => {
     app.use("/colyseus", basicAuthMiddleware, monitor());
+
+    app.post("/api/token", async (req, res) => {
+      let b = new URLSearchParams({
+        client_id: process.env.VITE_CLIENT_ID,
+        client_secret: process.env.DISCORD_SECRET,
+        grant_type: "authorization_code",
+        code: req.body.code,
+      });
+
+      const response = await fetch(`https://discord.com/api/oauth2/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: process.env.VITE_CLIENT_ID,
+          client_secret: process.env.DISCORD_SECRET,
+          grant_type: "authorization_code",
+          code: req.body.code,
+        }),
+      });
+
+      const { access_token } = (await response.json()) as {
+        access_token: string;
+      };
+
+      res.send({ access_token });
+    });
 
     app.use(express.static(path.join(__dirname, "../../client/dist")));
 

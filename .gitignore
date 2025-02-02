@@ -9,3 +9,4 @@ server/.devmode.json
 server/lib
 client/dist
 client/.colyseus-cloud.json
+server/.env.development

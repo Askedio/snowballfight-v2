@@ -58,7 +58,7 @@ export function App() {
   const location = useLocation();
 
   const [lastScene, setLastScene] = useState("");
-  const [failure, setFailure] = useState(false);
+  const [failure, setFailure] = useState("");
 
   useEffect(() => {
     if (!mode || lastScene === mode) {
@@ -113,7 +113,7 @@ export function App() {
           }
         );
       } catch (e: any) {
-        setFailure(true);
+        setFailure(e.message);
       }
     })();
 
@@ -189,6 +189,8 @@ export function App() {
       <div className="w-screen h-screen flex items-center">
         <div className="text-center w-full text-xl text-black">
           Sorry! The servers are currently offline.
+
+          <p>{failure || "Unknown problem :("}</p>
         </div>
       </div>
     );
