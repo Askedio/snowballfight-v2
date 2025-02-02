@@ -72,7 +72,7 @@ export default config({
 
     app.use("/colyseus", basicAuthMiddleware, monitor());
 
-    app.post("/api/token", async (req, res) => {
+    router.post("/api/token", async (req, res) => {
       let b = new URLSearchParams({
         client_id: process.env.VITE_CLIENT_ID,
         client_secret: process.env.DISCORD_SECRET,
