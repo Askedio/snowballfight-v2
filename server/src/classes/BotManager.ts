@@ -517,7 +517,6 @@ export class BotManager {
         angleDiff < shootThreshold &&
         targetDistance < 400;
 
-      // @ts-ignore
       return {
         up: dy < 0,
         down: dy > 0,
@@ -545,7 +544,6 @@ export class BotManager {
 
     const { canReload, canShoot } = this.canShootOrReload();
 
-    // @ts-ignore
     return {
       up: false,
       down: false,

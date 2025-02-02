@@ -4,9 +4,9 @@ export interface InputData {
   up: boolean;
   down: boolean;
   shoot: boolean;
-  tick: number;
+  tick?: number;
   pointer: any;
   r: boolean;
-  e: boolean;
-  shift: boolean;
+  e?: boolean;
+  shift?: boolean;
 }
