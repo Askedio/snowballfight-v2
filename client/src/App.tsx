@@ -1,4 +1,4 @@
-import { authorizeDiscordUser, initiateDiscordSDK } from "./utils/discordSDK";
+import { authorizeDiscordUser, getUserName, initiateDiscordSDK } from "./utils/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
@@ -144,6 +144,8 @@ export function App() {
 const bla = async () => {
   await initiateDiscordSDK();
   await authorizeDiscordUser();
+
+  console.log(getUserName())
 }
 
 bla()
