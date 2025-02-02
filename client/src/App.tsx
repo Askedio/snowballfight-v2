@@ -146,7 +146,7 @@ const bla = async () => {
   await initiateDiscordSDK();
   await authorizeDiscordUser();
 
-  console.log(getUserName())
+  console.log(await getUserName())
 }
 
 bla()

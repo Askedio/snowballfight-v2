@@ -82,11 +82,26 @@ const authorizeDiscordUser = async () => {
   });
 };
 
-const getUserName = () => {
-  console.log("as", "1335694934350495845", discordSdk.channelId)
+const getUserName = async () => {
   if (!auth) {
     return "User";
   }
+
+
+  let activityChannelName = 'Unknown';
+
+  // Requesting the channel in GDMs (when the guild ID is null) requires
+  // the dm_channels.read scope which requires Discord approval.
+  if (discordSdk.channelId != null && discordSdk.guildId != null) {
+    // Over RPC collect info about the channel
+    const channel = await discordSdk.commands.getChannel({channel_id: discordSdk.channelId});
+    if (channel.name != null) {
+      activityChannelName = channel.name;
+    }
+  }
+
+  console.log(activityChannelName)
+
 
   return auth.user.username;
 };
