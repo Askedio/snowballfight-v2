@@ -12,6 +12,7 @@ import { TdmRoom } from "./rooms/TdmRoom";
 import { TsRoom } from "./rooms/TsRoom";
 import express from "express";
 import path from "node:path";
+const router = express.Router();
 
 import basicAuth from "express-basic-auth";
 import { TestRoom } from "./rooms/TestRoom";
@@ -66,11 +67,8 @@ export default config({
   },
 
   initializeExpress: (app) => {
-
-    app.use((req, res, next) => {
-      res.setHeader('Content-Security-Policy', "connect-src 'self' https://1335694934350495845.discordsays.com");
-      next();
-    });
+    app.use(express.json());
+    app.use(router);
 
     app.use("/colyseus", basicAuthMiddleware, monitor());
 
@@ -102,16 +100,11 @@ export default config({
       res.send({ access_token });
     });
 
-    app.use(express.static(path.join(__dirname, "../../client/dist")));
+    app.use("/.proxy/api", router);
 
-   
-    app.get("/.proxy/api", (req, res) => {
-      res.sendFile(path.join(__dirname, "../../client/dist", "index.html"));
-    });
-
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "../../client/dist", "index.html"));
-    });
+    const clientBuildPath = path.join(__dirname, "../../client/dist");
+    app.use(express.static(clientBuildPath));
+    app.use("/.proxy/assets", express.static(clientBuildPath + "/assets"));
   },
 
   beforeListen: () => {},

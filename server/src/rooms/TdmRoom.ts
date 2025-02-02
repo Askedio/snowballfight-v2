@@ -9,7 +9,7 @@ export class TdmRoom extends BaseRoom<TdmRoomState> {
   maxBots = 1;
 
   // Map configuration
-  map = "../client/static/assets/maps/winter/map.json";
+  map = "../client/public/assets/maps/winter/map.json";
   layers = {
     base: "base",
     collisions: "collisions",

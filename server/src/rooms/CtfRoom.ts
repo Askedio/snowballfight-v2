@@ -12,7 +12,7 @@ export class CtfRoom extends BaseRoom<CtfRoomState> {
   maxBots = 1;
 
   // Map configuration
-  map = "../client/static/assets/maps/winter/map.json";
+  map = "../client/public/assets/maps/winter/map.json";
   layers: TilemapLayersConfig = {
     base: "base",
     collisions: "collisions",

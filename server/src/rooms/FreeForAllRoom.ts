@@ -10,7 +10,7 @@ export class FreeForAllRoom extends BaseRoom<FreeForAllRoomState> {
 
 
   // Map configuration
-  map = "../client/static/assets/maps/winter/map.json";
+  map = "../client/public/assets/maps/winter/map.json";
   layers = {
     base: "base",
     collisions: "collisions",

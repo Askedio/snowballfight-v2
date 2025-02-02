@@ -1,5 +1,6 @@
 import { colyseus } from "../use-colyseus/colyseus";
 
+
 // To-do, we can share game states..
 export const {
   client,
@@ -9,4 +10,5 @@ export const {
   useColyseusState,
   roomStore,
   stateStore,
-} = colyseus<any>(process.env.BACKEND_URL);
+} = colyseus<any>(import.meta.env.VITE_BACKEND_URL);
+ 

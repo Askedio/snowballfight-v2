@@ -74,147 +74,149 @@ export class BaseScene extends Phaser.Scene {
   disableChat = false;
 
   preload() {
-    this.load.image("snowball0", "/assets/images/weapons/snowball.png");
+    this.load.setPath("/.proxy/assets");
+
+    this.load.image("snowball0", "images/weapons/snowball.png");
 
     this.load.atlas(
       "players",
-      "/assets/sprites/players.png",
-      "/assets/sprites/players.json"
+      "sprites/players.png",
+      "sprites/players.json"
     );
 
     this.load.atlas(
       "explosiongrey",
-      "/assets/sprites/explosiongrey.png",
-      "/assets/sprites/explosiongrey.json"
+      "sprites/explosiongrey.png",
+      "sprites/explosiongrey.json"
     );
 
     this.load.atlas(
       "winterobjects",
-      "/assets/sprites/winterobjects.png",
-      "/assets/sprites/winterobjects.json"
+      "sprites/winterobjects.png",
+      "sprites/winterobjects.json"
     );
 
     this.load.atlas(
       "health",
-      "/assets/sprites/health.png",
-      "/assets/sprites/health.json"
+      "sprites/health.png",
+      "sprites/health.json"
     );
 
-    this.load.image("tree", "/assets/images/city/tree.png");
+    this.load.image("tree", "images/city/tree.png");
 
-    this.load.image("planter", "/assets/images/city/planter.png");
-    this.load.image("planter-long", "/assets/images/city/planter-long.png");
+    this.load.image("planter", "images/city/planter.png");
+    this.load.image("planter-long", "images/city/planter-long.png");
 
-    this.load.image("snowman", "/assets/images/IceMan.png");
-    this.load.image("cannon", "/assets/images/weapons/snowballfire.png");
+    this.load.image("snowman", "images/IceMan.png");
+    this.load.image("cannon", "images/weapons/snowballfire.png");
 
     this.load.atlas(
       "kaboom",
-      "/assets/sprites/explosion.png",
-      "/assets/sprites/explosion.json"
+      "sprites/explosion.png",
+      "sprites/explosion.json"
     );
 
     this.load.atlas(
       "snowball",
-      "/assets/sprites/weapons/snowball/snowball.png",
-      "/assets/sprites/weapons/snowball/snowball.json"
+      "sprites/weapons/snowball/snowball.png",
+      "sprites/weapons/snowball/snowball.json"
     );
 
     this.load.atlas(
       "explosion2",
-      "/assets/sprites/explosion2.png",
-      "/assets/sprites/explosion2.json"
+      "sprites/explosion2.png",
+      "sprites/explosion2.json"
     );
 
-    this.load.audio("explosion", "/assets/sounds/explosion.mp3");
+    this.load.audio("explosion", "sounds/explosion.mp3");
     this.load.audio(
       "bullet1",
-      "/assets/sounds/impacts/bullet_impact_snow_01.mp3"
+      "sounds/impacts/bullet_impact_snow_01.mp3"
     );
     this.load.audio(
       "bullet2",
-      "/assets/sounds/impacts/bullet_impact_snow_02.mp3"
+      "sounds/impacts/bullet_impact_snow_02.mp3"
     );
     this.load.audio(
       "bullet3",
-      "/assets/sounds/impacts/bullet_impact_snow_03.mp3"
+      "sounds/impacts/bullet_impact_snow_03.mp3"
     );
     this.load.audio(
       "bullet4",
-      "/assets/sounds/impacts/bullet_impact_snow_04.mp3"
+      "sounds/impacts/bullet_impact_snow_04.mp3"
     );
     this.load.audio(
       "bullet5",
-      "/assets/sounds/impacts/bullet_impact_snow_05.mp3"
+      "sounds/impacts/bullet_impact_snow_05.mp3"
     );
-    this.load.audio("chime1", "/assets/sounds/chime1.mp3");
-    this.load.audio("chime2", "/assets/sounds/chime2.wav");
-    this.load.audio("chime3", "/assets/sounds/chime3.wav");
-    this.load.audio("laugh1", "/assets/sounds/laugh1.mp3");
-    this.load.audio("move1", "/assets/sounds/move1.wav");
-    this.load.audio("shoot1", "/assets/sounds/shoot1.mp3");
+    this.load.audio("chime1", "sounds/chime1.mp3");
+    this.load.audio("chime2", "sounds/chime2.wav");
+    this.load.audio("chime3", "sounds/chime3.wav");
+    this.load.audio("laugh1", "sounds/laugh1.mp3");
+    this.load.audio("move1", "sounds/move1.wav");
+    this.load.audio("shoot1", "sounds/shoot1.mp3");
 
     this.load.audio(
       "footstep1",
-      "/assets/sounds/footsteps/Footstep_Snow_Walk_06.mp3"
+      "sounds/footsteps/Footstep_Snow_Walk_06.mp3"
     );
     this.load.audio(
       "footstep2",
-      "/assets/sounds/footsteps/Footstep_Snow_Walk_07.mp3"
+      "sounds/footsteps/Footstep_Snow_Walk_07.mp3"
     );
 
     this.load.audio(
       "footstepRun1",
-      "/assets/sounds/footsteps/Footstep_Snow_Run_06.mp3"
+      "sounds/footsteps/Footstep_Snow_Run_06.mp3"
     );
     this.load.audio(
       "footstepRun2",
-      "/assets/sounds/footsteps/Footstep_Snow_Run_07.mp3"
+      "sounds/footsteps/Footstep_Snow_Run_07.mp3"
     );
 
     this.load.audio(
       "smash1",
-      "/assets/sounds/smashes/Snow_Ball_Smash_Hard_01.mp3"
+      "sounds/smashes/Snow_Ball_Smash_Hard_01.mp3"
     );
     this.load.audio(
       "smash2",
-      "/assets/sounds/smashes/Snow_Ball_Smash_Hard_02.mp3"
+      "sounds/smashes/Snow_Ball_Smash_Hard_02.mp3"
     );
     this.load.audio(
       "smash3",
-      "/assets/sounds/smashes/Snow_Ball_Smash_Medium_04.mp3"
+      "sounds/smashes/Snow_Ball_Smash_Medium_04.mp3"
     );
     this.load.audio(
       "smash4",
-      "/assets/sounds/smashes/Snow_Ball_Smash_Hard_05.mp3"
+      "sounds/smashes/Snow_Ball_Smash_Hard_05.mp3"
     );
 
     // load the PNG file
-    this.load.image("Tileset", "/assets/maps/winter/map.png");
-    this.load.image("TilesetExtruded", "/assets/maps/winter/map-extruded.png");
+    this.load.image("Tileset", "maps/winter/map.png");
+    this.load.image("TilesetExtruded", "maps/winter/map-extruded.png");
 
     // load the JSON file
-    this.load.tilemapTiledJSON("tilemap", "/assets/maps/winter/map.json");
+    this.load.tilemapTiledJSON("tilemap", "maps/winter/map.json");
 
     this.load.image(
       "devil",
-      "/assets/images/icons/candy_cane/blue_candy_cane.png"
+      "images/icons/candy_cane/blue_candy_cane.png"
     );
     this.load.image(
       "skull",
-      "/assets/images/icons/candy_cane/purple_candy_cane.png"
+      "images/icons/candy_cane/purple_candy_cane.png"
     );
     this.load.image(
       "sword",
-      "/assets/images/icons/candy_cane/green_candy_cane.png"
+      "images/icons/candy_cane/green_candy_cane.png"
     );
     this.load.image(
       "treasure",
-      "/assets/images/icons/candy_cane/red_candy_cane.png"
+      "images/icons/candy_cane/red_candy_cane.png"
     );
     this.load.image(
       "wings",
-      "/assets/images/icons/candy_cane/yellow_candy_cane.png"
+      "images/icons/candy_cane/yellow_candy_cane.png"
     );
   }
 

@@ -1,3 +1,4 @@
+import { initiateDiscordSDK } from "./utils/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
@@ -124,6 +125,8 @@ export function App() {
   }, [location.pathname]);
 
   useLayoutEffect(() => {
+    initiateDiscordSDK();
+    
     const _game = new Phaser.Game(config);
     setGame(_game);
 
