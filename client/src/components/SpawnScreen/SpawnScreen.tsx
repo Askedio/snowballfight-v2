@@ -186,11 +186,17 @@ export function SpawnScreen() {
       setConnectionOpen(false);
     }
 
+    EventBus.emit("disable-keyboard");
+
     room.send("respawn", {
       playerName: spawnState.playerName,
       roomName: spawnState.roomName,
       skin: spawnState.skin,
     });
+
+    setTimeout(() => {
+      EventBus.emit("enable-keyboard");
+    }, 1000)
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
