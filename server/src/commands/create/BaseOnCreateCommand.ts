@@ -62,7 +62,7 @@ export class BaseOnCreateCommand<
         for (let i = 0; i < botsToAdd; i++) {
           const player = await this.createPlayer(null, null, "bot");
 
-          if(this.room.state.requiresReady) {
+          if (this.room.state.requiresReady) {
             player.enabled = false;
           }
         }
@@ -79,8 +79,6 @@ export class BaseOnCreateCommand<
     }, 2000);
 
     this.spawnPickups();
-
-    this.updateMap();
 
     this.room.onMessage("chat", (client, { message }) => {
       const player = this.room.state.players.get(client.sessionId);
@@ -246,6 +244,8 @@ export class BaseOnCreateCommand<
       ["crate", "planterLong"],
       "crates"
     );
+
+    this.updateMap();
   }
 
   updateMap() {

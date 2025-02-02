@@ -275,14 +275,14 @@ export class BaseTickCommand<
             const ny = dy / distance || 0;
 
             // Push the moving player out of collision by adjusting the position
-            // player.x += nx * overlap * 2; // Adjust based on direction
-            // player.y += ny * overlap * 2;
+            player.x += nx * overlap * 2; // Adjust based on direction
+            player.y += ny * overlap * 2;
 
             // Optionally, push the other player too (for equal collision response)
-            // otherPlayer.x -= nx * overlap * 0.5;
-            // otherPlayer.y -= ny * overlap * 0.5;
+            otherPlayer.x -= nx * overlap * 0.5;
+            otherPlayer.y -= ny * overlap * 0.5;
 
-            // isColliding = true; // Flag that a collision occurred
+            isColliding = true; // Flag that a collision occurred
           }
         });
       }
