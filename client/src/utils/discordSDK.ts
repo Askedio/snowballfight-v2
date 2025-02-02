@@ -9,7 +9,7 @@ let discordSdk: DiscordSDK | DiscordSDKMock;
 
 const initiateDiscordSDK = async () => {
   if (isEmbedded) {
-    discordSdk = new DiscordSDK(import.meta.env.VITE_CLIENT_ID);
+    discordSdk = new DiscordSDK("1335694934350495845");
     await discordSdk.ready();
   } else {
     // We're using session storage for user_id, guild_id, and channel_id
@@ -22,7 +22,7 @@ const initiateDiscordSDK = async () => {
     const mockGuildId = getOverrideOrRandomSessionValue("guild_id");
     const mockChannelId = getOverrideOrRandomSessionValue("channel_id");
 
-    discordSdk = new DiscordSDKMock(import.meta.env.VITE_CLIENT_ID, mockGuildId, mockChannelId);
+    discordSdk = new DiscordSDKMock("1335694934350495845", mockGuildId, mockChannelId);
     const discriminator = String(mockUserId.charCodeAt(0) % 5);
 
     discordSdk._updateCommandMocks({
@@ -57,7 +57,7 @@ const authorizeDiscordUser = async () => {
   }
 
   const { code } = await discordSdk.commands.authorize({
-    client_id: import.meta.env.VITE_CLIENT_ID,
+    client_id: "1335694934350495845",
     response_type: "code",
     state: "",
     prompt: "none",
@@ -83,7 +83,7 @@ const authorizeDiscordUser = async () => {
 };
 
 const getUserName = () => {
-  console.log("as", import.meta.env.VITE_CLIENT_ID)
+  console.log("as", "1335694934350495845")
   if (!auth) {
     return "User";
   }
