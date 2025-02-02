@@ -549,6 +549,12 @@ export class BaseScene extends Phaser.Scene {
 
         // Add the container to the pickup entities
         this.pickupEntities[pickup.id] = pickupContainer;
+
+        pickup.onChange(() => {
+          if (this.pickupEntities[pickup.id]) {
+            this.pickupEntities[pickup.id].setAlpha(pickup.opacity);
+          }
+        });
       } catch (e: any) {
         console.error("Failed to create pickups.");
       }

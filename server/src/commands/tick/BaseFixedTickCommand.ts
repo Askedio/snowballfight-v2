@@ -25,6 +25,21 @@ export class BaseTickCommand<
     this.tilemapManager = payload.tilemapManager;
     this.collisionSystem = payload.collisionSystem;
 
+    // need setting for this
+    this.room.state.pickups
+      .filter((_) => _.changeOpacityWhenClose === true)
+      .forEach((pickup) => {
+        const nearbyPlayers = this.room.spatialManager.queryNearbyObjects(
+          pickup.x,
+          pickup.y,
+          pickup.opacityChangeRadius, // Query radius (adjust based on pickup interaction range)
+          this.room.spatialManager.playerIndex
+        );
+
+        pickup.opacity =
+          nearbyPlayers.length > 0 ? pickup.opacityChangeWhenClose : 1;
+      });
+
     this.room.state.players.forEach((player) => {
       if (player.isDead) {
         player.isMoving = false;
@@ -91,7 +106,7 @@ export class BaseTickCommand<
 
         if (input.down) {
           newX -= Math.cos(angle) * velocity;
-          newY -= Math.sin(angle) * velocity ;
+          newY -= Math.sin(angle) * velocity;
           isCurrentlyMoving = true;
         }
 
@@ -134,7 +149,6 @@ export class BaseTickCommand<
       }
 
       // Check for collisions with pickups
-
       const nearbyPickups = this.room.spatialManager.queryNearbyObjects(
         player.x,
         player.y,

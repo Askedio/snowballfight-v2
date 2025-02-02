@@ -15,6 +15,9 @@ export class TreePickup extends Pickup {
     this.health = config.health || 100;
     this.destroyBulletOnCollision = true;
     this.tint = "0xffffff";
+    this.changeOpacityWhenClose = true;
+    this.opacityChangeWhenClose = 0.5;
+    this.opacityChangeRadius = 70;
   }
 
   onPlayerCollision(player: any): void {

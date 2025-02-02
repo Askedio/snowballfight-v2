@@ -13,25 +13,33 @@ export class Pickup extends Schema {
   @type("string") tint: string;
   @type("string") asset: string;
   @type("string") spawnTile: string;
+  @type("number") scale = 0.08;
+  @type("number") scaleOnPlayer = 0.04;
+  @type("number") width: number;
+  @type("number") height: number;
+  @type("number") rotation: number;
+  @type("number") opacity: number;
+  @type("number") radius = 12; // The size of the pickup collision zone
+  @type("boolean") bringToTop = false; // Place this above players
+
+  // Collision
+  @type("string") collisionshape: string; // The following are used for colission detection
+  @type("number") colissionOffsetX: number;
+  @type("number") colissionOffsetY: number;
+  @type("number") colissionWidth: number;
+  @type("number") colissionHeight: number;
+
+  // Change Opacity
+  @type("boolean") changeOpacityWhenClose = false; 
+  @type("number") opacityChangeWhenClose = 0.5;
+  @type("number") opacityChangeRadius = 50;
+
 
   // Position
   @type("number") x: number; // Spawn position X
   @type("number") y: number; // Spawn position Y
   @type("number") originalX: number; // Spawn position X
   @type("number") originalY: number; // Spawn position Y
-  @type("number") scale = 0.08;
-  @type("number") scaleOnPlayer = 0.04;
-  @type("number") width: number;
-  @type("number") height: number;
-  @type("number") rotation: number;
-  @type("number") radius = 12; // The size of the pickup collision zone
-  @type("string") collisionshape: string; // The following are used for colission detection
-  @type("number") colissionOffsetX: number;
-  @type("number") colissionOffsetY: number;
-  @type("number") colissionWidth: number;
-  @type("number") colissionHeight: number;
-  @type("boolean") bringToTop = false; // Place this above players
-
   // Stats
   @type("number") health = 100; // How much health this item has
   @type("number") damange = 20; // How much damage a bullet does to this item
