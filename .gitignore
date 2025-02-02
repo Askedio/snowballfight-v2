@@ -4,7 +4,7 @@ node_modules
 
 .env
 .env.local
-
+.env.development
 server/.devmode.json
 server/lib
 client/dist
