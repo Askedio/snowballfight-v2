@@ -130,7 +130,7 @@ export class RoundManager<
     });
   }
 
-  private startRound() {
+   startRound() {
     this.command.spawnPickups();
 
     this.command.room.state.redScore = 0;

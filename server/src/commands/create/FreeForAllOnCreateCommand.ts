@@ -23,6 +23,8 @@ export class FreeForAllOnCreateCommand extends BaseOnCreateCommand<
   async execute(payload: this["payload"]) {
     super.execute(payload);
 
+    this.roundManager.startRound();
+
     this.room.clock.setInterval(() => {
       this.roundManager.updateRoundState();
     }, 1000);
