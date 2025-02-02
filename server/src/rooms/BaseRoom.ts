@@ -21,6 +21,7 @@ export class BaseRoom<TState extends BaseRoomState> extends Room<
   maxClients: number;
   maxBots: number;
   minPlayers = 1;
+  mode: string;
 
   // Map configuration
   map: string;

@@ -4,7 +4,7 @@ import type { Pickup } from "../schemas/Pickup";
 import { SpatialPartitioningManager } from "./SpatialPartitioningManager";
 import { BaseRoom } from "../rooms/BaseRoom";
 import { BaseRoomState } from "../states/BaseRoomState";
-import { BotState, TargetType, WanderState } from "./BotStateManager";
+import { BotState, TargetType } from "./BotStateManager";
 
 const healthPickup = "treasure";
 const ammoPickup = "devil";
@@ -62,7 +62,6 @@ export class BotManager {
       case BotState.Combat:
         this.updateCombat();
         break;
-
       case BotState.Fleeing:
         this.updateFleeing();
         break;
@@ -76,9 +75,9 @@ export class BotManager {
         break;
     }
 
-    if(!this.bot.enabled) {
+    if (!this.bot.enabled) {
       this.bot.isMoving = false;
-      console.log("not read")
+
       return {
         up: false,
         down: false,
@@ -144,6 +143,27 @@ export class BotManager {
 
   // --- Behavior Update Functions ---
   private updateWandering() {
+    if (this.room.mode === "ctf") {
+      const hasFlag = this.bot.pickups.find(
+        (_) => _.type === (this.bot.team === "red" ? "blueFlag" : "redFlag")
+      );
+      if (hasFlag) {
+        // target self flag
+        const flag = this.room.state.pickups.find(
+          (_) => _.type === (this.bot.team === "red" ? "redFlag" : "blueFlag")
+        );
+        this.changeState(BotState.TargetingPickup);
+        this.setTarget(flag);
+      } else {
+        const flag = this.room.state.pickups.find(
+          (_) => _.type === (this.bot.team === "red" ? "blueFlag" : "redFlag")
+        );
+
+        this.changeState(BotState.TargetingPickup);
+        this.setTarget(flag);
+      }
+    }
+
     const sessionId = this.bot.sessionId;
     let target = this.room.botStateManager.get(
       sessionId,
@@ -170,7 +190,6 @@ export class BotManager {
     const d = Math.hypot(this.bot.x - target.x, this.bot.y - target.y);
     if (d < 50) {
       this.changeState(BotState.Wandering);
-
       this.clearTarget();
     }
   }
@@ -211,7 +230,6 @@ export class BotManager {
       // If we've successfully fled and the enemy is now more than 200 pixels away,
       // and the enemy is still valid, resume combat.
       if (d > combatDistance * 2) {
-        console.log("Resuming combat with stored enemy.");
         this.changeState(BotState.Combat);
         this.setTarget(lastEnemy);
         this.clearLastPlayerTarget();
@@ -239,6 +257,7 @@ export class BotManager {
       "target",
       null
     );
+
     if (!this.isValidTarget(target)) {
       this.updateWandering();
       return;
@@ -279,10 +298,7 @@ export class BotManager {
       this.spatialManager.playerIndex
     );
     nearby.forEach(({ player }) => {
-      if (
-        player.sessionId !== this.bot.sessionId &&
-        player.canBeAttacked()
-      ) {
+      if (player.sessionId !== this.bot.sessionId && player.canBeAttacked()) {
         const d = Math.hypot(this.bot.x - player.x, this.bot.y - player.y);
         const score = 100 - player.health + (200 - d);
         if (score > bestScore) {
@@ -359,9 +375,9 @@ export class BotManager {
       return { chosenTile: null, computedPath: [] };
     }
     if (computedPath.length === 0) {
-      console.warn(
-        `No valid path found after ${attempts} attempts; forcing fallback using last chosen tile.`
-      );
+      // console.warn(
+      //  `No valid path found after ${attempts} attempts; forcing fallback using last chosen tile.`
+      // );
       computedPath = [{ x: chosenTile.x, y: chosenTile.y }];
     }
     return { chosenTile, computedPath };
@@ -524,11 +540,14 @@ export class BotManager {
         targetX - this.bot.x,
         targetY - this.bot.y
       );
+
       const canShoot =
         [BotState.Combat, BotState.Fleeing].includes(this.state) &&
         Math.random() > 0.5 &&
         angleDiff < shootThreshold &&
-        targetDistance < 400;
+        targetDistance < 400 &&
+        (!this.bot.team ||
+          (lastPlayerTarget && this.bot.team !== lastPlayerTarget.team));
 
       return {
         up: dy < 0,
