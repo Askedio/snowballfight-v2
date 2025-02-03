@@ -22,7 +22,7 @@ const initiateDiscordSDK = async () => {
         details: "Throwing Snowballs!",
         state: "In Game",
         assets: {
-          large_image: "embedded_background",
+          large_image: "logo",
           large_text: "in a group",
           small_image: "logo",
           small_text: "in game",
@@ -84,7 +84,7 @@ const authorizeDiscordUser = async () => {
     response_type: "code",
     state: "",
     prompt: "none",
-    scope: ["identify", "guilds", "applications.commands"],
+    scope: ["identify", "guilds", "applications.commands", "activities.write"],
   });
 
   // Retrieve an access_token from your application's server
