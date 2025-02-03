@@ -38,7 +38,11 @@ export function SpawnScreen() {
 
   const local = location.pathname.split("/")[1];
   let gameMode = local;
-  if (![...gameModes, { value: "test", label: "Test World" }].find((_) => _.value === local)) {
+  if (
+    ![...gameModes, { value: "test", label: "Test World" }].find(
+      (_) => _.value === local
+    )
+  ) {
     gameMode = "ffa";
   }
 
@@ -65,8 +69,17 @@ export function SpawnScreen() {
       setLoading(false);
     });
 
+    EventBus.on("discord", ({ username, channel, guild_id }) => {
+      setSpawnState((prevState) => ({
+        ...prevState,
+        playerName: username,
+        roomName: guild_id,
+      }));
+    });
+
     return () => {
       EventBus.removeListener("scene-ready");
+      EventBus.removeListener("discord");
     };
   }, []);
 
@@ -196,7 +209,7 @@ export function SpawnScreen() {
 
     setTimeout(() => {
       EventBus.emit("enable-keyboard");
-    }, 1000)
+    }, 1000);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -338,7 +351,7 @@ export function SpawnScreen() {
         Shoot: Space or Left Click
         <br />
         Reload: R or Right Click
-        <br/>
+        <br />
         Sprint: Shift Key
       </div>
 

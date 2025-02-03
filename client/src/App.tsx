@@ -1,4 +1,8 @@
-import { authorizeDiscordUser, getUserName, initiateDiscordSDK } from "./utils/discordSDK";
+import {
+  authorizeDiscordUser,
+  getUserName,
+  initiateDiscordSDK,
+} from "./utils/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
@@ -97,7 +101,11 @@ export function App() {
   useEffect(() => {
     const local = location.pathname.split("/")[1];
     let gameMode = local;
-    if (![...gameModes, { value: "test", label: "Test World" }].find((_) => _.value === local)) {
+    if (
+      ![...gameModes, { value: "test", label: "Test World" }].find(
+        (_) => _.value === local
+      )
+    ) {
       gameMode = "ffa";
     }
 
@@ -125,7 +133,6 @@ export function App() {
   }, [location.pathname]);
 
   useLayoutEffect(() => {
-    
     const _game = new Phaser.Game(config);
     setGame(_game);
 
@@ -141,24 +148,23 @@ export function App() {
     // Attach resize event listener
     window.addEventListener("resize", handleResize);
 
-const bla = async () => {
-  console.log("as", "1335694934350495845")
-  await initiateDiscordSDK();
-  await authorizeDiscordUser();
+    const handleDiscord = async () => {
+      await initiateDiscordSDK();
+      await authorizeDiscordUser();
 
-  console.log(await getUserName())
-}
+      const userdata = await getUserName();
 
-bla()
+      if (userdata) {
+        EventBus.emit("discord", userdata);
+      }
+    };
 
-
+    handleDiscord();
 
     // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-
-
   }, []);
 
   useEffect(() => {
@@ -205,7 +211,6 @@ bla()
       <div className="w-screen h-screen flex items-center">
         <div className="text-center w-full text-xl text-black">
           Sorry! The servers are currently offline.
-
           <p>{failure || "Unknown problem :("}</p>
         </div>
       </div>
