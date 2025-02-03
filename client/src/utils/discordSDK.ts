@@ -89,6 +89,7 @@ const getUserName = async () => {
 
 
   let activityChannelName = 'Unknown';
+  let guild_id = ''
 
   // Requesting the channel in GDMs (when the guild ID is null) requires
   // the dm_channels.read scope which requires Discord approval.
@@ -97,13 +98,14 @@ const getUserName = async () => {
     const channel = await discordSdk.commands.getChannel({channel_id: discordSdk.channelId});
     if (channel.name != null) {
       activityChannelName = channel.name;
+      guild_id = channel.guild_id
     }
   }
 
-  console.log(activityChannelName)
+  console.log(activityChannelName, guild_id)
 
 
-  return auth.user.username;
+  return {username: auth.user.username, channel: activityChannelName, guild_id};
 };
 
 enum SessionStorageQueryParam {
