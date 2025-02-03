@@ -12,7 +12,7 @@ export default ({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            phaser: ["phaser"],
+            phaser: ["phaser", "colyseus.js"],
           },
         },
       },
