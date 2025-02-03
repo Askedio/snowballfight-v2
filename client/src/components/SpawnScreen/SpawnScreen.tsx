@@ -17,6 +17,7 @@ import {
   IoVolumeMute,
 } from "react-icons/io5";
 import PickupHelper from "../PickupHelper/PickupHelper";
+import { isEmbedded } from "../../lib/discordSDK";
 
 interface SpawnState {
   playerName: string;
@@ -55,6 +56,7 @@ export function SpawnScreen() {
 
   const [disabled, setDisabled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [waitingForDiscord, setWaitingFOrDiscord] = useState(isEmbedded);
   const [muteAudio, setMuteAudio] = useState(false);
   const [killedBy, setKilledBy] = useState<string>("");
   const [lastRoomName, setLastRoomName] = useState<string>("");
@@ -82,6 +84,14 @@ export function SpawnScreen() {
       EventBus.removeListener("discord");
     };
   }, []);
+
+  useEffect(() => {
+    if (isEmbedded) {
+      setTimeout(() => {
+        setWaitingFOrDiscord(false);
+      }, 3000);
+    }
+  }, [isEmbedded]);
 
   useEffect(() => {
     if (!room) {
@@ -166,6 +176,12 @@ export function SpawnScreen() {
   }, [respawnDelay]);
 
   useEffect(() => {
+    if (loading) {
+      EventBus.emit("disable-keyboard");
+    }
+  }, [loading]);
+
+  useEffect(() => {
     const connect = async () => {
       await connectToRoom();
       window.history.pushState(
@@ -198,8 +214,6 @@ export function SpawnScreen() {
     if (!room.connection.isOpen) {
       setConnectionOpen(false);
     }
-
-    EventBus.emit("disable-keyboard");
 
     room.send("respawn", {
       playerName: spawnState.playerName,
@@ -308,7 +322,7 @@ export function SpawnScreen() {
       <button
         type="button"
         className="btn-primary"
-        disabled={!room || respawnDelay > 0} // Disable if room is unavailable or delay > 0
+        disabled={!room || respawnDelay > 0 || waitingForDiscord} // Disable if room is unavailable or delay > 0
         onClick={handleJoinButtonClick}
       >
         {respawnDelay > 0
