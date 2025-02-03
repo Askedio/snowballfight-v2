@@ -6,10 +6,6 @@
   }
 }
 
-.instructions {
-  @apply mt-4 text-xs text-gray-300 border-t pt-3 border-gray-600;
-}
-
 .btn-plain {
   @apply text-xs underline;
 
@@ -23,7 +19,7 @@
 }
 
 .created-by {
-  @apply text-[9px] fixed bottom-0 right-3;
+  @apply -mb-8 justify-between w-full flex items-center;
 
   a {
     @apply text-white underline hover:no-underline;

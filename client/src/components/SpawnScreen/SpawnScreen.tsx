@@ -18,6 +18,7 @@ import {
 } from "react-icons/io5";
 import PickupHelper from "../PickupHelper/PickupHelper";
 import { isEmbedded } from "../../lib/discordSDK";
+import { PiDiscordLogoFill } from "react-icons/pi";
 
 interface SpawnState {
   playerName: string;
@@ -277,7 +278,7 @@ export function SpawnScreen() {
 
   return (
     <div className="modal z-30">
-      <div className="hidden md:block absolute -right-[200px] top-32">
+      <div className="hidden md:block absolute -right-[200px] top-1/2 transform -translate-y-1/2">
         <PickupHelper />
       </div>
 
@@ -355,26 +356,31 @@ export function SpawnScreen() {
         </button>
       </div>
 
-      <div className="instructions">
-        <p className="text-white text-center w-full pb-3 border-b border-gray-600 flex items-center">
-          <IoAlertCircleOutline className="text-3xl" /> Use your respawn
-          protection time to reload your snowballs!
-        </p>
-        Move: WASD/Arrow keys in the direction of your mouse
-        <br />
-        Shoot: Space or Left Click
-        <br />
-        Reload: R or Right Click
-        <br />
-        Sprint: Shift Key
-      </div>
-
-      <p className="created-by">
-        Created by{" "}
-        <a href="https://willbowman.dev" target="_blank" rel="noreferrer">
-          Will Bowman
-        </a>
+      <p className="text-white text-xs text-center w-full py-3 border-b border-t mt-3 border-gray-600 flex items-center">
+        <IoAlertCircleOutline className="text-2xl mr-2" /> Use respawn
+        protection to reload your snowballs!
       </p>
+
+      <div className="created-by">
+        <p>
+          <a
+            href="https://discord.gg/5ByX3WE3"
+            target="_blank"
+            rel="noreferrer"
+            title="Join us on Discord"
+            className="hover:text-gray-200"
+          >
+            <PiDiscordLogoFill size={24} />
+          </a>
+        </p>
+
+        <p className="text-xs">
+          Created by{" "}
+          <a href="https://willbowman.dev" target="_blank" rel="noreferrer">
+            Will Bowman
+          </a>
+        </p>
+      </div>
 
       {isRoomModalOpen && (
         <RoomModal

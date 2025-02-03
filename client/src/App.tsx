@@ -2,6 +2,7 @@ import {
   authorizeDiscordUser,
   getUserInformation,
   initiateDiscordSDK,
+  isEmbedded,
 } from "./lib/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
@@ -222,7 +223,7 @@ export function App() {
       <Menu />
       <Loading />
       <SpawnScreen />
-      <Chat />
+      {!isEmbedded && <Chat />}
       <Leaderboard />
       <PlayerReady />
       <ErrorDialog />

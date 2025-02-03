@@ -1,4 +1,5 @@
 import React from "react";
+import { IoAlertCircleOutline } from "react-icons/io5";
 
 const pickupHelpText = [
   {
@@ -47,12 +48,28 @@ const PickupHelper: React.FC = () => {
               alt={pickup.title}
               className="h-8 object-contain"
             />
-            <div>
-              {pickup.description}
-            </div>
+            <div>{pickup.description}</div>
           </li>
         ))}
       </ul>
+
+      <div className="mt-4 text-xs text-gray-300 border-t pt-3 border-gray-600 flex flex-col">
+        <p className="!m-1">
+          <span className="text-white">Move:</span> WASD/Arrow keys
+        </p>
+
+        <p className="!m-1">
+          <span className="text-white">Shoot:</span> Space or Left Click
+        </p>
+
+        <p className="!m-1">
+          <span className="text-white">Reload:</span> R or Right Click
+        </p>
+
+        <p className="!m-1">
+          <span className="text-white">Sprint:</span> Shift Key
+        </p>
+      </div>
     </div>
   );
 };
