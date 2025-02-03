@@ -1,8 +1,8 @@
 import {
   authorizeDiscordUser,
-  getUserName,
+  getUserInformation,
   initiateDiscordSDK,
-} from "./utils/discordSDK";
+} from "./lib/discordSDK";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FreeForAllScene } from "./scenes/FreeForAllScene";
 import { Loading } from "./components/Loading/Loading";
@@ -152,10 +152,10 @@ export function App() {
       await initiateDiscordSDK();
       await authorizeDiscordUser();
 
-      const userdata = await getUserName();
+      const userInformation = await getUserInformation();
 
-      if (userdata) {
-        EventBus.emit("discord", userdata);
+      if (userInformation) {
+        EventBus.emit("discord", userInformation);
       }
     };
 
