@@ -1,6 +1,7 @@
 export function Terms() {
   return (
     <div className="text-black flex flex-col gap-3 p-12 overflow-auto h-screen w-screen">
+      <img src="/logo.png" width="300" className="rounded-xl mx-auto" />
       <h1 className="text-3xl">Terms of Use</h1>
       <p>Last Updated: 02/02/2025</p>
 

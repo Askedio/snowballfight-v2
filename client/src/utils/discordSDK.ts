@@ -70,7 +70,7 @@ const authorizeDiscordUser = async () => {
     response_type: "code",
     state: "",
     prompt: "none",
-    scope: ["identify", "guilds", "applications.commands", "activities.write"],
+    scope: ["identify", "guilds", "applications.commands"], //  "activities.write"
   });
 
   // Retrieve an access_token from your application's server
@@ -93,7 +93,7 @@ const authorizeDiscordUser = async () => {
 
 const getUserName = async () => {
   try {
-    await discordSdk.commands.setActivity({
+    /*await discordSdk.commands.setActivity({
       activity: {
         type: 0,
         details: "Throwing Snowballs!",
@@ -105,7 +105,7 @@ const getUserName = async () => {
           small_text: "in game",
         },
       },
-    });
+    });*/
   } catch (e) {
     console.log(e);
   }
