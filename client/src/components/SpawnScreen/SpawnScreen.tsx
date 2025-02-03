@@ -72,8 +72,8 @@ export function SpawnScreen() {
     EventBus.on("discord", ({ username, channel, guild_id }) => {
       setSpawnState((prevState) => ({
         ...prevState,
-        playerName: username,
-        roomName: guild_id,
+        playerName: username || "",
+        roomName: guild_id || "",
       }));
     });
 
