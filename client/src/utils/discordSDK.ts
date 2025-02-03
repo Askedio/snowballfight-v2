@@ -1,4 +1,8 @@
-import { CommandResponse, DiscordSDK, DiscordSDKMock } from "@discord/embedded-app-sdk";
+import {
+  CommandResponse,
+  DiscordSDK,
+  DiscordSDKMock,
+} from "@discord/embedded-app-sdk";
 type Auth = CommandResponse<"authenticate">;
 let auth: Auth;
 
@@ -11,6 +15,20 @@ const initiateDiscordSDK = async () => {
   if (isEmbedded) {
     discordSdk = new DiscordSDK("1335694934350495845");
     await discordSdk.ready();
+
+    await discordSdk.commands.setActivity({
+      activity: {
+        type: 0,
+        details: "Throwing Snowballs!",
+        state: "In Game",
+        assets: {
+          large_image: "embedded_background",
+          large_text: "in a group",
+          small_image: "logo",
+          small_text: "in game",
+        },
+      },
+    });
   } else {
     // We're using session storage for user_id, guild_id, and channel_id
     // This way the user/guild/channel will be maintained until the tab is closed, even if you refresh
@@ -22,7 +40,12 @@ const initiateDiscordSDK = async () => {
     const mockGuildId = getOverrideOrRandomSessionValue("guild_id");
     const mockChannelId = getOverrideOrRandomSessionValue("channel_id");
 
-    discordSdk = new DiscordSDKMock("1335694934350495845", mockGuildId, mockChannelId);
+    discordSdk = new DiscordSDKMock(
+      "1335694934350495845",
+      mockGuildId,
+      mockChannelId
+    );
+
     const discriminator = String(mockUserId.charCodeAt(0) % 5);
 
     discordSdk._updateCommandMocks({
@@ -61,7 +84,7 @@ const authorizeDiscordUser = async () => {
     response_type: "code",
     state: "",
     prompt: "none",
-    scope: ["identify","guilds", "applications.commands"],
+    scope: ["identify", "guilds", "applications.commands"],
   });
 
   // Retrieve an access_token from your application's server
@@ -87,25 +110,27 @@ const getUserName = async () => {
     return "User";
   }
 
-
-  let activityChannelName = 'Unknown';
-  let guild_id = ''
+  let activityChannelName = "Unknown";
+  let guild_id = "";
 
   // Requesting the channel in GDMs (when the guild ID is null) requires
   // the dm_channels.read scope which requires Discord approval.
   if (discordSdk.channelId != null && discordSdk.guildId != null) {
     // Over RPC collect info about the channel
-    const channel = await discordSdk.commands.getChannel({channel_id: discordSdk.channelId});
+    const channel = await discordSdk.commands.getChannel({
+      channel_id: discordSdk.channelId,
+    });
     if (channel.name != null) {
       activityChannelName = channel.name;
-      guild_id = channel.guild_id
+      guild_id = channel.guild_id;
     }
   }
 
-  console.log(activityChannelName, guild_id)
-
-
-  return {username: auth.user.username, channel: activityChannelName, guild_id};
+  return {
+    username: auth.user.username,
+    channel: activityChannelName,
+    guild_id,
+  };
 };
 
 enum SessionStorageQueryParam {
@@ -114,7 +139,9 @@ enum SessionStorageQueryParam {
   channel_id = "channel_id",
 }
 
-function getOverrideOrRandomSessionValue(queryParam: `${SessionStorageQueryParam}`) {
+function getOverrideOrRandomSessionValue(
+  queryParam: `${SessionStorageQueryParam}`
+) {
   const overrideValue = queryParams.get(queryParam);
   if (overrideValue != null) {
     return overrideValue;
