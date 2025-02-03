@@ -16,19 +16,7 @@ const initiateDiscordSDK = async () => {
     discordSdk = new DiscordSDK("1335694934350495845");
     await discordSdk.ready();
 
-    await discordSdk.commands.setActivity({
-      activity: {
-        type: 0,
-        details: "Throwing Snowballs!",
-        state: "In Game",
-        assets: {
-          large_image: "logo",
-          large_text: "in a group",
-          small_image: "logo",
-          small_text: "in game",
-        },
-      },
-    });
+   
   } else {
     // We're using session storage for user_id, guild_id, and channel_id
     // This way the user/guild/channel will be maintained until the tab is closed, even if you refresh
@@ -106,6 +94,21 @@ const authorizeDiscordUser = async () => {
 };
 
 const getUserName = async () => {
+  await discordSdk.commands.setActivity({
+    activity: {
+      type: 0,
+      details: "Throwing Snowballs!",
+      state: "In Game",
+      assets: {
+        large_image: "logo",
+        large_text: "in a group",
+        small_image: "logo",
+        small_text: "in game",
+      },
+    },
+  });
+
+
   if (!auth) {
     return "User";
   }
