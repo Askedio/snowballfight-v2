@@ -9,6 +9,7 @@ let discordSdk: DiscordSDK | DiscordSDKMock;
 
 const initiateDiscordSDK = async () => {
   if (isEmbedded) {
+    document.body.style.zoom = "70%";
     discordSdk = new DiscordSDK("1335694934350495845");
     await discordSdk.ready();
   } else {
