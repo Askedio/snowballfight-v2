@@ -30,7 +30,6 @@ const basicAuthMiddleware = basicAuth({
 
 let gameServerRef: Server;
 
-
 export default config({
   options: {
     devMode: process.env.NODE_ENV === "development",
@@ -71,17 +70,9 @@ export default config({
 
     console.log(process.env.VITE_CLIENT_ID);
 
-
     app.use("/colyseus", basicAuthMiddleware, monitor());
 
     router.post("/api/token", async (req, res) => {
-      let b = new URLSearchParams({
-        client_id: process.env.VITE_CLIENT_ID,
-        client_secret: process.env.DISCORD_SECRET,
-        grant_type: "authorization_code",
-        code: req.body.code,
-      });
-
       const response = await fetch(`https://discord.com/api/oauth2/token`, {
         method: "POST",
         headers: {
@@ -107,6 +98,12 @@ export default config({
     const clientBuildPath = path.join(__dirname, "../../client/dist");
     app.use(express.static(clientBuildPath));
     app.use("/.proxy/assets", express.static(clientBuildPath + "/assets"));
+
+    app.get("*", function (req, res) {
+      res.sendFile("index.html", {
+        root: path.join(__dirname, "../../client/dist/"),
+      });
+    });
   },
 
   beforeListen: () => {},
